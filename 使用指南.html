@@ -1,0 +1,550 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>JackyAiTeam 使用指南 · 建材外贸客户背调与智能触达系统</title>
+<style>
+:root{
+  --bg:#eef1f7;--panel:#fff;--line:#e2e7ef;--txt:#141c2b;--txt2:#546074;--txt3:#8894a8;
+  --brand:#2f6bff;--brand-l:#eaf1ff;--ink:#0b1a3a;
+  --ok:#0f9d58;--ok-l:#e7f7ee;--warn:#d98300;--warn-l:#fff5e6;--bad:#d93838;--bad-l:#fdecec;
+  --grad:linear-gradient(135deg,#4f8cff 0%,#7c5cff 62%,#22c9e0 100%);
+  --shadow:0 1px 2px rgba(15,26,58,.05),0 8px 24px rgba(15,26,58,.06);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{
+  font-family:"Microsoft YaHei","PingFang SC","Segoe UI",Arial,sans-serif;
+  background:var(--bg);color:var(--txt);font-size:14px;line-height:1.85;-webkit-font-smoothing:antialiased;
+}
+a{color:var(--brand);text-decoration:none}
+a:hover{text-decoration:underline}
+.appbar{
+  background:linear-gradient(118deg,#0b1a3a 0%,#152a58 46%,#3a2a6e 100%);
+  padding:16px 22px;display:flex;align-items:center;gap:13px;box-shadow:0 2px 16px rgba(11,26,58,.24)
+}
+.brand .mark{width:44px;height:44px;border-radius:13px;box-shadow:0 5px 16px rgba(79,140,255,.38)}
+.brand{display:flex;align-items:center;gap:12px}
+.brand-txt b{
+  display:block;font-size:19px;font-weight:800;letter-spacing:.5px;
+  background:linear-gradient(92deg,#fff,#cfe0ff 58%,#9fe6ff);
+  -webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent
+}
+.brand-txt span{display:block;font-size:12px;color:#93a6cc}
+.wrap{max-width:1000px;margin:0 auto;padding:22px 18px 60px}
+.hero{
+  background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:20px 22px;
+  box-shadow:var(--shadow);margin-bottom:18px
+}
+.hero h1{font-size:21px;margin-bottom:6px}
+.hero p{color:var(--txt2);font-size:13.5px}
+.hero .links{margin-top:12px;display:flex;gap:9px;flex-wrap:wrap}
+.hero .links a{
+  border:1px solid var(--line);border-radius:8px;padding:6px 13px;font-size:13px;background:#fbfcfe
+}
+.hero .links a.p{background:var(--grad);color:#fff;border-color:transparent;font-weight:700}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:14px;box-shadow:var(--shadow);margin-bottom:16px;overflow:hidden}
+.card>h2{
+  font-size:16px;padding:14px 20px;border-bottom:1px solid var(--line);
+  background:linear-gradient(180deg,#fff,#fbfcfe);display:flex;align-items:center;gap:9px
+}
+.card>h2 .no{
+  width:24px;height:24px;border-radius:7px;background:var(--grad);color:#fff;
+  display:grid;place-items:center;font-size:13px;font-weight:700;flex:0 0 auto
+}
+.card .bd{padding:16px 20px}
+h3{font-size:14.5px;margin:16px 0 7px;color:var(--ink)}
+h3:first-child{margin-top:0}
+h4{font-size:13.5px;margin:13px 0 5px}
+p{margin-bottom:9px;color:var(--txt2)}
+ul,ol{margin:0 0 10px 20px;color:var(--txt2)}
+li{margin-bottom:5px}
+li b,p b,td b{color:var(--txt)}
+code{background:#f2f5fa;border:1px solid var(--line);border-radius:4px;padding:1px 6px;font-family:Consolas,Monaco,monospace;font-size:12.5px;color:#1d3a6b}
+.steps{counter-reset:s;list-style:none;margin-left:0}
+.steps>li{
+  counter-increment:s;position:relative;padding-left:34px;margin-bottom:11px;color:var(--txt2)
+}
+.steps>li:before{
+  content:counter(s);position:absolute;left:0;top:1px;width:22px;height:22px;border-radius:50%;
+  background:var(--brand-l);color:var(--brand);font-weight:700;font-size:12.5px;display:grid;place-items:center
+}
+table{width:100%;border-collapse:collapse;font-size:13px;margin:9px 0 13px}
+th,td{border:1px solid var(--line);padding:7px 10px;text-align:left;vertical-align:top}
+th{background:#f6f9fd;font-weight:700;font-size:12.5px;color:var(--txt2)}
+td{color:var(--txt2)}
+.tip,.warn,.bad{
+  border-radius:10px;padding:11px 14px;font-size:13px;margin:11px 0;line-height:1.8
+}
+.tip{background:var(--brand-l);border:1px solid #cfe0fb;color:#1d3a6b}
+.warn{background:var(--warn-l);border:1px solid #f6ddbc;color:#8a5700}
+.bad{background:var(--bad-l);border:1px solid #f5c9c9;color:#8f2020}
+.tip b,.warn b,.bad b{color:inherit}
+.pill{
+  display:inline-block;border-radius:20px;padding:1px 10px;font-size:12px;margin:2px 4px 2px 0;
+  background:#f0f2f6;color:var(--txt2)
+}
+.pill.a{background:var(--ok-l);color:var(--ok);font-weight:700}
+.pill.b{background:var(--warn-l);color:var(--warn);font-weight:700}
+.pill.c{background:#eef1f6;color:var(--txt3);font-weight:700}
+.toc{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:8px}
+.toc a{
+  display:block;border:1px solid var(--line);border-radius:9px;padding:9px 13px;font-size:13px;
+  background:#fbfcfe;color:var(--txt2)
+}
+.toc a:hover{border-color:var(--brand);color:var(--brand);text-decoration:none}
+.faq{border-bottom:1px solid var(--line);padding:12px 0}
+.faq:last-child{border-bottom:none;padding-bottom:0}
+.faq b{display:block;font-size:13.5px;margin-bottom:4px;color:var(--ink)}
+.faq p{margin:0}
+.kv{display:grid;grid-template-columns:120px 1fr;gap:6px 12px;font-size:13px;color:var(--txt2)}
+.kv dt{color:var(--txt3)}
+.kv dd{color:var(--txt)}
+.foot{text-align:center;color:var(--txt3);font-size:12.5px;padding:18px 0 0}
+@media (max-width:640px){
+  .wrap{padding:12px 10px 40px}
+  .appbar{padding:12px 14px}
+  .card .bd{padding:13px 14px}
+  .card>h2{padding:12px 14px;font-size:15px}
+  .kv{grid-template-columns:90px 1fr}
+  table{font-size:12.5px}
+  th,td{padding:6px 7px}
+}
+@media print{
+  body{background:#fff}
+  .appbar,.hero .links,.toc{display:none}
+  .card{break-inside:avoid;box-shadow:none}
+}
+</style>
+</head>
+<body>
+
+<div class="appbar">
+  <div class="brand">
+    <svg class="mark" viewBox="0 0 48 48" aria-hidden="true">
+      <defs>
+        <linearGradient id="jlg" x1="0" y1="0" x2="1" y2="1">
+          <stop offset="0" stop-color="#4f8cff"/><stop offset=".55" stop-color="#7c5cff"/><stop offset="1" stop-color="#22c9e0"/>
+        </linearGradient>
+      </defs>
+      <rect width="48" height="48" rx="13" fill="url(#jlg)"/>
+      <path d="M30.4 11.6v19.1c0 4.3-2.9 6.9-7.2 6.9-3.4 0-6-1.7-7.3-4.5" fill="none" stroke="#fff" stroke-width="4.2" stroke-linecap="round"/>
+      <circle cx="34.6" cy="14.4" r="3.1" fill="#fff" opacity=".95"/>
+      <circle cx="14.6" cy="34.6" r="2.3" fill="#fff" opacity=".7"/>
+    </svg>
+    <div class="brand-txt"><b>JackyAiTeam</b><span>建材外贸客户背调与智能触达系统 · 使用指南</span></div>
+  </div>
+</div>
+
+<div class="wrap">
+
+  <div class="hero">
+    <h1>使用指南</h1>
+    <p>这套工具帮你把「广交会建材采购商名录」变成一份可直接开工的客户清单：自动背调打分、按 A/B/C 分级、逐条说明评级理由，再按客户的不同需求生成差异化话术，逐个触达并记录跟进。</p>
+    <div class="links">
+      <a class="p" href="https://jackyai001.github.io/my-website/" target="_blank" rel="noopener">打开系统（线上版）</a>
+      <a href="#toc">跳到目录</a>
+      <a href="#faq">常见问题</a>
+    </div>
+  </div>
+
+  <div class="card" id="toc">
+    <h2><span class="no">目</span>目录</h2>
+    <div class="bd">
+      <div class="toc">
+        <a href="#start">① 三分钟上手</a>
+        <a href="#entry">② 三个入口怎么选</a>
+        <a href="#list">③ 客户名录与筛选</a>
+        <a href="#score">④ 背调是怎么打分的</a>
+        <a href="#board">⑤ 背调看板</a>
+        <a href="#outreach">⑥ 批量触达（WhatsApp / 邮件）</a>
+        <a href="#letter">⑦ 开发信生成</a>
+        <a href="#follow">⑧ 跟进管理</a>
+        <a href="#export">⑨ 导出与备份</a>
+        <a href="#data">⑩ 数据存在哪、怎么迁移</a>
+        <a href="#faq">⑪ 常见问题</a>
+        <a href="#rules">⑫ 使用纪律（重要）</a>
+      </div>
+    </div>
+  </div>
+
+  <!-- 1 -->
+  <div class="card" id="start">
+    <h2><span class="no">1</span>三分钟上手</h2>
+    <div class="bd">
+      <ol class="steps">
+        <li><b>打开系统</b>：线上版 <code>https://jackyai001.github.io/my-website/</code>，或双击电脑上的 <code>广交会建材客户背调筛选系统.html</code>。页面顶部显示「客户总数 1132」就说明数据加载正常。</li>
+        <li><b>先填我方资料</b>：进「开发信」页，右侧填公司名（英文）、业务员姓名、主营产品（英文）、WhatsApp、邮箱、网站、城市、出口年数。<br>这一步很关键 —— 背调的「产品匹配」打分和后面所有话术，都靠这几个字段。</li>
+        <li><b>筛出今天要打的客户</b>：进「客户名录」，左侧勾选条件（比如：等级选 A、国家选阿联酋+沙特、类目选卫浴洁具），右上角按「评分」排序。</li>
+        <li><b>看背调理由</b>：点客户名打开详情，看「为什么是 A 级（评分依据）」，六项分数一目了然。觉得值得开发的，在「跟进记录」里标上状态和标签。</li>
+        <li><b>开始触达</b>：进「批量触达」，选好范围，点「一键提取并生成差异化话术」，然后逐个「打开当前这条」→ 在 WhatsApp / 邮件里点发送 → 回来点「标记已发送 → 下一条」。</li>
+      </ol>
+      <div class="tip"><b>提示：</b>第一次用建议先只做前 3 步，熟悉界面。触达是最后一步，想清楚再发。</div>
+    </div>
+  </div>
+
+  <!-- 2 -->
+  <div class="card" id="entry">
+    <h2><span class="no">2</span>三个入口怎么选</h2>
+    <div class="bd">
+      <table>
+        <tr><th style="width:150px">入口</th><th>怎么打开</th><th>适合什么场景</th></tr>
+        <tr>
+          <td><b>线上版</b></td>
+          <td><code>https://jackyai001.github.io/my-website/</code></td>
+          <td>发给同事/客户看；手机直接用；不需要电脑开着。国内访问 github.io 偶尔会慢。</td>
+        </tr>
+        <tr>
+          <td><b>本地文件版</b></td>
+          <td>双击 <code>广交会建材客户背调筛选系统.html</code></td>
+          <td><b>断网也能用</b>（筛选、背调、话术、导出全部可用）。自己干活最稳。</td>
+        </tr>
+        <tr>
+          <td><b>局域网 + 手机</b></td>
+          <td>双击 <code>启动背调系统.bat</code>，弹管理员授权点「是」，窗口里会打印手机地址</td>
+          <td>想在手机上一边看客户一边打电话/发消息。手机要和电脑连同一个 Wi-Fi。</td>
+        </tr>
+      </table>
+      <div class="warn"><b>注意：</b>三个入口的数据是<b>各自独立的</b>（浏览器按网址隔离存储）。在线上版录的跟进记录，本地版里看不到。要同步就用「备份/恢复」导出 JSON 再导入。</div>
+    </div>
+  </div>
+
+  <!-- 3 -->
+  <div class="card" id="list">
+    <h2><span class="no">3</span>客户名录与筛选</h2>
+    <div class="bd">
+      <h3>左侧筛选面板</h3>
+      <table>
+        <tr><th style="width:150px">筛选条件</th><th>说明</th></tr>
+        <tr><td><b>关键词</b></td><td>同时搜公司名、联系人、邮箱、采购产品、国家。</td></tr>
+        <tr><td><b>客户等级</b></td><td><span class="pill a">A 优先开发</span><span class="pill b">B 可开发</span><span class="pill c">C 低优先</span></td></tr>
+        <tr><td><b>国家/地区</b></td><td>按客户数量排序，点「展开」看全部；带「待核对」标记的是原始名录里国家字段有问题的记录。</td></tr>
+        <tr><td><b>采购产品类目</b></td><td>18 个建材类目（瓷砖、卫浴洁具、五金、门窗幕墙、地板、灯具照明、石材、玻璃、铝材、管件阀门……），括号里的数字是命中条数。</td></tr>
+        <tr><td><b>邮箱情况</b></td><td>企业邮箱 / 个人邮箱 / 无邮箱 / 格式无效。<b>企业邮箱</b>的客户公司化程度和采购量通常更高。</td></tr>
+        <tr><td><b>背调状态</b></td><td>未核查 / 域名可收信 / 无邮件服务 / 域名不存在。（要先跑「联网核查」才有数据）</td></tr>
+        <tr><td><b>客户类型</b></td><td>贸易商、工程承包商、经销商门店、同行工厂、驻华采购办。前三种是建材工厂的理想买家。</td></tr>
+        <tr><td><b>参展届数</b></td><td>全部 / 已记录 / 尚未记录 / 2 届及以上 / 3 届及以上。<b>届数越多说明是老买家、采购习惯稳定。</b></td></tr>
+        <tr><td><b>海外社媒</b></td><td>有任意社媒 / 领英 / 脸书 / Instagram / 未记录。</td></tr>
+        <tr><td><b>跟进状态、标签</b></td><td>按你标记的进度过滤。</td></tr>
+        <tr><td><b>联系方式</b></td><td>有邮箱 / 有手机 / 有座机 / 有网址 / 含风险标记。</td></tr>
+      </table>
+
+      <h3>表格里的每一列</h3>
+      <ul>
+        <li><b>评级依据</b> —— 直接写明这个客户为什么是 A/B/C，鼠标悬停可看完整文字</li>
+        <li><b>参展届数</b> —— 未填显示「未记录」，填了显示「N 届」</li>
+        <li>公司名下方的小标签：跟进状态、标签、邮箱无效、个人邮箱、域名不存在、疑似同行、重复记录、高核实需求、已参加 N 届、有社媒</li>
+      </ul>
+
+      <h3>每行右侧的五个按钮</h3>
+      <table>
+        <tr><td style="width:60px"><b>☰</b></td><td>打开背调详情（评分依据、参展届数、社媒、联网核查、跟进记录都在这里）</td></tr>
+        <tr><td><b>✉</b></td><td>用这个客户生成开发信</td></tr>
+        <tr><td><b>◉</b></td><td>打开 WhatsApp 直聊（号码已自动补齐国际区号）</td></tr>
+        <tr><td><b>@</b></td><td>打开邮件并预填主题与正文</td></tr>
+        <tr><td><b>✓</b></td><td>只核查这一个客户的邮箱域名</td></tr>
+      </table>
+
+      <h3>勾选后的批量操作</h3>
+      <p>勾选客户后，表格上方出现批量工具条：<b>设置状态</b>、<b>加标签</b>、<b>清除标签</b>、<b>批量生成开发信</b>、<b>设参展届数</b>、<b>加入触达队列</b>、<b>导出选中</b>。</p>
+      <div class="tip"><b>实用组合：</b>筛出某国某类目的 A 级客户 → 全选 → 「加标签：重点客户」→「加入触达队列」。这样你的开发是分国家、分品类成批推进的，不会乱。</div>
+
+      <h3>参展届数怎么填</h3>
+      <ul>
+        <li><b>单个填</b>：打开客户详情 → 「参展届数」区 → 直接输入数字，或点 <code>1 届 / 2 届 / 3 届 / 5 届 / 10 届</code> 快捷按钮</li>
+        <li><b>批量填</b>：勾选多个客户 → 工具条里输入届数 → 点「设参展届数」</li>
+        <li><b>去查</b>：详情里有「必应查历届参展记录」「英文查参展历史」「广交会官网查询」三个跳转</li>
+        <li><b>从文件导入</b>：如果你的名录文件里有「参展届数」这一列，用顶部「导入名录」导入，程序会自动识别并写入</li>
+      </ul>
+      <div class="warn"><b>说实话：</b>原始名录里没有「第几次参加广交会」这个数据，任何声称能自动算出来的都是编的。这里给的是「人工核验 + 留档」的正规做法。</div>
+
+      <h3>海外社媒怎么填</h3>
+      <p>详情里「海外社媒账号」有三个输入框（领英 / 脸书 / Instagram），每个旁边有「搜」按钮 —— 用公司名去必应检索该平台的页面。查到后把链接或账号名粘进去，点「保存社媒记录」，之后列表会打上「领英·脸书」这类标签，导出也会带上。</p>
+    </div>
+  </div>
+
+  <!-- 4 -->
+  <div class="card" id="score">
+    <h2><span class="no">4</span>背调是怎么打分的</h2>
+    <div class="bd">
+      <p>总分 100 分，五个维度相加，联网核查单独加减分。打开客户详情就能看到每一项得了多少分、为什么。</p>
+      <table>
+        <tr><th style="width:110px">维度</th><th style="width:60px">满分</th><th>怎么给分</th></tr>
+        <tr>
+          <td><b>联系通道</b></td><td>30</td>
+          <td>手机可拨打 +12 · 邮箱格式有效 +8 · 企业域名邮箱 +6（个人免费邮箱只 +2）· 号码含国际区号 +4（缺则 +2）</td>
+        </tr>
+        <tr>
+          <td><b>客户类型</b></td><td>25</td>
+          <td>贸易商/进口商 25 · 工程承包商 24 · 经销商门店 24 · 驻华采购办 21 · 无明确关键词 17 · <b>同行工厂 10</b>（公司名含 Factory/Manufacturing 等，可能是你的竞争对手）</td>
+        </tr>
+        <tr>
+          <td><b>产品匹配</b></td><td>20</td>
+          <td>命中建材类目 12 分起，每多命中一类 +2（最多 +6）· 采购描述笼统 +8 · 未列明 +4 · <b>命中你填的主营产品再加 +2</b></td>
+        </tr>
+        <tr>
+          <td><b>信息完整</b></td><td>15</td>
+          <td>有联系人 +4 · 有公司座机 +4 · 有官网 +4 · 有地址 +3</td>
+        </tr>
+        <tr>
+          <td><b>数据可信</b></td><td>10</td>
+          <td>国家可识别 +4 · 号码区号与国别匹配 +3 · 无重复记录 +3</td>
+        </tr>
+        <tr>
+          <td><b>联网核查</b></td><td>±</td>
+          <td>邮箱域名 MX 正常 <b>+4</b> · 域名存在但无邮件服务 <b>−8</b> · 域名根本不存在 <b>−18</b></td>
+        </tr>
+      </table>
+
+      <h3>等级怎么分</h3>
+      <table>
+        <tr><th style="width:110px">等级</th><th style="width:110px">分数</th><th>怎么用</th></tr>
+        <tr><td><span class="pill a">A 级</span></td><td>75 分及以上</td><td><b>优先开发</b>。联系方式完整、角色对路、有官网，值得你花时间做定制报价。</td></tr>
+        <tr><td><span class="pill b">B 级</span></td><td>60 – 74 分</td><td><b>正常开发</b>。通常缺个官网或用了个人邮箱，可以先发一条简短问询试探。</td></tr>
+        <tr><td><span class="pill c">C 级</span></td><td>60 分以下</td><td><b>低优先</b>。多为信息残缺、疑似同行或无有效联系方式，批量触达时建议排除。</td></tr>
+      </table>
+
+      <div class="tip"><b>当前分布：</b>1132 条里 A 级 488、B 级 608、C 级 36。如果你觉得 A 级太宽松（占 43%），告诉我，我把分数线从 75 提到 80 重算一版。</div>
+
+      <h3>联网核查是什么</h3>
+      <p>点「客户名录」右上角的「联网核查」，程序会去查每个客户邮箱域名的 <b>MX / SPF / DMARC / A 记录</b>，判断：</p>
+      <ul>
+        <li><b>这个邮箱是不是真的能收信</b> —— 域名不存在的话，你写了一万字的开发信也是白写</li>
+        <li><b>客户有没有官网</b> —— 有 A 记录说明有网站，公司真实性更高</li>
+        <li><b>是不是正规运营的企业</b> —— 配了 SPF 通常说明有专职 IT 或至少懂点技术</li>
+      </ul>
+      <p>用的是国内公共 DNS（阿里/腾讯/360），<b>不需要翻墙</b>。建议每次核查 200-300 条，分批跑；重复域名会自动复用已有结果。</p>
+    </div>
+  </div>
+
+  <!-- 5 -->
+  <div class="card" id="board">
+    <h2><span class="no">5</span>背调看板</h2>
+    <div class="bd">
+      <p>一眼看清整份名录的质量和结构，用来决定「这一批客户先打哪个国家、哪个品类」。</p>
+      <ul>
+        <li><b>客户等级分布</b> —— A/B/C 各多少条</li>
+        <li><b>客户类型分布</b> —— 贸易商、工程商、经销商、同行工厂各占多少</li>
+        <li><b>邮箱情况</b> —— 企业邮箱 / 个人邮箱 / 无邮箱 / 格式无效</li>
+        <li><b>重点国家 Top 20</b> —— 哪个国家的买家企业最多（印度 144、沙特 53、阿联酋 45……）</li>
+        <li><b>数据质量与风险提示</b> —— 国家无法识别几条、疑似重复几条、邮箱必退信几条、无邮箱几条、号码区号不符几条、已核查多少条</li>
+      </ul>
+      <div class="tip"><b>怎么用：</b>先看「数据质量」，把有问题的先剔掉；再看「重点国家」，挑一个你物流/认证最熟的市场，把那个国家的 A 级客户一次性干完，比撒胡椒面效率高得多。</div>
+    </div>
+  </div>
+
+  <!-- 6 -->
+  <div class="card" id="outreach">
+    <h2><span class="no">6</span>批量触达（WhatsApp / 邮件）</h2>
+    <div class="bd">
+      <div class="bad">
+        <b>先把话说清楚：这套工具不能"一键群发"。</b><br>
+        WhatsApp 只对通过认证的企业开放发消息接口，用脚本自动群发个人号必被封；浏览器的邮件又没有发信能力。任何号称能自动群发的工具，代价都是你的账号。<br>
+        这里做的是<b>半自动点对点</b>：程序按客户的情况写好不同的内容 → 逐个打开并预填 → 你点发送 → 程序记录状态和节奏。<b>慢一点，但账号是你的。</b>
+      </div>
+
+      <h3>操作步骤</h3>
+      <ol class="steps">
+        <li>进「批量触达」，先选渠道：<b>WhatsApp 触达</b> 或 <b>邮件触达</b>。</li>
+        <li>右侧「目标范围」选客户：当前筛选结果 / 已勾选的客户 / 仅 A 级 / A+B 级 / 仅已核查通过的客户。</li>
+        <li>设好「今日发送上限」（默认 30）、「间隔下限/上限」（默认 25-70 秒随机）。</li>
+        <li>点「<b>一键提取并生成差异化话术</b>」→ 弹出<b>风险确认</b> → 勾选「我已阅读并理解上述风险……」→ 点「确认并开始」。</li>
+        <li>程序自动完成：提取号码/邮箱（自动去重）→ 按<b>采购类目 + 等级</b>分组 → 每组用不同话术模板、组内措辞也随机变化 → 生成队列。</li>
+        <li>点「<b>打开当前这条</b>」→ WhatsApp / 邮件客户端弹出，内容已填好 → 你确认后发送。</li>
+        <li>回来点「<b>标记已发送 → 下一条</b>」，自动跳到下一位并开始随机间隔倒计时。<br>不想发这个客户就点「跳过」。</li>
+        <li>想留档或换工具发，点「<b>导出清单</b>」下载 CSV。</li>
+      </ol>
+
+      <h3>队列界面怎么看</h3>
+      <ul>
+        <li><b>四个统计</b>：可触达客户 / 待处理 / 已发送 / 今日剩余额度</li>
+        <li><b>当前客户</b>：公司名、等级分数、国家、采购类目、本封用的话术名称</li>
+        <li><b>号码</b>：显示规范化后的国际号码，并注明原始号码（例如原始 <code>017430512565</code> → <code>+88017430512565</code>）</li>
+        <li><b>话术分组</b>：右侧显示共分多少组、每组多少条、每组用了几种话术</li>
+        <li><b>队列明细</b>：每条带「待处理 / 已打开 / 已发送 / 已跳过」状态，点任意一条可切过去</li>
+      </ul>
+
+      <h3>话术是怎么"因人而异"的</h3>
+      <ul>
+        <li><b>按类目</b>：客户买瓷砖就提瓷砖，买卫浴就提卫浴</li>
+        <li><b>按等级</b>：A 级用完整卖点，C 级用最短问询</li>
+        <li><b>按国家</b>：话术里会注明"针对 {国家} 市场"</li>
+        <li><b>组内轮换</b>：WhatsApp 有 6 套开场（简洁问询 / 展会跟进 / 卖点切入 / 问题式开场 / 专业顾问式 / 短句低打扰），邮件有 4 套模板 + 4 种主题，同一组里也不会人人相同</li>
+        <li><b>自动带入</b>：联系人姓名、公司名、客户采购产品、你的公司名/产品/联系方式</li>
+      </ul>
+      <div class="tip">话术模板可以在「开发信」页里改（邮件渠道用的就是那几套模板）。改完队列里的内容会自动重算。</div>
+
+      <h3>关于发送节奏（这条最重要）</h3>
+      <table>
+        <tr><th style="width:170px">控制项</th><th>建议值</th><th>为什么</th></tr>
+        <tr><td>每日发送上限</td><td><b>20–30 条</b></td><td>新号或长期不活跃的号，超过 30 条/天风险陡增</td></tr>
+        <tr><td>随机间隔</td><td><b>25–70 秒</b></td><td>固定间隔（比如正好 30 秒一条）是典型的机器特征</td></tr>
+        <tr><td>首次联系内容</td><td><b>简短问询，不要直接报价</b></td><td>第一条就被判定为广告，后面基本进黑名单</td></tr>
+        <tr><td>分批推进</td><td><b>一周 3-4 天，别连着一周天天发满</b></td><td>给账号留正常的社交行为痕迹</td></tr>
+      </table>
+    </div>
+  </div>
+
+  <!-- 7 -->
+  <div class="card" id="letter">
+    <h2><span class="no">7</span>开发信生成</h2>
+    <div class="bd">
+      <p>比批量触达更"重"的一封信，适合对 A 级客户做正式的首次开发或展会跟进。</p>
+      <h3>怎么用</h3>
+      <ol class="steps">
+        <li>右侧先填「我方资料」8 项：公司名（英文）、业务员姓名、主营产品（英文）、WhatsApp/电话、邮箱、网站、工厂城市、出口年数。</li>
+        <li>上方选「目标客户范围」：当前筛选结果 / 已勾选 / 仅 A 级；用「切换查看第几条」翻看每封信。</li>
+        <li>选模板：内置 4 套 —— <b>初次开发信（标准）</b>、<b>广交会展会后跟进</b>、<b>WhatsApp 短消息</b>、<b>报价后催单</b>。</li>
+        <li>直接在文本框里改模板（可用变量：<code>{contact}</code> 联系人、<code>{company}</code> 客户公司、<code>{country}</code> 国家、<code>{products}</code> 客户采购产品、<code>{myCompany}</code>、<code>{myProducts}</code>、<code>{myName}</code>、<code>{myPhone}</code>、<code>{myEmail}</code>、<code>{city}</code>、<code>{years}</code>），点「保存模板」。</li>
+        <li>点「复制当前」即可粘到邮箱/WhatsApp；点「导出全部（CSV）」得到每人一封的清单。</li>
+      </ol>
+      <div class="tip"><b>写开发信的三条经验：</b>① 主题行别写 "We are a factory"，写客户关心的事（他的品类 + 市场）；② 正文别超过 150 字，AI 味越淡越好；③ 结尾一定要一个明确的小问题（"May I send our price list?"），让对方好回复。</div>
+    </div>
+  </div>
+
+  <!-- 8 -->
+  <div class="card" id="follow">
+    <h2><span class="no">8</span>跟进管理</h2>
+    <div class="bd">
+      <p>每个客户的进度都存在本机，不丢不乱。</p>
+      <h3>状态怎么选</h3>
+      <p>未联系 → 已发信 → 已回复 → 询价中 → 已报价 → 寄样中 → 已成交 → 暂搁置 / 无效客户</p>
+      <h3>怎么记录</h3>
+      <ul>
+        <li>点客户行 → 打开详情 → 底部「跟进记录」：选状态、点标签（重点客户 / 待验证 / 已加WhatsApp / 老客户 / 待报价 / 黑名单）、写备注、点「保存跟进」</li>
+        <li>点「标记为今天已跟进」记录最后联系时间</li>
+        <li>批量：勾选多个客户 → 工具条里「设置状态」「加标签」</li>
+      </ul>
+      <h3>跟进管理页</h3>
+      <p>顶部是各状态的数量总览；下面是所有已建立跟进记录的客户，按最后跟进时间倒序，点「编辑」直接跳回该客户详情。点「导出跟进记录」可导出成 Excel 交给同事或做周报。</p>
+      <div class="tip"><b>建议的工作节奏：</b>每天开工先看「跟进管理」—— 哪些发了信没回（3 天后跟进一次的）、哪些报了价待确认、哪些该寄样了。有记录的开发才叫开发，没记录的就是碰运气。</div>
+    </div>
+  </div>
+
+  <!-- 9 -->
+  <div class="card" id="export">
+    <h2><span class="no">9</span>导出与备份</h2>
+    <div class="bd">
+      <h3>导出</h3>
+      <table>
+        <tr><th style="width:180px">按钮</th><th>导出什么</th></tr>
+        <tr><td><b>导出结果</b>（顶部）</td><td>当前筛选出来的客户，25 个字段全带上</td></tr>
+        <tr><td><b>导出选中</b>（工具条）</td><td>只导勾选的那几个</td></tr>
+        <tr><td><b>导出清单</b>（批量触达）</td><td>触达清单，含已规范化的号码/邮箱、话术模板、发送状态、消息全文</td></tr>
+        <tr><td><b>导出全部（CSV）</b>（开发信）</td><td>每人一封的开发信（含邮箱、主题、正文）</td></tr>
+        <tr><td><b>导出跟进记录</b></td><td>跟进状态、标签、备注、最后跟进时间</td></tr>
+        <tr><td><b>导出全部客户（CSV）</b>（备份窗口）</td><td>全部 1132 条，不做筛选</td></tr>
+      </table>
+      <p>导出的 CSV 带 UTF-8 BOM，Excel / WPS 双击直接打开不会乱码。字段包括：序号、采购商、国家/地区、联系人、手机、公司电话、邮箱、采购产品、背调评分、客户等级、<b>评级依据</b>、客户类型、采购类目、<b>参展届数</b>、<b>领英/脸书/Instagram</b>、优势与风险提示、邮箱域名核查、WhatsApp 发送时间、邮件发送时间、跟进状态、标签、备注、最后跟进。</p>
+
+      <h3>备份与恢复</h3>
+      <p>点顶部「备份/恢复」：</p>
+      <ul>
+        <li><b>导出备份（JSON）</b> —— 把跟进记录、标签、备注、参展届数、社媒、发送记录、模板全部打包</li>
+        <li><b>导入备份</b> —— 换电脑、换网址、清理浏览器之后，用它一键恢复</li>
+      </ul>
+      <div class="warn"><b>请养成习惯：</b>每周导出一次备份 JSON，存到网盘或 U 盘。<b>浏览器缓存被清理时，没备份的跟进记录会全部消失，且无法找回。</b></div>
+    </div>
+  </div>
+
+  <!-- 10 -->
+  <div class="card" id="data">
+    <h2><span class="no">10</span>数据存在哪、怎么迁移</h2>
+    <div class="bd">
+      <p>这套系统<b>没有后台服务器</b>，你录入的所有东西（跟进状态、标签、备注、参展届数、社媒、发送记录、话术模板）都保存在<b>你自己电脑的浏览器里</b>（localStorage）。好处是数据不上传、不怕泄露；代价是要理解下面几件事。</p>
+      <table>
+        <tr><th style="width:210px">你会遇到的情况</th><th>数据会怎样</th></tr>
+        <tr><td>同一台电脑、同一个浏览器、同一个网址</td><td>数据一直在，正常使用</td></tr>
+        <tr><td>换浏览器（Chrome → Edge）</td><td><b>数据看不到</b>。属于两个独立的存储空间</td></tr>
+        <tr><td>线上版 ↔ 本地文件 ↔ 局域网版</td><td><b>三份数据互不相通</b>，因为网址不同</td></tr>
+        <tr><td>清理浏览器缓存 / 用无痕模式</td><td><b>数据全部丢失</b>，无痕模式关闭即清空</td></tr>
+        <tr><td>换电脑</td><td>需要导出备份再导入</td></tr>
+      </table>
+      <div class="tip"><b>迁移口诀：</b>旧的导出 JSON → 新的导入 JSON。表格数据（1132 条客户）是程序自带的，不用也不该迁移；要迁的只有你自己录进去的东西。</div>
+    </div>
+  </div>
+
+  <!-- 11 -->
+  <div class="card" id="faq">
+    <h2><span class="no">11</span>常见问题</h2>
+    <div class="bd">
+
+      <div class="faq">
+        <b>Q：点「发邮件」或「打开当前这条」没反应 / 只打开了 Chrome 空白页</b>
+        <p>因为 Windows 的默认邮件程序被设成了浏览器。两个办法：<br>
+        ① 在浏览器里登录你的网页邮箱（如 Gmail、Outlook 网页版），再用工具发送；<br>
+        ② 想用桌面客户端：先把邮箱账号加到 Outlook 里（打开 <code>C:\Program Files (x86)\Microsoft Office\root\Office16\OUTLOOK.EXE</code> 按提示添加），然后 Windows 设置 → 应用 → 默认应用 → 搜 <code>mailto</code> → 选 Microsoft Outlook。</p>
+      </div>
+
+      <div class="faq">
+        <b>Q：WhatsApp 点开显示号码不对 / 打不开</b>
+        <p>看详情里的「原始号码」和规范化后的号码。程序会去掉前导 0 并补国家区号，但原始名录里有些单元格塞了好几个号码，会取最长的一段。如果发现补错了，直接复制原始号码手动加到通讯录再联系。</p>
+      </div>
+
+      <div class="faq">
+        <b>Q：「联网核查」点了没进度 / 显示查询失败</b>
+        <p>先确认网络正常（用的是国内阿里/腾讯 DNS，不需要翻墙）。如果整批都失败，多半是公司网络或安全软件拦截了 <code>dns.alidns.com</code>，换手机热点试试。另外每批不要超过 300 条，公共接口有速率限制。</p>
+      </div>
+
+      <div class="faq">
+        <b>Q：导入 Excel 提示无法解析 / 列名不识别</b>
+        <p>Excel 需要联网加载解析库。最稳的办法是在 Excel/WPS 里「另存为 CSV（UTF-8）」再导入。列名支持这些写法：采购商 / 公司 / Buyer、国家/地区 / Country、联系人 / Contact、手机 / WhatsApp、公司电话 / Tel、邮箱 / Email、采购产品 / Products、参展届数 / Fair。</p>
+      </div>
+
+      <div class="faq">
+        <b>Q：手机打不开局域网地址</b>
+        <p>检查三点：① 手机连的是不是和电脑同一个 Wi-Fi（不是流量）；② 有些公司/酒店 Wi-Fi 开了「客户端隔离」，会禁止手机访问电脑 —— 换成手机开热点、电脑连热点，再重新双击 bat；③ 以黑窗口里打印的那个地址为准，网段变了地址也会变。</p>
+      </div>
+
+      <div class="faq">
+        <b>Q：等级想调严一点 / 想改打分权重</b>
+        <p>现在的线是 A≥75、B≥60。觉得 A 太多就告诉我，我改成 A≥80。权重要调整（比如你觉得"企业邮箱"比"有座机"重要得多）也可以改。</p>
+      </div>
+
+      <div class="faq">
+        <b>Q：能不能直接群发？我客户太多了一个个发太慢</b>
+        <p>技术上不行，也不建议。真的量大就走"导出清单 + 邮件合并"：工具导出含「邮箱/主题/正文」的 CSV → Word → 邮件 → 选择收件人 → 使用现有列表 → 插入合并域 → 完成并合并 → 发送电子邮件（走 Outlook）。这样每个客户收到的是单独的、内容不同的信。</p>
+      </div>
+
+      <div class="faq">
+        <b>Q：名录里的客户数据会泄露吗</b>
+        <p>线上版是公开网页，所以那 1132 条客户数据（含手机号、邮箱）是<b>任何人都能下载</b>的，搜索引擎也会抓取 —— 这是你当初确认过的选择。你自己录进去的跟进记录、备注等只存在你本机浏览器里，不会上传、别人看不到。</p>
+      </div>
+
+      <div class="faq">
+        <b>Q：数据没保存上 / 刷新后少了</b>
+        <p>点「保存跟进」或切换状态后才会写入本机存储。如果用了无痕模式，关闭窗口就会清空。另外本地存储有容量上限（约 5MB），如果反复出现"本地存储已满"的提示，先导出备份，再删掉一些不再需要的记录。</p>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- 12 -->
+  <div class="card" id="rules">
+    <h2><span class="no">12</span>使用纪律（重要）</h2>
+    <div class="bd">
+      <div class="bad">
+        <b>批量触达的后果由使用者自己承担。</b><br>
+        WhatsApp 官方只允许通过认证的 Business API 发送商业消息；用个人号批量发营销内容，可能被限制发送、临时封禁甚至永久封号。邮件同理，可能让你公司的发件域名被列入黑名单，影响正常外贸往来。请遵守目标国家的反垃圾信息法规（GDPR、CAN-SPAM 等）。
+      </div>
+      <h3>六条实操纪律</h3>
+      <ol class="steps">
+        <li><b>先筛后发</b>：只对「有企业邮箱 + 采购类目明确 + 非同行」的客户做首次触达，也就是优先 A 级。</li>
+        <li><b>控制节奏</b>：每天 20-30 条，随机间隔 25 秒以上，一周别连着七天都发满。</li>
+        <li><b>内容要像人写的</b>：别提"群发"、别用夸张词、别放大段图片、第一条别直接报价格。</li>
+        <li><b>优先 WhatsApp</b>：建材客户在 WhatsApp 上回复率通常远高于邮件，而且没有那么强的垃圾判定。</li>
+        <li><b>记录一切</b>：发完立刻标记状态。没记录的客户，等于没开发过。</li>
+        <li><b>长期主义</b>：同一客户被拒绝两次之后就别死磕了，标「无效客户」，把精力留给下一个 A 级。</li>
+      </ol>
+      <div class="tip"><b>工具能帮你做的：</b>把 1132 条乱名录变成有优先级、有理由、有内容、有记录的作战清单。<br><b>工具不能替你做的：</b>判断一个客户值不值得长期投入、把询盘谈成订单。这两件事还得靠你。</div>
+    </div>
+  </div>
+
+  <div class="foot">
+    JackyAiTeam · 建材外贸客户背调与智能触达系统 · 使用指南<br>
+    线上地址：<a href="https://jackyai001.github.io/my-website/" target="_blank" rel="noopener">https://jackyai001.github.io/my-website/</a>
+  </div>
+
+</div>
+</body>
+</html>

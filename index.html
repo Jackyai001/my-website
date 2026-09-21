@@ -1256,8 +1256,6 @@ function showGate(){
       '<div class="lfoot">本产品为授权使用，未激活无法查看与操作客户数据</div>' +
       '<div class="landmask on" id="lMask">' +
         '<div class="gatebox">' +
-          '<div class="gbrand">' + mark.replace('id="lg1"','id="lg2"').replace('url(#lg1)','url(#lg2)') +
-            '<div><b>JackyAiTeam</b><span>建材外贸客户背调与智能触达系统</span></div></div>' +
           '<h2>产品激活</h2>' +
           '<p class="gsub">本产品为授权使用。请填写卖家发给你的专属激活码，激活码与手机号后四位绑定，一码一人。</p>' +
           '<label class="glab">姓名 / 公司</label>' +
@@ -2498,8 +2496,9 @@ const HEAD_CN = ["序号","采购商","国家/地区","联系人","手机/WhatsA
   "背调评分","客户等级","评级依据","客户类型","采购类目","参展届数","领英","脸书","Instagram",
   "优势与风险提示","邮箱域名核查","WhatsApp发送时间","邮件发送时间","跟进状态","标签","备注","最后跟进"];
 function exportRows(headers, rows, name){
-  if(demoBlock("导出")) return;
+  if(demoBlock("导出")) return false;
   download(name + "_" + new Date().toISOString().slice(0,10) + ".csv", toCsv(headers, rows));
+  return true;
 }
 function socOf(r, k){
   var n = NOTES[r.id];
@@ -2520,8 +2519,7 @@ function rowToArray(r){
 }
 function exportCurrent(){
   if(!VIEW.length){ toast("当前没有可导出的记录"); return; }
-  exportRows(HEAD_CN, VIEW.map(rowToArray), "广交会建材客户_筛选结果");
-  toast("已导出 " + VIEW.length + " 条");
+  if(exportRows(HEAD_CN, VIEW.map(rowToArray), "广交会建材客户_筛选结果")) toast("已导出 " + VIEW.length + " 条");
 }
 function exportAll(){
   exportRows(HEAD_CN, ROWS.map(rowToArray), "广交会建材客户_全量");
@@ -2540,7 +2538,7 @@ function exportFollow(){
     return [r.seq, r.buyer, r.country, r.contact, r.mobile, r.email, r.score, r.grade,
       n.status, n.tags.join("、"), n.note, n.last ? fmtDate(n.last) : ""];
   }), "客户跟进记录");
-  toast("已导出 " + rs.length + " 条跟进记录");
+  if(!DEMO) toast("已导出 " + rs.length + " 条跟进记录");
 }
 function exportLetters(){
   if(!LETTERS.length){ toast("没有可导出的开发信"); return; }
@@ -2548,7 +2546,7 @@ function exportLetters(){
     LETTERS.map(function(x, i){
       return [i+1, x.r.buyer, x.r.country, x.r.contact, x.r.mail.valid[0]||"", x.r.mobile, x.r.score, x.text];
     }), "开发信批量导出");
-  toast("已导出 " + LETTERS.length + " 封开发信");
+  if(!DEMO) toast("已导出 " + LETTERS.length + " 封开发信");
 }
 function importFile(file){
   var reader = new FileReader();
@@ -2955,7 +2953,7 @@ function exportQueue(){
           it.subject, it.msg];
       }), "邮件触达清单");
   }
-  toast("已导出 " + Q.items.length + " 条");
+  if(!DEMO) toast("已导出 " + Q.items.length + " 条");
 }
 
 /* ---------------- 16. 事件绑定 ---------------- */
@@ -3252,8 +3250,8 @@ function bindUI(){
     };
   });
   $("#qBuild").onclick = function(){ needConsent(buildQueue); };
-  $("#qOpen").onclick = function(){ needConsent(openCurrent); };
-  $("#qDone").onclick = function(){ needConsent(markDone); };
+  $("#qOpen").onclick = function(){ if(demoBlock("发送消息")) return; needConsent(openCurrent); };
+  $("#qDone").onclick = function(){ if(demoBlock("记录发送状态")) return; needConsent(markDone); };
   $("#qSkip").onclick = skipCurrent;
   $("#qExport").onclick = exportQueue;
   $("#qScope").onchange = function(){ Q.items = []; renderQueue(); };

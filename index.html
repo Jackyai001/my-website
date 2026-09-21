@@ -367,20 +367,22 @@ tbody tr.sel td{background:var(--brand-l)}
   padding:20px;overflow:auto;background:linear-gradient(135deg,#0b1a3a,#152a58 45%,#3a2a6e)
 }
 .gatebox{
-  width:430px;max-width:100%;background:#fff;border-radius:16px;padding:26px 26px 20px;
-  box-shadow:0 24px 60px rgba(0,0,0,.42);margin:auto
+  width:430px;max-width:100%;background:#fff;border-radius:16px;padding:22px 24px 18px;
+  box-shadow:0 24px 60px rgba(0,0,0,.42);margin:auto;color:var(--txt)
 }
-.gbrand{display:flex;align-items:center;gap:12px;margin-bottom:18px}
+.gbrand{display:flex;align-items:center;gap:12px;margin-bottom:15px}
 .gbrand svg{flex:0 0 auto}
 .gbrand b{display:block;font-size:17px;font-weight:800;color:var(--ink);letter-spacing:.3px}
 .gbrand span{display:block;font-size:11.5px;color:var(--txt3)}
 .gatebox h2{font-size:19px;margin-bottom:6px;color:var(--ink)}
-.gsub{font-size:12.5px;color:var(--txt2);line-height:1.75;margin-bottom:16px}
-.glab{display:block;font-size:12px;font-weight:700;color:var(--txt2);margin-bottom:5px}
+.gsub{font-size:12.5px;color:var(--txt2);line-height:1.7;margin-bottom:14px}
+.glab{display:block;font-size:12px;font-weight:700;color:var(--txt2);margin-bottom:4px}
 .ginp{
-  width:100%;border:1px solid var(--line);border-radius:9px;padding:10px 12px;font-size:14px;
-  margin-bottom:12px;outline:none;background:#fbfcfe
+  width:100%;border:1px solid var(--line);border-radius:9px;padding:9px 12px;font-size:14px;
+  margin-bottom:10px;outline:none;background:#fbfcfe;
+  color:var(--ink);caret-color:var(--ink);-webkit-text-fill-color:var(--ink)
 }
+.ginp::placeholder{color:#9aa6b8;-webkit-text-fill-color:#9aa6b8}
 .ginp:focus{border-color:var(--brand);background:#fff;box-shadow:0 0 0 3px var(--brand-l)}
 .gcode{font-family:Consolas,Monaco,monospace;letter-spacing:1.5px;font-size:15px}
 .gbtn{
@@ -435,6 +437,10 @@ tbody tr.sel td{background:var(--brand-l)}
 .lcontact p{font-size:13.5px;color:#a8b8d6;line-height:1.95;margin-bottom:20px}
 .glink{color:#2f6bff;font-weight:700;text-decoration:none;border-bottom:1px dashed #9dc0ff}
 .glink:hover{color:#1e57e0}
+.demobar{background:linear-gradient(92deg,#c97a00,#e8a020);color:#fff;font-size:12.5px;padding:9px 16px;
+  text-align:center;line-height:1.75;position:relative;z-index:6}
+.demobar b{display:inline-block;background:rgba(255,255,255,.22);border-radius:5px;padding:1px 8px;margin-right:8px}
+.demobar a{color:#fff;font-weight:800;text-decoration:underline;white-space:nowrap}
 .landmask{position:fixed;inset:0;z-index:900;display:none;align-items:center;justify-content:center;
   padding:20px;overflow:auto;background:rgba(6,12,28,.74);-webkit-backdrop-filter:blur(4px);backdrop-filter:blur(4px)}
 .landmask.on{display:flex}
@@ -1141,6 +1147,21 @@ var LIC_ALPH = "0123456789ABCDEFGHJKMNPQRSTVWXYZ";
 /* 客服入口：企业微信「联系我」链接，点击后打开企业微信添加客服 */
 var LIC_CONTACT_URL = "https://work.weixin.qq.com/ca/cawcded2ec14ec119a";
 var LIC_CONTACT_BTN = "点击添加客服，开通账号，可以试试";
+/* ---------------- 只读演示版：构建演示版时注入 window.__JAT_DEMO__ = true ---------------- */
+var DEMO = (typeof window.__JAT_DEMO__ !== "undefined" && window.__JAT_DEMO__ === true);
+function demoBlock(what){
+  if(!DEMO) return false;
+  toast("这是只读演示版，不能" + what + "。点顶部横幅「添加客服」开通正式账号即可使用");
+  return true;
+}
+/* 演示版顶部横幅 */
+function showDemoBar(){
+  var b = document.createElement("div");
+  b.className = "demobar";
+  b.innerHTML = '<b>只读演示版</b>仅展示 50 条脱敏示例数据（正式版 1132 条，含完整联系方式，可导出、可批量触达）　' +
+    '<a href="' + LIC_CONTACT_URL + '" target="_blank" rel="noopener">' + esc(LIC_CONTACT_BTN) + '</a>';
+  document.body.insertBefore(b, document.body.firstChild);
+}
 /* 激活码签名：由「序号 + 手机号后四位」派生 10 位校验串 */
 function licSig(seq, tail){
   var s = licSec() + "|" + seq + "|" + tail, out = "";
@@ -1576,6 +1597,7 @@ function loadStore(){
   if(!S.tmpls || !S.tmpls.length) S.tmpls = JSON.parse(JSON.stringify(TMPL_DEFAULT));
 }
 function saveStore(){
+  if(DEMO) return;   /* 只读演示版不写入任何数据 */
   try{
     localStorage.setItem(STORE_NOTES, JSON.stringify(NOTES));
     localStorage.setItem(STORE_DNS, JSON.stringify(DNS));
@@ -2476,6 +2498,7 @@ const HEAD_CN = ["序号","采购商","国家/地区","联系人","手机/WhatsA
   "背调评分","客户等级","评级依据","客户类型","采购类目","参展届数","领英","脸书","Instagram",
   "优势与风险提示","邮箱域名核查","WhatsApp发送时间","邮件发送时间","跟进状态","标签","备注","最后跟进"];
 function exportRows(headers, rows, name){
+  if(demoBlock("导出")) return;
   download(name + "_" + new Date().toISOString().slice(0,10) + ".csv", toCsv(headers, rows));
 }
 function socOf(r, k){
@@ -3311,8 +3334,20 @@ function fallbackCopy(t){
 /* ---------------- 16. 启动 ---------------- */
 function boot(){
   loadStore();
+  /* 只读演示版：跳过激活门禁、不写入本地数据、不真正发送 */
+  if(DEMO){
+    try{ localStorage.setItem = function(){}; }catch(e){}
+    var _wo = window.open;
+    window.open = function(u){
+      if(typeof u === "string" && (u.indexOf("wa.me") >= 0 || u.indexOf("mail") >= 0)){
+        toast("只读演示版不会真的发送。正式版会逐个打开并自动填好收件人与正文，你点发送即可");
+        return null;
+      }
+      return _wo.apply(window, arguments);
+    };
+  }
   /* 授权门禁：未激活直接显示激活页，不加载任何客户数据 */
-  if(!isActivated()){ showGate(); return; }
+  if(!DEMO && !isActivated()){ showGate(); return; }
   try{
     prepare(currentRows());
   }catch(e){
@@ -3326,6 +3361,7 @@ function boot(){
   applyFilters();
   buildLetter([]);
   $("#letterScope").value = "filtered";
+  if(DEMO) showDemoBar();
 }
 boot();
 </script>

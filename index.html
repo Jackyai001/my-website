@@ -702,6 +702,14 @@ tbody tr.sel td{background:var(--brand-l)}
           <div><label class="lab">间隔下限（秒）</label><input class="inp" id="qGapMin" value="25"></div>
           <div><label class="lab">间隔上限（秒）</label><input class="inp" id="qGapMax" value="70"></div>
         </div>
+        <label class="lab">邮件打开方式</label>
+        <select class="sel" id="qMailMode" style="margin-bottom:6px">
+          <option value="outlook">Outlook 网页版（推荐，写好的邮件直接打开）</option>
+          <option value="office">Outlook 365 / 公司邮箱网页版</option>
+          <option value="gmail">Gmail 网页版</option>
+          <option value="mailto">系统默认邮件客户端（Outlook/Foxmail）</option>
+        </select>
+        <div class="hintline" style="margin-bottom:11px">点「打开当前这条」时会按这里的设置打开：选网页版就直接出现写好的邮件窗口，不依赖电脑上装没装邮件软件。</div>
         <button class="btn p" id="qBuild" style="width:100%;justify-content:center">一键提取并生成差异化话术</button>
         <div class="hintline" id="qBuildHint">按国家 / 采购类目 / 背调等级自动分组，不同组用不同话术，组内措辞也会随机变化</div>
         <div style="margin-top:12px" id="qGroups"></div>
@@ -2434,7 +2442,7 @@ function loadStore(){
   refreshDay();
   var def = {
     myCompany:"", myProducts:"", myName:"", myPhone:"", myEmail:"", website:"", city:"", years:"10",
-    tmplIdx:0, tmpls:JSON.parse(JSON.stringify(TMPL_DEFAULT))
+    tmplIdx:0, tmpls:JSON.parse(JSON.stringify(TMPL_DEFAULT)), mailMode:"mailto"
   };
   try{
     var saved = JSON.parse(localStorage.getItem(STORE_SET)||"null");
@@ -3000,7 +3008,12 @@ function openDetail(id){
     '<div class="sec"><h4>核验与联系入口</h4>'+
       '<div style="display:flex;gap:7px;flex-wrap:wrap">'+
         (waNumber(r) ? '<a class="btn sm" href="https://wa.me/'+waNumber(r)+'" target="_blank" rel="noopener">WhatsApp 直聊（'+waNumber(r)+'）</a>' : '')+
-        (r.emailList.length ? '<a class="btn sm" href="mailto:'+esc(r.emailList[0])+'">发邮件</a>' : '')+
+        (r.mail.valid.length ?
+          '<button class="btn sm" data-mailmode="mailto" data-mailto="'+esc(r.mail.valid[0])+'">系统邮件客户端</button>'+
+          '<button class="btn sm" data-mailmode="outlook" data-mailto="'+esc(r.mail.valid[0])+'">Outlook 网页写邮件</button>'+
+          '<button class="btn sm" data-mailmode="office" data-mailto="'+esc(r.mail.valid[0])+'">Outlook 365 写邮件</button>'+
+          '<button class="btn sm" data-mailmode="gmail" data-mailto="'+esc(r.mail.valid[0])+'">Gmail 网页写邮件</button>'
+          : '')+
         (r.web ? '<a class="btn sm" href="'+(/^https?:\/\//.test(r.web)?r.web:"http://"+r.web)+'" target="_blank" rel="noopener">访问官网</a>' : '')+
         '<a class="btn sm" href="https://cn.bing.com/search?q='+q+'" target="_blank" rel="noopener">必应背调（国内可开）</a>'+
         '<a class="btn sm" href="https://www.baidu.com/s?wd='+q+'" target="_blank" rel="noopener">百度背调</a>'+
@@ -3191,6 +3204,21 @@ function fillTmpl(body, r){
     .replace(/\{website\}/g, S.website || "")
     .replace(/\{city\}/g, S.city || "China")
     .replace(/\{years\}/g, S.years || "10");
+}
+/* 按选定的邮件打开方式生成写信链接：不走系统 mailto，可直接打开网页写邮件窗口 */
+function mailUrl(to, subject, body, mode){
+  mode = mode || S.mailMode || "mailto";
+  var t = encodeURIComponent(to || ""), su = encodeURIComponent(subject || ""), bd = encodeURIComponent(body || "");
+  if(mode === "gmail")   return "https://mail.google.com/mail/?view=cm&fs=1&to=" + t + "&su=" + su + "&body=" + bd;
+  if(mode === "outlook") return "https://outlook.live.com/mail/0/deeplink/compose?to=" + t + "&subject=" + su + "&body=" + bd;
+  if(mode === "office")  return "https://outlook.office.com/mail/deeplink/compose?to=" + t + "&subject=" + su + "&body=" + bd;
+  return "mailto:" + (to || "") + "?subject=" + su + "&body=" + bd;
+}
+function openMail(to, subject, body, mode){
+  var m = mode || S.mailMode || "mailto";
+  if(m === "mailto"){ window.location.href = mailUrl(to, subject, body, m); return; }
+  var w = window.open(mailUrl(to, subject, body, m), "_blank");
+  if(!w) toast("浏览器拦截了弹出窗口，请允许本网站弹窗后重试");
 }
 var LETTERS = [];
 function letterPool(){
@@ -3642,13 +3670,12 @@ function openCurrent(){
   if(Q.channel === "wa"){
     window.open("https://wa.me/" + it.target + (it.msg ? ("?text=" + encodeURIComponent(it.msg)) : ""), "_blank");
   } else {
-    window.open("mailto:" + it.target + "?subject=" + encodeURIComponent(it.subject) +
-      "&body=" + encodeURIComponent(it.msg), "_blank");
+    openMail(it.target, it.subject, it.msg);
   }
   if(it.state !== "done") it.state = "opened";
   renderQueue();
   startGap();
-  toast("已打开预填内容，请在" + (Q.channel === "wa" ? "WhatsApp" : "邮件客户端") + "里确认发送");
+  toast("已打开预填内容，请在" + (Q.channel === "wa" ? "WhatsApp" : "邮件窗口") + "里确认发送");
 }
 function markDone(){
   var it = Q.items[Q.idx];
@@ -3776,9 +3803,7 @@ function bindUI(){
       else if(act === "mail"){
         if(!r.mail.valid.length){ toast("该客户没有有效邮箱"); return; }
         var body = fillTmpl(S.tmpls[S.tmplIdx].body, r);
-        window.location.href = "mailto:"+r.mail.valid[0]+"?subject="+
-          encodeURIComponent("Building materials supply from " + (S.myCompany||"China factory")) +
-          "&body=" + encodeURIComponent(body);
+        openMail(r.mail.valid[0], "Building materials supply from " + (S.myCompany || "China factory"), body);
       }
       else if(act === "verify") verifyOne(r);
       return;
@@ -3942,6 +3967,14 @@ function bindUI(){
 
   /* ---------- 参展届数：详情里的快捷按钮（事件委托，只绑一次） ---------- */
   $("#dBody").addEventListener("click", function(e){
+    /* 详情里的四种"写邮件"入口 */
+    var mb = e.target.closest("[data-mailmode]");
+    if(mb && CUR){
+      var to = mb.getAttribute("data-mailto");
+      var body = fillTmpl(S.tmpls[S.tmplIdx].body, CUR);
+      openMail(to, "Building materials supply from " + (S.myCompany || "China factory"), body, mb.getAttribute("data-mailmode"));
+      return;
+    }
     var b = e.target.closest("[data-fairset]");
     if(!b || !CUR) return;
     var n = noteOf(CUR.id);
@@ -3983,6 +4016,10 @@ function bindUI(){
   $("#qExport").onclick = exportQueue;
   $("#qScope").onchange = function(){ Q.items = []; renderQueue(); };
   $("#qDayLimit").onchange = renderQueue;
+  $("#qMailMode").onchange = function(){
+    S.mailMode = this.value; saveStore();
+    toast("邮件打开方式已切换为：" + this.options[this.selectedIndex].text);
+  };
   $("#qList").onclick = function(e){
     var el = e.target.closest("[data-qgo]");
     if(!el) return;
@@ -4015,6 +4052,8 @@ function syncSettingsUI(){
     return '<option value="'+i+'"'+(i===S.tmplIdx?" selected":"")+'>'+esc(t.name)+'</option>';
   }).join("");
   $("#tmplBody").value = S.tmpls[S.tmplIdx] ? S.tmpls[S.tmplIdx].body : "";
+  var qm = document.getElementById("qMailMode");
+  if(qm) qm.value = S.mailMode || "mailto";
 }
 function copyText(t){
   if(navigator.clipboard && navigator.clipboard.writeText){

@@ -136,6 +136,17 @@ a:hover{text-decoration:underline}
 }
 .pill:hover{border-color:#c3cedd}
 .pill.on{background:var(--brand-l);border-color:#b9d5f8;color:var(--brand-d);font-weight:600}
+/* ---------- WhatsApp 号码校验标记 ---------- */
+.wab{display:inline-block;border-radius:5px;padding:0 5px;font-size:10.5px;font-weight:700;
+  vertical-align:middle;white-space:nowrap;font-family:"Microsoft YaHei",sans-serif}
+.wab.wok{background:var(--ok-l);color:var(--ok);border:1px solid #bfe6cf}
+.wab.wwarn{background:var(--warn-l);color:var(--warn);border:1px solid #f3dcb6}
+.wab.wbad{background:var(--bad-l);color:var(--bad);border:1px solid #f3c4c4}
+.wadetail{margin-top:6px;font-size:12px;line-height:1.75;border-radius:8px;padding:7px 10px;font-family:"Microsoft YaHei",sans-serif}
+.wadetail.wok{background:var(--ok-l);color:#0a6b3d;border:1px solid #bfe6cf}
+.wadetail.wwarn{background:var(--warn-l);color:#8a5700;border:1px solid #f3dcb6}
+.wadetail.wbad{background:var(--bad-l);color:#8f2020;border:1px solid #f3c4c4}
+.wadetail b{color:inherit}
 
 /* ---------- 表格 ---------- */
 .tablewrap{overflow:auto;max-height:calc(100vh - 250px)}
@@ -613,6 +624,15 @@ tbody tr.sel td{background:var(--brand-l)}
           <button class="pill" data-v="risk">含风险标记</button>
         </div>
       </div>
+      <div class="fgroup">
+        <h4>WhatsApp 号码校验</h4>
+        <div class="pills" id="fWa">
+          <button class="pill" data-v="ok">✓ 可直发</button>
+          <button class="pill" data-v="warn">⚠ 待核对</button>
+          <button class="pill" data-v="bad">✕ 不可用</button>
+        </div>
+        <div class="hintline" style="margin-top:7px">系统已按各国手机号规则自动校验：✓ 格式正确可直接发；⚠ 疑似固话、位数异常或号码归属国不符；✕ 号码无法解析</div>
+      </div>
     </div>
 
     <div class="card">
@@ -1083,26 +1103,270 @@ function hash(s){
   return (h>>>0).toString(36);
 }
 function digits(s){ return String(s||"").replace(/\D/g,""); }
-/* 手机号规范化成 WhatsApp 可用的国际号码：去前导 0、补国家区号 */
-function waNumber(r){
-  var raw = String(r.mobile || "").trim();
-  var d = raw.indexOf("+") >= 0 ? digits(raw.slice(raw.indexOf("+"))) : digits(raw);
-  if(d.length < 8) return "";
-  if(d.length > 15){
-    /* 有的单元格里塞了多个号码，挑最长且长度合理的一段 */
-    var cand = raw.split(/[^0-9+]+/).map(function(x){ return digits(x); })
-      .filter(function(x){ return x.length >= 8 && x.length <= 15; })
-      .sort(function(a,b){ return b.length - a.length; });
-    d = cand.length ? cand[0] : d.slice(0, 15);
+
+/* ================= WhatsApp 号码可用性校验 ================= */
+/* 各国手机号规则：m = 去掉区号后的手机号段正则；len = 该国手机号常见位数 */
+const WA_RULES = {
+  "印度":{m:/^[6-9]\d{9}$/,len:[10,10]},
+  "沙特阿拉伯":{m:/^5\d{8}$/,len:[9,9]},
+  "阿联酋":{m:/^5[024568]\d{7}$/,len:[9,9]},
+  "菲律宾":{m:/^9\d{9}$/,len:[10,10]},
+  "伊朗":{m:/^9\d{9}$/,len:[10,10]},
+  "马来西亚":{m:/^1\d{8,9}$/,len:[9,10]},
+  "印度尼西亚":{m:/^8\d{8,11}$/,len:[9,12]},
+  "香港":{m:/^[456789]\d{7}$/,len:[8,8]},
+  "泰国":{m:/^[689]\d{8}$/,len:[9,9]},
+  "澳大利亚":{m:/^4\d{8}$/,len:[9,9]},
+  "孟加拉国":{m:/^1[3-9]\d{8}$/,len:[10,10]},
+  "斯里兰卡":{m:/^7\d{8}$/,len:[9,9]},
+  "越南":{m:/^[35789]\d{8}$/,len:[9,9]},
+  "美国":{m:/^[2-9]\d{9}$/,len:[10,10]},
+  "加拿大":{m:/^[2-9]\d{9}$/,len:[10,10]},
+  "俄罗斯":{m:/^9\d{9}$/,len:[10,10]},
+  "埃及":{m:/^1\d{9}$/,len:[10,10]},
+  "蒙古":{m:/^\d{8}$/,len:[8,8]},
+  "中国办事处":{m:/^1[3-9]\d{9}$/,len:[11,11]},
+  "巴基斯坦":{m:/^3\d{9}$/,len:[10,10]},
+  "台湾":{m:/^9\d{8}$/,len:[9,9]},
+  "摩洛哥":{m:/^[67]\d{8}$/,len:[9,9]},
+  "缅甸":{m:/^9\d{7,9}$/,len:[8,10]},
+  "卡塔尔":{m:/^[3567]\d{7}$/,len:[8,8]},
+  "尼日利亚":{m:/^[789]\d{9}$/,len:[10,10]},
+  "新加坡":{m:/^[89]\d{7}$/,len:[8,8]},
+  "巴西":{m:/^\d{10,11}$/,len:[10,11]},
+  "肯尼亚":{m:/^[17]\d{8}$/,len:[9,9]},
+  "阿曼":{m:/^[79]\d{7}$/,len:[8,8]},
+  "南非":{m:/^[678]\d{8}$/,len:[9,9]},
+  "韩国":{m:/^1\d{8,9}$/,len:[9,10]},
+  "乌克兰":{m:/^[67]\d{8}$/,len:[9,9]},
+  "科威特":{m:/^[569]\d{7}$/,len:[8,8]},
+  "黎巴嫩":{m:/^[371]\d{6,7}$/,len:[7,8]},
+  "哥伦比亚":{m:/^3\d{9}$/,len:[10,10]},
+  "阿根廷":{m:/^9\d{10}$/,len:[11,11]},
+  "阿尔及利亚":{m:/^[567]\d{8}$/,len:[9,9]},
+  "英国":{m:/^7\d{9}$/,len:[10,10]},
+  "法国":{m:/^[67]\d{8}$/,len:[9,9]},
+  "意大利":{m:/^3\d{8,9}$/,len:[9,10]},
+  "巴林":{m:/^[36]\d{7}$/,len:[8,8]},
+  "委内瑞拉":{m:/^4\d{9}$/,len:[10,10]},
+  "希腊":{m:/^69\d{8}$/,len:[10,10]},
+  "叙利亚":{m:/^9\d{8}$/,len:[9,9]},
+  "智利":{m:/^9\d{8}$/,len:[9,9]},
+  "柬埔寨":{m:/^[1-9]\d{7,8}$/,len:[8,9]},
+  "波兰":{m:/^\d{9}$/,len:[9,9]},
+  "日本":{m:/^[789]0\d{8}$/,len:[10,10]},
+  "约旦":{m:/^7\d{8}$/,len:[9,9]},
+  "土耳其":{m:/^5\d{9}$/,len:[10,10]},
+  "塞内加尔":{m:/^7\d{8}$/,len:[9,9]},
+  "毛里求斯":{m:/^5\d{7}$/,len:[8,8]},
+  "乌兹别克斯坦":{m:/^[39]\d{8}$/,len:[9,9]},
+  "巴勒斯坦":{m:/^5\d{8}$/,len:[9,9]},
+  "伊拉克":{m:/^7\d{9}$/,len:[10,10]},
+  "也门":{m:/^7\d{8}$/,len:[9,9]},
+  "以色列":{m:/^5\d{8}$/,len:[9,9]},
+  "德国":{m:/^1\d{9,10}$/,len:[10,11]},
+  "荷兰":{m:/^6\d{8}$/,len:[9,9]},
+  "哈萨克斯坦":{m:/^[67]\d{9}$/,len:[10,10]},
+  "西班牙":{m:/^[67]\d{8}$/,len:[9,9]},
+  "澳门":{m:/^6\d{7}$/,len:[8,8]},
+  "新西兰":{m:/^2\d{7,9}$/,len:[8,10]},
+  "捷克":{m:/^[67]\d{8}$/,len:[9,9]},
+  "匈牙利":{m:/^[237]\d{8}$/,len:[9,9]},
+  "加纳":{m:/^[235]\d{8}$/,len:[9,9]},
+  "埃塞俄比亚":{m:/^9\d{8}$/,len:[9,9]},
+  "秘鲁":{m:/^9\d{8}$/,len:[9,9]},
+  "墨西哥":{m:/^1?\d{10}$/,len:[10,11]},
+  "玻利维亚":{m:/^[67]\d{7}$/,len:[8,8]},
+  "津巴布韦":{m:/^7\d{8}$/,len:[9,9]},
+  "厄瓜多尔":{m:/^9\d{8}$/,len:[9,9]},
+  "保加利亚":{m:/^[89]\d{8}$/,len:[9,9]},
+  "塞尔维亚":{m:/^6\d{7,8}$/,len:[8,9]},
+  "斯洛伐克":{m:/^9\d{8}$/,len:[9,9]},
+  "格鲁吉亚":{m:/^5\d{8}$/,len:[9,9]},
+  "亚美尼亚":{m:/^[79]\d{7}$/,len:[8,8]},
+  "白俄罗斯":{m:/^[23]\d{8}$/,len:[9,9]},
+  "卢旺达":{m:/^7\d{8}$/,len:[9,9]},
+  "乌干达":{m:/^7\d{8}$/,len:[9,9]},
+  "坦桑尼亚":{m:/^7\d{8}$/,len:[9,9]},
+  "赞比亚":{m:/^[79]\d{8}$/,len:[9,9]},
+  "莫桑比克":{m:/^8[2-7]\d{7}$/,len:[9,9]},
+  "安哥拉":{m:/^9\d{8}$/,len:[9,9]},
+  "喀麦隆":{m:/^6\d{8}$/,len:[9,9]},
+  "苏丹":{m:/^9\d{8}$/,len:[9,9]},
+  "突尼斯":{m:/^[259]\d{7}$/,len:[8,8]},
+  "利比亚":{m:/^9\d{8}$/,len:[9,9]},
+  "多米尼加":{m:/^8\d{9}$/,len:[10,10]},
+  "危地马拉":{m:/^[345]\d{7}$/,len:[8,8]},
+  "哥斯达黎加":{m:/^[678]\d{7}$/,len:[8,8]},
+  "巴拿马":{m:/^6\d{7}$/,len:[8,8]},
+  "巴拉圭":{m:/^9\d{8}$/,len:[9,9]},
+  "乌拉圭":{m:/^9\d{7}$/,len:[8,8]},
+  "牙买加":{m:/^\d{10}$/,len:[10,10]},
+  "尼泊尔":{m:/^9[78]\d{8}$/,len:[10,10]},
+  "马尔代夫":{m:/^[79]\d{6}$/,len:[7,7]},
+  "阿富汗":{m:/^7\d{8}$/,len:[9,9]},
+  "吉布提":{m:/^7\d{7}$/,len:[8,8]},
+  "几内亚":{m:/^6\d{8}$/,len:[9,9]},
+  "布基纳法索":{m:/^[567]\d{7}$/,len:[8,8]},
+  "科特迪瓦":{m:/^\d{8,10}$/,len:[8,10]},
+  "刚果":{m:/^[89]\d{8}$/,len:[9,9]},
+  "索马里":{m:/^[679]\d{7}$/,len:[8,8]},
+  "加蓬":{m:/^6\d{7}$/,len:[8,8]},
+  "贝宁":{m:/^\d{8}$/,len:[8,8]},
+  "葡萄牙":{m:/^9\d{8}$/,len:[9,9]},
+  "瑞典":{m:/^7\d{8}$/,len:[9,9]},
+  "比利时":{m:/^4\d{8}$/,len:[9,9]},
+  "立陶宛":{m:/^6\d{7}$/,len:[8,8]},
+  "罗马尼亚":{m:/^7\d{8}$/,len:[9,9]},
+  "黑山":{m:/^6\d{7}$/,len:[8,8]},
+  "阿尔巴尼亚":{m:/^6\d{7,8}$/,len:[8,9]},
+  "巴布亚新几内亚":{m:/^7\d{7}$/,len:[8,8]},
+  "关岛":{m:/^671\d{7}$/,len:[10,10]},
+  "苏里南":{m:/^[78]\d{6}$/,len:[7,7]},
+  "以色列":{m:/^5\d{8}$/,len:[9,9]}
+};
+/* 全部国际区号（按位数从长到短匹配，避免 1 / 7 这种短码误配） */
+const WA_DIALS = (function(){
+  var arr = [], seen = {};
+  Object.keys(CTRY_MAP).forEach(function(k){
+    if(CTRY_MAP[k].dial && !seen[k + "|" + CTRY_MAP[k].dial]){ seen[k + "|" + CTRY_MAP[k].dial] = 1; arr.push({dial:CTRY_MAP[k].dial, cn:k}); }
+  });
+  [["86","中国办事处"],["880","孟加拉国"],["970","巴勒斯坦"],["381","塞尔维亚"],["421","斯洛伐克"],
+   ["995","格鲁吉亚"],["998","乌兹别克斯坦"],["256","乌干达"],["234","尼日利亚"],["254","肯尼亚"],
+   ["251","埃塞俄比亚"],["263","津巴布韦"],["233","加纳"],["237","喀麦隆"],["225","科特迪瓦"],
+   ["226","布基纳法索"],["250","卢旺达"],["224","几内亚"],["229","贝宁"],["241","加蓬"],
+   ["244","安哥拉"],["253","吉布提"],["216","突尼斯"],["218","利比亚"],["249","苏丹"],
+   ["252","索马里"],["258","莫桑比克"],["260","赞比亚"]
+  ].forEach(function(x){ arr.push({dial:x[0], cn:x[1]}); });
+  arr.sort(function(a,b){ return b.dial.length - a.dial.length; });
+  return arr;
+})();
+/* 把手机字段拆成候选号码：去掉邮箱、网址、"Email:"、括号说明，再按多号码分隔符拆开 */
+function waSplit(raw){
+  var s = String(raw || "");
+  s = s.replace(/[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}/g, " ");
+  s = s.replace(/(https?:\/\/|www\.)\S+/gi, " ");
+  s = s.replace(/网址|邮箱|手机|直线电话|直线|电话|传真|Email|E-?mail|Tel|Fax|Mob/gi, " ");
+  s = s.replace(/\([^)]*\)/g, " ");
+  var out = [], seen = {};
+  function push(d){
+    if(d.length >= 7 && d.length <= 15 && !seen[d]){ seen[d] = 1; out.push(d); }
   }
-  d = d.replace(/^0+/, "");
-  var cn = (r && r.country && CTRY_MAP[r.country]) ? CTRY_MAP[r.country] : null;
-  if(!cn) return d;
-  var dial = cn.dial;
-  if(d.indexOf(dial) === 0 && d.length >= dial.length + 6) return d;
-  if(dial === "1" && d.length >= 10) return "1" + d.slice(-10);
-  return dial + d;
+  s.split(/[,;，、\/\n\r|]+/).forEach(function(ch){
+    var d = digits(ch);
+    if(d.length >= 7 && d.length <= 15){ push(d); return; }
+    if(d.length > 15){
+      ch.split(/\s+/).forEach(function(p){ push(digits(p)); });
+    }
+  });
+  return out;
 }
+function waCountryOf(r){
+  var c = String(r.country || "");
+  if(CTRY_FIX[c] !== undefined) c = CTRY_FIX[c];
+  return CTRY_MAP[c] ? c : "";
+}
+function waMatchDial(d){
+  for(var i = 0; i < WA_DIALS.length; i++){
+    var x = WA_DIALS[i];
+    if(d.indexOf(x.dial) === 0){
+      var nat = d.slice(x.dial.length);
+      if(nat.length >= 7 && nat.length <= 11) return {dial:x.dial, cn:x.cn, nat:nat};
+    }
+  }
+  return null;
+}
+function waGrade(country, cn, nat, full){
+  var rule = WA_RULES[country];
+  if(full.length < 8 || full.length > 15)
+    return {level:"bad", note:"号码位数异常（共 " + full.length + " 位），无法用于 WhatsApp"};
+  if(rule){
+    if(rule.m.test(nat)) return {level:"ok", note:"格式正确，可直接用 WhatsApp"};
+    if(nat.length >= rule.len[0] && nat.length <= rule.len[1])
+      return {level:"warn", note:"位数正确但不是手机号段，疑似固话（固话无法用 WhatsApp）"};
+    return {level:"warn", note:"位数与" + country + "手机号常见位数不符，建议人工核对"};
+  }
+  return {level:"warn", note:"已按" + country + "区号补齐，但该国手机号规则未覆盖，需人工确认"};
+}
+/* 校验一条记录的 WhatsApp 可用性；返回 {level, e164, raw, note, count} */
+function waCheck(r){
+  var cands = waSplit(r.mobile);
+  if(!cands.length) return {level:"bad", e164:"", raw:"", note:"手机字段里没有可解析的号码（可能只写了邮箱或说明文字）", count:0};
+  var country = waCountryOf(r);
+  var best = null;
+  for(var i = 0; i < cands.length; i++){
+    var d = cands[i], pick = null;
+    if(d.indexOf("00") === 0) d = d.slice(2);
+    var own = country ? CTRY_MAP[country] : null;
+    if(own && d.indexOf(own.dial) === 0 && d.length - own.dial.length >= 6){
+      var g1 = waGrade(country, own, d.slice(own.dial.length), d);
+      pick = {level:g1.level, e164:"+" + d, raw:cands[i], note:g1.note, country:country};
+    } else {
+      var m = waMatchDial(d);
+      if(m && m.cn !== country && (!own || m.dial !== own.dial)){
+        var g2 = waGrade(m.cn, {dial:m.dial}, m.nat, d);
+        pick = {level:g2.level, e164:"+" + d, raw:cands[i], country:m.cn,
+          note:"号码归属" + m.cn + "，与名录国家" + (country || "未填") + "不一致" + (m.dial === "86" ? "（可能是国内代理/办事处电话，不是买家本人）" : "")};
+      } else if(own){
+        var t = d.replace(/^0+/, "");
+        if(t.indexOf(own.dial) === 0 && t.length - own.dial.length >= 6){
+          /* 去掉前导 0 后本来就是国际格式（如 0974-5568163 -> 9745568163），不能再补一次区号 */
+          var g4 = waGrade(country, own, t.slice(own.dial.length), t);
+          pick = {level:g4.level, e164:"+" + t, raw:cands[i], note:g4.note, country:country};
+        } else if(t.length >= 6){
+          var g3 = waGrade(country, own, t, own.dial + t);
+          pick = {level:g3.level, e164:"+" + own.dial + t, raw:cands[i], note:g3.note, country:country,
+            fixed:"已补" + country + "区号 +" + own.dial};
+        }
+      }
+    }
+    if(pick){
+      if(!best || (pick.level === "ok" && best.level !== "ok")) best = pick;
+      if(best.level === "ok") break;
+    }
+  }
+  if(!best) return {level:"bad", e164:"", raw:cands[0], note:"无法确定国家区号，需人工核对原始号码", count:cands.length};
+  best.count = cands.length;
+  if(cands.length > 1) best.note += "（该字段含 " + cands.length + " 个号码，已取最优的一个）";
+  return best;
+}
+const WA_CACHE = {};
+function waOf(r){
+  var k = (r.country || "") + "|" + (r.mobile || "");
+  if(!WA_CACHE[k]) WA_CACHE[k] = waCheck(r);
+  return WA_CACHE[k];
+}
+/* 手机号规范化成 WhatsApp 可用的国际号码（去 +，供 wa.me 链接使用） */
+function waNumber(r){
+  var c = waOf(r);
+  return c && c.e164 ? c.e164.replace(/^\+/, "") : "";
+}
+/* 列表里的 WhatsApp 可用性小标记 */
+function waBadge(r){
+  var wa = waOf(r);
+  if(!wa) return "";
+  var m = wa.level === "ok" ? ["wok","✓ WhatsApp"]
+        : (wa.level === "warn" ? ["wwarn","⚠ 待核"] : ["wbad","✕ 不可用"]);
+  var tip = wa.note + (wa.e164 ? "｜规范号码 " + wa.e164 : "");
+  return ' <span class="wab ' + m[0] + '" title="' + esc(tip) + '">' + m[1] + '</span>';
+}
+/* 详情里的校验说明 */
+function waDetail(r){
+  var wa = waOf(r);
+  if(!wa) return "";
+  var cls = wa.level === "ok" ? "wok" : (wa.level === "warn" ? "wwarn" : "wbad");
+  var txt = wa.level === "ok" ? "可直发" : (wa.level === "warn" ? "待核对" : "不可用");
+  return '<div class="wadetail ' + cls + '"><b>WhatsApp 校验：' + txt + '</b>' +
+    (wa.e164 ? '<br>规范号码：<span class="mono">' + esc(wa.e164) + '</span>' : '') +
+    '<br>' + esc(wa.note) + '</div>';
+}
+/* 导出用的一列文字 */
+function waExport(r){
+  var wa = waOf(r);
+  var t = wa.level === "ok" ? "可直发" : (wa.level === "warn" ? "待核对" : "不可用");
+  return t + (wa.e164 ? "（" + wa.e164 + "）" : "") + "：" + wa.note;
+}
+
 function toast(msg){
   var t = $("#toast"); t.textContent = msg; t.classList.add("on");
   clearTimeout(t._t); t._t = setTimeout(function(){ t.classList.remove("on"); }, 2100);
@@ -1584,7 +1848,7 @@ var NOTES = {};              /* id -> {status,tags,note,last,fair,li,fb,ig,waAt,
 var DNS = {};                /* domain -> 核查结果 */
 var OUT = {day:"", wa:0, mail:0};   /* 触达计数器（按日重置） */
 var FILTERS = {
-  kw:"", quick:"", grades:{}, countries:{}, cats:{}, mails:{}, verify:{}, roles:{}, contacts:{},
+  kw:"", quick:"", grades:{}, countries:{}, cats:{}, mails:{}, verify:{}, roles:{}, contacts:{}, wa:{},
   status:"", tag:"", fair:"", social:{}, sort:"score", page:1, size:50
 };
 var TMPL_DEFAULT = [
@@ -1838,6 +2102,9 @@ function pass(r){
     if(f.contacts.hasWeb && !r.web) return false;
     if(f.contacts.risk && !(r.cons.length >= 3)) return false;
   }
+  if(count(f.wa)){
+    if(!f.wa[waOf(r).level]) return false;
+  }
   var n = NOTES[r.id];
   if(f.status && (!n || n.status !== f.status)) return false;
   if(f.tag && (!n || n.tags.indexOf(f.tag) < 0)) return false;
@@ -1953,7 +2220,7 @@ function render(){
         '<td data-label="公司"><span class="bname">'+esc(r.buyer||"(无公司名)")+'</span>'+rowTags(r)+'</td>'+
         '<td data-label="国家">'+(esc(r.country)||'<span class="muted">未填</span>')+'</td>'+
         '<td class="contactline" data-label="联系人">'+esc(r.contact||"—")+'</td>'+
-        '<td class="mono contactline" data-label="手机">'+mob+'</td>'+
+        '<td class="mono contactline" data-label="手机">'+mob+waBadge(r)+'</td>'+
         '<td data-label="邮箱"><span class="email">'+mail+'</span></td>'+
         '<td data-label="采购产品"><span class="prod">'+esc(r.products||"—")+'</span></td>'+
         '<td data-label="评级依据"><span class="gradeReason" title="'+esc(r.gradeReason)+'">'+esc(r.gradeReason)+'</span></td>'+
@@ -2137,7 +2404,7 @@ function openDetail(id){
       '<dt>采购商</dt><dd>'+esc(r.buyer)+'</dd>'+
       '<dt>国家/地区</dt><dd>'+esc(r.country||"未填")+(CTRY_MAP[r.country]?' （区号 +'+CTRY_MAP[r.country].dial+'，'+CTRY_MAP[r.country].iso+'）':'')+'</dd>'+
       '<dt>联系人</dt><dd>'+esc(r.contact||"未填")+'</dd>'+
-      '<dt>手机/WhatsApp</dt><dd class="mono">'+esc(r.mobile||"未填")+'</dd>'+
+      '<dt>手机/WhatsApp</dt><dd class="mono">'+esc(r.mobile||"未填")+waDetail(r)+'</dd>'+
       '<dt>公司电话</dt><dd class="mono">'+esc(r.tel||"未填")+'</dd>'+
       '<dt>邮箱</dt><dd>'+esc(r.email||"未填")+'</dd>'+
       '<dt>采购产品</dt><dd>'+esc(r.products||"未填")+'</dd>'+
@@ -2530,7 +2797,7 @@ function showLettersModal(){
 }
 
 /* ---------------- 13. 导入 / 导出 ---------------- */
-const HEAD_CN = ["序号","采购商","国家/地区","联系人","手机/WhatsApp","公司电话","邮箱","采购产品",
+const HEAD_CN = ["序号","采购商","国家/地区","联系人","手机/WhatsApp","WhatsApp校验","公司电话","邮箱","采购产品",
   "背调评分","客户等级","评级依据","客户类型","采购类目","参展届数","领英","脸书","Instagram",
   "优势与风险提示","邮箱域名核查","WhatsApp发送时间","邮件发送时间","跟进状态","标签","备注","最后跟进"];
 function exportRows(headers, rows, name){
@@ -2546,7 +2813,7 @@ function rowToArray(r){
   var n = NOTES[r.id] || {status:"未联系", tags:[], note:"", last:0};
   var dnsTxt = r.dns ? ({ok:"域名可收信", nomail:"域名存在但无邮件服务", nxdomain:"域名不存在", fail:"查询失败"}[r.dns.status] || "") : "未核查";
   return [
-    r.seq, r.buyer, r.country, r.contact, r.mobile, r.tel, r.email, r.products,
+    r.seq, r.buyer, r.country, r.contact, r.mobile, waExport(r), r.tel, r.email, r.products,
     r.score, r.grade, r.gradeReason, r.role.label, r.cats.join("、"),
     (n.fair ? n.fair + " 届" : "未记录"), socOf(r,"li"), socOf(r,"fb"), socOf(r,"ig"),
     "优势：" + (r.pros.join(" | ")||"无") + " ；风险：" + (r.cons.join(" | ")||"无"),
@@ -3027,7 +3294,7 @@ function bindUI(){
   $$(".fgroup").forEach(function(g){
     var wrap = g.querySelector(".pills"); if(!wrap) return;
     var key = wrap.id.replace(/^f/,"");
-    var map = {Grade:"grades", Mail:"mails", Verify:"verify", Role:"roles", Contact:"contacts"};
+    var map = {Grade:"grades", Mail:"mails", Verify:"verify", Role:"roles", Contact:"contacts", Wa:"wa"};
     var target = map[key]; if(!target) return;
     wrap.onclick = function(e){
       var b = e.target.closest(".pill"); if(!b) return;

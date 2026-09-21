@@ -3,16 +3,22 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>广交会建材客户自动背调与筛选系统</title>
+<title>JackyAiTeam · 建材外贸客户背调与智能触达系统</title>
+<meta name="description" content="JackyAiTeam 出品：广交会建材采购商自动背调、A/B/C 分级筛选、参展届数与社媒核查、差异化话术半自动触达与跟进管理">
+<meta name="theme-color" content="#0b1a3a">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 48 48'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0' y1='0' x2='1' y2='1'%3E%3Cstop offset='0' stop-color='%234f8cff'/%3E%3Cstop offset='1' stop-color='%237c5cff'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='48' height='48' rx='12' fill='url(%23g)'/%3E%3Cpath d='M30 12v18c0 4-3 7-7 7-3 0-5-2-6-4' stroke='white' stroke-width='4' fill='none' stroke-linecap='round'/%3E%3C/svg%3E">
 <style>
 :root{
-  --bg:#f4f6f9; --panel:#ffffff; --line:#e2e7ef; --line2:#eef1f6;
-  --txt:#1f2733; --txt2:#5b6676; --txt3:#8c97a8;
-  --brand:#1a6fe0; --brand-d:#1559b4; --brand-l:#eaf2fe;
+  --bg:#eef1f7; --panel:#ffffff; --line:#e2e7ef; --line2:#eef1f6;
+  --txt:#141c2b; --txt2:#546074; --txt3:#8894a8;
+  --brand:#2f6bff; --brand-d:#1f55dd; --brand-l:#eaf1ff; --brand-2:#7c5cff; --brand-3:#22c9e0;
+  --ink:#0b1a3a; --ink-2:#152a58;
   --ok:#0f9d58; --ok-l:#e7f7ee; --warn:#d98300; --warn-l:#fff5e6;
   --bad:#d93838; --bad-l:#fdecec; --gray:#8c97a8; --gray-l:#f0f2f6;
-  --shadow:0 1px 3px rgba(23,38,63,.06),0 6px 20px rgba(23,38,63,.05);
-  --r:8px;
+  --shadow:0 1px 2px rgba(15,26,58,.05),0 8px 24px rgba(15,26,58,.06);
+  --shadow-l:0 10px 34px rgba(15,26,58,.12);
+  --r:12px; --r-s:8px;
+  --grad:linear-gradient(135deg,#4f8cff 0%,#7c5cff 62%,#22c9e0 100%);
 }
 *{box-sizing:border-box;margin:0;padding:0}
 html,body{height:100%}
@@ -30,28 +36,41 @@ a:hover{text-decoration:underline}
 ::-webkit-scrollbar-thumb:hover{background:#adb9c9}
 ::-webkit-scrollbar-track{background:transparent}
 
-/* ---------- 顶栏 ---------- */
-.topbar{
-  background:linear-gradient(180deg,#fff,#fbfcfe); border-bottom:1px solid var(--line);
-  padding:10px 16px; display:flex; align-items:center; gap:14px; flex-wrap:wrap;
-  position:sticky; top:0; z-index:50;
+/* ---------- 品牌顶栏 ---------- */
+.appbar{
+  background:linear-gradient(118deg,#0b1a3a 0%,#152a58 46%,#3a2a6e 100%);
+  padding:11px 18px; display:flex; align-items:center; gap:14px; flex-wrap:wrap;
+  position:sticky; top:0; z-index:50; box-shadow:0 2px 16px rgba(11,26,58,.24)
 }
-.logo{display:flex;align-items:center;gap:9px;font-weight:700;font-size:15px;white-space:nowrap}
-.logo .mark{
-  width:26px;height:26px;border-radius:7px;background:linear-gradient(135deg,#1a6fe0,#3f9bff);
-  display:grid;place-items:center;color:#fff;font-size:13px;font-weight:700
+.appbar:after{
+  content:""; position:absolute; left:0; right:0; bottom:0; height:1px;
+  background:linear-gradient(90deg,transparent,rgba(124,92,255,.75),rgba(34,201,224,.6),transparent)
 }
-.logo small{display:block;font-weight:400;font-size:11px;color:var(--txt3);line-height:1}
-.chips{display:flex;gap:8px;flex-wrap:wrap;margin-left:4px}
+.brand{display:flex;align-items:center;gap:11px;white-space:nowrap}
+.brand .mark{width:40px;height:40px;border-radius:12px;box-shadow:0 5px 16px rgba(79,140,255,.38)}
+.brand-txt b{
+  display:block;font-size:17px;letter-spacing:.4px;font-weight:800;
+  background:linear-gradient(92deg,#fff,#cfe0ff 58%,#9fe6ff);
+  -webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent
+}
+.brand-txt span{display:block;font-size:11px;color:#93a6cc;letter-spacing:.2px;line-height:1.5}
+.chips{display:flex;gap:7px;flex-wrap:wrap;align-items:center;margin-left:6px}
 .chip{
-  background:var(--gray-l);border-radius:20px;padding:3px 11px;font-size:12px;color:var(--txt2);
+  background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.11);
+  border-radius:20px;padding:4px 11px;font-size:11.5px;color:#b9c7e2;
   display:flex;align-items:center;gap:5px;white-space:nowrap
 }
-.chip b{color:var(--txt);font-weight:700}
-.chip.a{background:var(--ok-l);color:var(--ok)} .chip.a b{color:var(--ok)}
-.chip.b{background:var(--warn-l);color:var(--warn)} .chip.b b{color:var(--warn)}
-.topbar .spacer{flex:1}
-.tools{display:flex;gap:8px;flex-wrap:wrap}
+.chip b{color:#fff;font-weight:700}
+.chip.a{background:rgba(15,157,88,.18);border-color:rgba(15,157,88,.34);color:#7fe0ab}
+.chip.a b{color:#a9f0c9}
+.chip.b{background:rgba(217,131,0,.18);border-color:rgba(217,131,0,.34);color:#f3bd6a}
+.chip.b b{color:#ffd79a}
+.appbar .spacer{flex:1}
+.tools{display:flex;gap:7px;flex-wrap:wrap}
+.tools .btn{background:rgba(255,255,255,.09);border-color:rgba(255,255,255,.15);color:#dbe5f7}
+.tools .btn:hover{background:rgba(255,255,255,.17);border-color:rgba(255,255,255,.3);color:#fff}
+.tools .btn.p{background:var(--grad);border-color:transparent;color:#fff}
+.tools .btn.danger:hover{background:rgba(217,56,56,.22);border-color:rgba(217,56,56,.42);color:#ffb3b3}
 
 /* ---------- 通用控件 ---------- */
 .btn{
@@ -76,16 +95,16 @@ a:hover{text-decoration:underline}
 
 /* ---------- 标签页 ---------- */
 .tabs{
-  display:flex;gap:2px;padding:0 16px;background:#fff;border-bottom:1px solid var(--line);
-  position:sticky;top:53px;z-index:40
+  display:flex;gap:2px;padding:0 18px;background:#fff;border-bottom:1px solid var(--line);
+  position:sticky;top:62px;z-index:40;overflow-x:auto
 }
 .tab{
-  padding:9px 15px;font-size:13px;color:var(--txt2);border-bottom:2px solid transparent;
-  font-weight:600;transition:.15s
+  padding:11px 16px;font-size:13px;color:var(--txt2);border-bottom:2px solid transparent;
+  font-weight:600;transition:.15s;white-space:nowrap;display:flex;align-items:center;gap:6px
 }
-.tab:hover{color:var(--txt)}
+.tab:hover{color:var(--txt);background:var(--gray-l)}
 .tab.on{color:var(--brand);border-bottom-color:var(--brand)}
-.page{display:none;padding:14px 16px 40px}
+.page{display:none;padding:16px 18px 44px;max-width:1560px;margin:0 auto}
 .page.on{display:block}
 
 /* ---------- 名录布局 ---------- */
@@ -198,11 +217,11 @@ tbody tr.sel td{background:var(--brand-l)}
 /* ---------- 弹窗 ---------- */
 .modal{position:fixed;inset:0;background:rgba(19,28,44,.45);z-index:120;display:none;align-items:center;justify-content:center;padding:20px}
 .modal.on{display:flex}
-.modal .box{background:#fff;border-radius:10px;width:560px;max-width:96vw;max-height:88vh;display:flex;flex-direction:column;overflow:hidden}
+.modal .box{background:#fff;border-radius:10px;width:560px;max-width:96vw;max-height:86vh;display:flex;flex-direction:column;overflow:hidden}
 .modal .box.wide{width:820px}
-.modal .mh{padding:13px 16px;border-bottom:1px solid var(--line);font-weight:700;font-size:14px;display:flex;align-items:center}
-.modal .mb{padding:15px 16px;overflow:auto;flex:1}
-.modal .mf{padding:11px 16px;border-top:1px solid var(--line);display:flex;gap:9px;justify-content:flex-end;background:#fbfcfe}
+.modal .mh{padding:13px 16px;border-bottom:1px solid var(--line);font-weight:700;font-size:14px;display:flex;align-items:center;flex:0 0 auto}
+.modal .mb{padding:15px 16px;overflow:auto;flex:1 1 auto;min-height:0}
+.modal .mf{padding:11px 16px;border-top:1px solid var(--line);display:flex;gap:9px;justify-content:flex-end;background:#fbfcfe;flex:0 0 auto}
 .tmpl{font-family:Consolas,Monaco,"Courier New",monospace;font-size:12.5px;line-height:1.7;min-height:230px;resize:vertical;white-space:pre-wrap}
 .hintline{font-size:12px;color:var(--txt3);margin-top:7px;line-height:1.6}
 .copybox{background:#fbfcfe;border:1px solid var(--line2);border-radius:6px;padding:11px;font-size:12.5px;white-space:pre-wrap;line-height:1.75;max-height:320px;overflow:auto}
@@ -228,21 +247,63 @@ tbody tr.sel td{background:var(--brand-l)}
 .setitem .t{display:flex;align-items:center;gap:7px;font-weight:600}
 .setitem .m{color:var(--txt3);font-size:11.5px;margin-top:2px}
 
-/* ---------- 手机 / 小屏适配 ---------- */
+/* ---------- 等级依据 / 评分明细 ---------- */
+.dimgrid{display:flex;flex-direction:column;gap:6px}
+.dimrow{display:grid;grid-template-columns:60px 1fr 56px;gap:9px;align-items:center;font-size:12.5px}
+.dimrow .k{color:var(--txt2);font-weight:600}
+.dimbar{height:8px;background:var(--gray-l);border-radius:5px;overflow:hidden}
+.dimbar i{display:block;height:100%;background:var(--grad)}
+.dimbar i.neg{background:linear-gradient(90deg,#d93838,#ef6b6b)}
+.dimrow .v{text-align:right;font-weight:700;font-variant-numeric:tabular-nums;color:var(--txt)}
+.dimwhy{font-size:11.5px;color:var(--txt3);margin:1px 0 6px 69px;line-height:1.55}
+.reasonbox{
+  background:linear-gradient(135deg,#f6f9ff,#fbf8ff);border:1px solid #e5ecfc;
+  border-radius:9px;padding:10px 12px;font-size:12.5px;line-height:1.8;color:var(--txt2)
+}
+.gradeReason{font-size:11.5px;color:var(--txt3);line-height:1.5;margin-top:2px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+
+/* ---------- 社媒 ---------- */
+.socgrid{display:flex;flex-direction:column;gap:7px}
+.socrow{display:flex;align-items:center;gap:8px}
+.socrow .pfx{width:78px;font-size:12px;color:var(--txt2);font-weight:600;display:flex;align-items:center;gap:6px;flex:0 0 auto}
+.socrow .inp{flex:1;min-width:0}
+.socdot{width:9px;height:9px;border-radius:3px;display:inline-block;flex:0 0 auto}
+.socdot.li{background:#0a66c2}
+.socdot.fb{background:#1877f2}
+.socdot.ig{background:linear-gradient(45deg,#f09433,#e6683c,#dc2743,#cc2366,#bc1888)}
+
+/* ---------- 触达队列 ---------- */
+.qitem{border:1px solid var(--line);border-radius:10px;padding:9px 11px;margin-bottom:8px;background:#fff;transition:.15s}
+.qitem.done{border-color:#c8ead6;background:#f7fdfa}
+.qitem.now{border-color:var(--brand);box-shadow:0 0 0 3px var(--brand-l)}
+.qhd{display:flex;align-items:center;gap:7px;flex-wrap:wrap}
+.qmsg{background:#fbfcfe;border:1px solid var(--line2);border-radius:8px;padding:9px;font-size:12.5px;white-space:pre-wrap;line-height:1.72;max-height:200px;overflow:auto;margin-top:7px}
+.segcard{border:1px solid var(--line);border-radius:10px;padding:10px 11px;margin-bottom:8px;background:#fbfcfe}
+.segcard .t{display:flex;align-items:center;gap:7px;font-weight:700;font-size:12.5px;margin-bottom:5px}
+
+/* ---------- 风控提示 ---------- */
+.riskbox{background:#fff9f2;border:1px solid #f6ddbc;border-radius:10px;padding:13px 15px}
+.riskbox h4{color:#a55a00;font-size:13.5px;margin-bottom:7px;display:flex;align-items:center;gap:6px}
+.riskbox ul{margin:0 0 11px 17px;font-size:12.5px;color:#7d5520;line-height:1.85}
+.riskchk{display:flex;align-items:flex-start;gap:9px;font-size:12.5px;color:#7d5520;font-weight:700;cursor:pointer;user-select:none}
+.riskchk input{margin-top:2px;accent-color:#d98300;width:16px;height:16px;flex:0 0 auto}
+.legalnote{font-size:11.5px;color:var(--txt3);line-height:1.7;margin-top:8px}
+
+/* ---------- 手机端 ---------- */
 .mobfilterbtn{display:none}
+.bottomnav{display:none}
 @media (max-width: 900px){
   body{font-size:13.5px;-webkit-text-size-adjust:100%}
-  .topbar{position:static;padding:10px 12px;gap:9px}
-  .logo{font-size:14px}
-  .logo small{font-size:10.5px}
-  .chips{width:100%;gap:6px;margin-left:0}
-  .chip{font-size:11.5px;padding:3px 9px}
-  .topbar .spacer{display:none}
+  .appbar{position:static;padding:10px 12px;gap:9px}
+  .brand .mark{width:34px;height:34px;border-radius:10px}
+  .brand-txt b{font-size:15px}
+  .brand-txt span{font-size:10px}
+  .chips{width:100%;margin-left:0;gap:6px}
+  .appbar .spacer{display:none}
   .tools{gap:6px;width:100%}
   .tools .btn{flex:1;justify-content:center;padding:8px 6px}
-  .tabs{position:sticky;top:0;overflow-x:auto;padding:0 6px;white-space:nowrap;z-index:45}
-  .tab{padding:10px 12px;font-size:12.5px;flex:0 0 auto}
-  .page{padding:10px 10px 70px}
+  .tabs{display:none}
+  .page{padding:12px 11px 86px}
   .layout{grid-template-columns:1fr}
   .mobfilterbtn{display:flex;width:100%;justify-content:center;margin-bottom:10px;padding:10px}
   .filters{position:static;max-height:none;display:none}
@@ -254,12 +315,12 @@ tbody tr.sel td{background:var(--brand-l)}
   .modal{padding:0}
   .modal .box,.modal .box.wide{width:100%;max-width:100%;max-height:100vh;border-radius:0}
   .checklist,.checklist.short{max-height:190px}
-  /* 表格转为卡片列表，便于手机竖屏阅读 */
+  /* 表格转卡片 */
   .tablewrap{max-height:none;overflow:visible}
   table,thead,tbody{display:block}
   thead{display:none}
   tbody tr{
-    display:block;border:1px solid var(--line);border-radius:9px;padding:11px 12px;
+    display:block;border:1px solid var(--line);border-radius:11px;padding:11px 12px;
     margin-bottom:10px;background:#fff;box-shadow:var(--shadow)
   }
   tbody td{display:block;border:none;padding:2px 0;font-size:13px}
@@ -285,15 +346,45 @@ tbody tr.sel td{background:var(--brand-l)}
   .fgroup{padding:12px 13px}
   .checklist label{padding:6px 5px;font-size:13px}
   .pill{padding:6px 12px;font-size:12.5px}
+  .bottomnav{
+    display:flex;position:fixed;left:0;right:0;bottom:0;z-index:60;
+    background:rgba(255,255,255,.97);-webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px);
+    border-top:1px solid var(--line);padding:5px 4px calc(5px + env(safe-area-inset-bottom));
+    box-shadow:0 -4px 20px rgba(15,26,58,.09)
+  }
+  .bottomnav button{
+    flex:1;display:flex;flex-direction:column;align-items:center;gap:2px;
+    padding:6px 2px;font-size:10.5px;color:var(--txt3);border-radius:10px;line-height:1.2
+  }
+  .bottomnav button .ic{font-size:19px;line-height:1.1}
+  .bottomnav button.on{color:var(--brand);background:var(--brand-l);font-weight:700}
+  .dimrow{grid-template-columns:54px 1fr 52px}
+  .dimwhy{margin-left:63px}
 }
 </style>
 </head>
 <body>
 
-<div class="topbar">
-  <div class="logo">
-    <div class="mark">建</div>
-    <div>广交会建材客户背调筛选系统<small>2026 春季 · 建材采购商名录 · 本地运行不上传</small></div>
+<header class="appbar">
+  <div class="brand">
+    <svg class="mark" viewBox="0 0 48 48" aria-hidden="true">
+      <defs>
+        <linearGradient id="jlg" x1="0" y1="0" x2="1" y2="1">
+          <stop offset="0" stop-color="#4f8cff"/>
+          <stop offset=".55" stop-color="#7c5cff"/>
+          <stop offset="1" stop-color="#22c9e0"/>
+        </linearGradient>
+      </defs>
+      <rect x="0" y="0" width="48" height="48" rx="13" fill="url(#jlg)"/>
+      <path d="M30.4 11.6v19.1c0 4.3-2.9 6.9-7.2 6.9-3.4 0-6-1.7-7.3-4.5"
+            fill="none" stroke="#fff" stroke-width="4.2" stroke-linecap="round"/>
+      <circle cx="34.6" cy="14.4" r="3.1" fill="#fff" opacity=".95"/>
+      <circle cx="14.6" cy="34.6" r="2.3" fill="#fff" opacity=".7"/>
+    </svg>
+    <div class="brand-txt">
+      <b>JackyAiTeam</b>
+      <span>建材外贸客户背调与智能触达系统 · 2026 春季广交会</span>
+    </div>
   </div>
   <div class="chips" id="chips"></div>
   <div class="spacer"></div>
@@ -304,14 +395,23 @@ tbody tr.sel td{background:var(--brand-l)}
     <button class="btn danger" id="btnReset">恢复内置名录</button>
     <input type="file" id="fileInput" accept=".csv,.tsv,.txt,.xlsx,.xls" style="display:none">
   </div>
-</div>
+</header>
 
-<div class="tabs">
-  <button class="tab on" data-page="list">客户名录与筛选</button>
-  <button class="tab" data-page="board">背调看板</button>
-  <button class="tab" data-page="letter">开发信生成</button>
-  <button class="tab" data-page="follow">跟进管理</button>
-</div>
+<nav class="tabs">
+  <button class="tab on" data-page="list"><span class="ic">▤</span>客户名录</button>
+  <button class="tab" data-page="board"><span class="ic">◔</span>背调看板</button>
+  <button class="tab" data-page="outreach"><span class="ic">✈</span>批量触达</button>
+  <button class="tab" data-page="letter"><span class="ic">✉</span>开发信</button>
+  <button class="tab" data-page="follow"><span class="ic">☑</span>跟进管理</button>
+</nav>
+
+<nav class="bottomnav" id="bottomnav">
+  <button class="on" data-page="list"><span class="ic">▤</span>名录</button>
+  <button data-page="board"><span class="ic">◔</span>看板</button>
+  <button data-page="outreach"><span class="ic">✈</span>触达</button>
+  <button data-page="letter"><span class="ic">✉</span>开发信</button>
+  <button data-page="follow"><span class="ic">☑</span>跟进</button>
+</nav>
 
 <!-- ============ 客户名录 ============ -->
 <div class="page on" id="page-list">
@@ -369,6 +469,26 @@ tbody tr.sel td{background:var(--brand-l)}
         </div>
       </div>
       <div class="fgroup">
+        <h4>参展届数（第几次参加广交会）</h4>
+        <select class="sel" id="fFair">
+          <option value="">全部</option>
+          <option value="has">已记录届数</option>
+          <option value="none">尚未记录</option>
+          <option value="ge2">2 届及以上</option>
+          <option value="ge3">3 届及以上</option>
+        </select>
+      </div>
+      <div class="fgroup">
+        <h4>海外社媒</h4>
+        <div class="pills" id="fSocial">
+          <button class="pill" data-v="any">有任意社媒</button>
+          <button class="pill" data-v="li">领英</button>
+          <button class="pill" data-v="fb">脸书</button>
+          <button class="pill" data-v="ig">Instagram</button>
+          <button class="pill" data-v="none">未记录</button>
+        </div>
+      </div>
+      <div class="fgroup">
         <h4>跟进状态 / 标签</h4>
         <select class="sel" id="fStatus" style="margin-bottom:6px"></select>
         <select class="sel" id="fTag"></select>
@@ -390,10 +510,11 @@ tbody tr.sel td{background:var(--brand-l)}
         <span>客户列表 <span class="muted" id="countInfo"></span></span>
         <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
           <input class="inp" id="fQuick" placeholder="表内快速搜索" style="width:180px">
-          <select class="sel" id="sortSel" style="width:150px">
+          <select class="sel" id="sortSel" style="width:158px">
             <option value="score">按评分排序</option>
             <option value="country">按国家排序</option>
             <option value="role">按客户类型排序</option>
+            <option value="fair">按参展届数排序</option>
             <option value="seq">按名录原顺序</option>
             <option value="status">按跟进状态排序</option>
           </select>
@@ -408,6 +529,9 @@ tbody tr.sel td{background:var(--brand-l)}
         <button class="btn sm" id="btnBatchTag">加标签</button>
         <button class="btn sm" id="btnBatchClear">清除标签</button>
         <button class="btn sm" id="btnBatchLetter">批量生成开发信</button>
+        <input class="inp" id="batchFair" placeholder="届数" style="width:66px">
+        <button class="btn sm" id="btnBatchFair">设参展届数</button>
+        <button class="btn sm p" id="btnBatchOutreach">加入触达队列</button>
         <button class="btn sm" id="btnBatchExport">导出选中</button>
         <button class="btn sm" id="btnSelNone">取消选择</button>
       </div>
@@ -423,7 +547,9 @@ tbody tr.sel td{background:var(--brand-l)}
               <th style="width:132px">手机 / WhatsApp</th>
               <th style="width:186px">邮箱</th>
               <th>采购产品</th>
+              <th style="width:216px">评级依据（为什么是这个等级）</th>
               <th class="sortable" data-k="score" style="width:74px">背调</th>
+              <th class="sortable" data-k="fair" style="width:86px">参展届数</th>
               <th style="width:92px">跟进</th>
               <th style="width:112px">操作</th>
             </tr>
@@ -532,6 +658,81 @@ tbody tr.sel td{background:var(--brand-l)}
   <div class="card">
     <div class="hd">已建立跟进记录的客户 <span class="muted">（状态、标签、备注自动保存在本机浏览器）</span></div>
     <div class="bd"><div class="setlist" id="followList"></div></div>
+  </div>
+</div>
+
+<!-- ============ 批量触达 ============ -->
+<div class="page" id="page-outreach">
+  <div class="split">
+    <div class="card">
+      <div class="hd">
+        <span>触达队列 <span class="muted" id="qInfo"></span></span>
+        <div style="display:flex;gap:8px;flex-wrap:wrap">
+          <button class="btn sm p" id="qOpen">打开当前这条</button>
+          <button class="btn sm" id="qDone">标记已发送 → 下一条</button>
+          <button class="btn sm" id="qSkip">跳过</button>
+          <button class="btn sm" id="qExport">导出清单</button>
+        </div>
+      </div>
+      <div class="bd">
+        <div class="segbar" style="margin-bottom:11px">
+          <button class="pill on" data-channel="wa">WhatsApp 触达</button>
+          <button class="pill" data-channel="mail">邮件触达</button>
+        </div>
+        <div id="qTop"></div>
+        <div id="qList" style="margin-top:11px"></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="hd">触达设置</div>
+      <div class="bd">
+        <label class="lab">目标范围</label>
+        <select class="sel" id="qScope" style="margin-bottom:10px">
+          <option value="filtered">当前筛选结果</option>
+          <option value="selected">已勾选的客户</option>
+          <option value="gradeA">仅 A 级客户</option>
+          <option value="gradeAB">A + B 级客户</option>
+          <option value="checked">仅已联网核查通过的客户</option>
+        </select>
+        <div class="grid2" style="margin-bottom:10px">
+          <div><label class="lab">今日发送上限</label><input class="inp" id="qDayLimit" value="30"></div>
+          <div><label class="lab">已发送（本机累计）</label><input class="inp mono" id="qDayDone" readonly></div>
+          <div><label class="lab">间隔下限（秒）</label><input class="inp" id="qGapMin" value="25"></div>
+          <div><label class="lab">间隔上限（秒）</label><input class="inp" id="qGapMax" value="70"></div>
+        </div>
+        <button class="btn p" id="qBuild" style="width:100%;justify-content:center">一键提取并生成差异化话术</button>
+        <div class="hintline" id="qBuildHint">按国家 / 采购类目 / 背调等级自动分组，不同组用不同话术，组内措辞也会随机变化</div>
+        <div style="margin-top:12px" id="qGroups"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 风控与免责确认 -->
+<div class="modal" id="modalRisk">
+  <div class="box">
+    <div class="mh">⚠ 发送前风险确认（必读）</div>
+    <div class="mb">
+      <div class="riskbox">
+        <h4>批量触达存在账号与合规风险，请先确认你理解以下事实</h4>
+        <ul>
+          <li><b>WhatsApp</b>：官方仅允许已认证的 Business API 发送商业消息。使用个人号批量发送营销内容，可能被判定为垃圾消息，导致<b>限制发送、临时封禁甚至永久封号</b>。</li>
+          <li><b>邮件</b>：未经许可的批量营销邮件可能被判定为垃圾邮件，导致<b>发件域名或 IP 被列入黑名单</b>，影响你公司的正常外贸邮件往来。</li>
+          <li>本工具只做「逐个打开并预填内容」，<b>不代替你点击发送</b>，也不绕过任何平台限制；发送节奏、内容与数量由你决定。</li>
+          <li>请遵守目标国家的反垃圾信息法规（如 GDPR、CAN-SPAM），并优先联系<b>有明确合作意向</b>的客户。</li>
+          <li>降低风险的可行做法：控制在每日 20-30 条、随机间隔 25 秒以上、内容针对其采购类目定制、先发首条简短问询而非直接报价。</li>
+        </ul>
+        <label class="riskchk"><input type="checkbox" id="riskAgree">
+          <span>我已阅读并理解上述风险，本次触达的内容、频率与后果由我本人承担，与工具提供方无关。</span>
+        </label>
+      </div>
+      <div class="legalnote">勾选后本次会话内有效；关闭浏览器后需重新确认。</div>
+    </div>
+    <div class="mf">
+      <button class="btn" id="riskCancel">取消</button>
+      <button class="btn p" id="riskOk" disabled>确认并开始</button>
+    </div>
   </div>
 </div>
 
@@ -1879,6 +2080,7 @@ const STORE_NOTES = "cfbm_notes_v1";
 const STORE_SET = "cfbm_settings_v1";
 const STORE_IMPORT = "cfbm_imported_v1";
 const STORE_DNS = "cfbm_dns_v1";
+const STORE_OUT = "cfbm_outreach_v1";
 
 /* ---------------- 2. 工具函数 ---------------- */
 const $ = function(s){ return document.querySelector(s); };
@@ -1892,6 +2094,26 @@ function hash(s){
   return (h>>>0).toString(36);
 }
 function digits(s){ return String(s||"").replace(/\D/g,""); }
+/* 手机号规范化成 WhatsApp 可用的国际号码：去前导 0、补国家区号 */
+function waNumber(r){
+  var raw = String(r.mobile || "").trim();
+  var d = raw.indexOf("+") >= 0 ? digits(raw.slice(raw.indexOf("+"))) : digits(raw);
+  if(d.length < 8) return "";
+  if(d.length > 15){
+    /* 有的单元格里塞了多个号码，挑最长且长度合理的一段 */
+    var cand = raw.split(/[^0-9+]+/).map(function(x){ return digits(x); })
+      .filter(function(x){ return x.length >= 8 && x.length <= 15; })
+      .sort(function(a,b){ return b.length - a.length; });
+    d = cand.length ? cand[0] : d.slice(0, 15);
+  }
+  d = d.replace(/^0+/, "");
+  var cn = (r && r.country && CTRY_MAP[r.country]) ? CTRY_MAP[r.country] : null;
+  if(!cn) return d;
+  var dial = cn.dial;
+  if(d.indexOf(dial) === 0 && d.length >= dial.length + 6) return d;
+  if(dial === "1" && d.length >= 10) return "1" + d.slice(-10);
+  return dial + d;
+}
 function toast(msg){
   var t = $("#toast"); t.textContent = msg; t.classList.add("on");
   clearTimeout(t._t); t._t = setTimeout(function(){ t.classList.remove("on"); }, 2100);
@@ -2041,6 +2263,8 @@ function catsOf(text){
 /* 核心：单条记录背调 */
 function analyze(r, dupSet){
   var pro = [], con = [], issues = [], score = 0;
+  /* 五个维度分别计分，用于向使用者解释“为什么是 A/B/C” */
+  var dim = {contact:0, role:0, match:0, info:0, trust:0};
   var mi = mailInfo(r.emailList);
   var hasMobile = digits(r.mobile).length >= 8;
   var hasTel = digits(r.tel).length >= 7;
@@ -2050,19 +2274,20 @@ function analyze(r, dupSet){
   r.web = extractWeb(r.buyer+" "+r.products+" "+r.raw, r.emailList);
 
   /* (1) 联系通道 30 分 */
-  if(hasMobile){ score += 12; pro.push("有可拨打的手机/WhatsApp：" + r.mobile); }
+  if(hasMobile){ dim.contact += 12; pro.push("有可拨打的手机/WhatsApp：" + r.mobile); }
   else { issues.push("无有效手机号"); }
   if(mi.valid.length){
-    score += 8; pro.push("邮箱格式有效：" + mi.valid[0]);
-    if(mi.corp.length){ score += 6; pro.push("使用企业自有域名邮箱（"+mi.corp[0]+"），公司化程度较高"); }
-    else if(mi.free.length){ score += 2; issues.push("使用个人免费邮箱（"+mi.free[0]+"），多数为小型客户或个体贸易商"); }
+    dim.contact += 8; pro.push("邮箱格式有效：" + mi.valid[0]);
+    if(mi.corp.length){ dim.contact += 6; pro.push("使用企业自有域名邮箱（"+mi.corp[0]+"），公司化程度较高"); }
+    else if(mi.free.length){ dim.contact += 2; issues.push("使用个人免费邮箱（"+mi.free[0]+"），多数为小型客户或个体贸易商"); }
   } else {
     issues.push(mi.invalid.length ? ("邮箱格式无效："+mi.invalid[0]) : "名录未提供邮箱");
   }
-  if(/^\s*\+/.test(r.mobile)){ score += 4; } else { score += 2; issues.push("手机号未带国际区号，发送前需按国家补全"); }
+  var hasIntl = /^\s*\+/.test(r.mobile);
+  if(hasIntl){ dim.contact += 4; } else { dim.contact += 2; issues.push("手机号未带国际区号，发送前需按国家补全"); }
 
   /* (2) 客户角色 25 分 */
-  score += role.score;
+  dim.role += role.score;
   if(role.key === "trader" || role.key === "dealer" || role.key === "contractor")
     pro.push("客户类型：" + role.label + "，属于建材工厂的理想买家");
   else if(role.key === "factory")
@@ -2078,33 +2303,58 @@ function analyze(r, dupSet){
     return (r.products+" "+r.cats.join(" ")).toLowerCase().indexOf(k.toLowerCase()) >= 0;
   });
   if(r.cats.length){
-    score += 12 + Math.min(r.cats.length,3)*2;
+    dim.match += 12 + Math.min(r.cats.length,3)*2;
     pro.push("采购类目命中 " + r.cats.length + " 项：" + r.cats.slice(0,6).join("、"));
   } else if(r.products){
-    score += 8; pro.push("采购产品描述为笼统品类（"+r.products.slice(0,18)+"），需进一步确认具体需求");
+    dim.match += 8; pro.push("采购产品描述为笼统品类（"+r.products.slice(0,18)+"），需进一步确认具体需求");
   } else {
-    score += 4; issues.push("名录未列明采购产品，无法判断需求匹配度");
+    dim.match += 4; issues.push("名录未列明采购产品，无法判断需求匹配度");
   }
-  if(myHit.length){ score += 2; pro.push("强烈匹配我方主营：" + myHit.join("、")); }
+  if(myHit.length){ dim.match += 2; pro.push("强烈匹配我方主营：" + myHit.join("、")); }
+  r.myHit = myHit;
 
   /* (4) 信息完整度 15 分 */
-  if(r.contact){ score += 4; } else { issues.push("缺少联系人姓名"); }
-  if(hasTel){ score += 4; } else { issues.push("缺少公司座机"); }
-  if(r.web){ score += 4; pro.push("可获取官网/域名：" + r.web); } else { issues.push("未发现官网/公司域名，客户真实性需重点核验"); }
-  if(r.addr){ score += 3; }
+  if(r.contact){ dim.info += 4; } else { issues.push("缺少联系人姓名"); }
+  if(hasTel){ dim.info += 4; } else { issues.push("缺少公司座机"); }
+  if(r.web){ dim.info += 4; pro.push("可获取官网/域名：" + r.web); } else { issues.push("未发现官网/公司域名，客户真实性需重点核验"); }
+  if(r.addr){ dim.info += 3; }
 
   /* (5) 数据可信性 10 分 */
-  if(r.country && CTRY_MAP[r.country]){ score += 4; } else { score += 0; issues.push("国家/地区无法识别，需人工核对"); }
-  if(r.dialOK === true){ score += 3; }
+  if(r.country && CTRY_MAP[r.country]){ dim.trust += 4; } else { issues.push("国家/地区无法识别，需人工核对"); }
+  if(r.dialOK === true){ dim.trust += 3; }
   else if(r.dialOK === false){ issues.push("电话号码国际区号与所在地不符（"+r.mobile+"），号码可能填写有误"); }
-  else { score += 1; issues.push("号码无法判定国别，建议首次沟通时确认"); }
-  if(dupSet[r.id]){ score += 0; issues.push("名录中存在重复记录（同名或同邮箱 "+(dupSet[r.id])+" 条），注意不要重复开发"); }
-  else { score += 3; }
+  else { dim.trust += 1; issues.push("号码无法判定国别，建议首次沟通时确认"); }
+  if(dupSet[r.id]){ issues.push("名录中存在重复记录（同名或同邮箱 "+(dupSet[r.id])+" 条），注意不要重复开发"); }
+  else { dim.trust += 3; }
 
+  score = dim.contact + dim.role + dim.match + dim.info + dim.trust;
   score = Math.max(0, Math.min(100, Math.round(score)));
   r.score = score;
   r.grade = score >= 75 ? "A" : (score >= 60 ? "B" : "C");
   r.pros = pro; r.cons = issues; r.mail = mi;
+
+  /* 评分明细：让客户等级有据可查 */
+  r.dims = [
+    {k:"联系通道", got:dim.contact, max:30, why:
+      (hasMobile?"手机可拨打":"无手机号") + " · " +
+      (mi.corp.length ? "企业域名邮箱" : (mi.free.length ? "个人免费邮箱" : (mi.invalid.length ? "邮箱格式无效" : "无邮箱"))) +
+      (hasIntl ? " · 含国际区号" : " · 缺国际区号")},
+    {k:"客户类型", got:dim.role, max:25, why: role.label},
+    {k:"产品匹配", got:dim.match, max:20, why:
+      r.cats.length ? ("命中 "+r.cats.length+" 个类目："+r.cats.slice(0,3).join("、")) :
+      (r.products ? "采购产品描述笼统，需进一步确认" : "名录未列明采购产品")},
+    {k:"信息完整", got:dim.info, max:15, why:
+      "联系人"+(r.contact?"✓":"✗")+" · 座机"+(hasTel?"✓":"✗")+" · 官网"+(r.web?"✓":"✗")+" · 地址"+(r.addr?"✓":"✗")},
+    {k:"数据可信", got:dim.trust, max:10, why:
+      (CTRY_MAP[r.country]?"国家可识别":"国家不可识别") + " · " +
+      (r.dialOK===true?"区号匹配":(r.dialOK===false?"区号不符":"区号无法判定")) + " · " +
+      (dupSet[r.id]?"疑似重复记录":"无重复")},
+    {k:"联网核查", got:0, max:4, why:"尚未核查邮箱域名"}
+  ];
+  r.gradeReason = "评为 " + r.grade + " 级（" + score + " 分）：得分主要来自 " +
+    (pro.slice(0,2).join("；") || "无明显加分项") +
+    "；失分点 " + (issues.slice(0,2).join("；") || "无明显失分项");
+
   /* 保存基础分，便于联网核查结果幂等叠加 */
   r.baseScore = score; r.basePros = pro.slice(); r.baseCons = issues.slice();
   return r;
@@ -2139,11 +2389,12 @@ var S = {};                 /* 我方资料与模板 */
 var ROWS = [];               /* 全部记录 */
 var VIEW = [];               /* 筛选后 */
 var SEL = {};                /* 勾选集合 */
-var NOTES = {};              /* id -> {status,tags,note,last} */
+var NOTES = {};              /* id -> {status,tags,note,last,fair,li,fb,ig,waAt,mailAt} */
 var DNS = {};                /* domain -> 核查结果 */
+var OUT = {day:"", wa:0, mail:0};   /* 触达计数器（按日重置） */
 var FILTERS = {
   kw:"", quick:"", grades:{}, countries:{}, cats:{}, mails:{}, verify:{}, roles:{}, contacts:{},
-  status:"", tag:"", sort:"score", page:1, size:50
+  status:"", tag:"", fair:"", social:{}, sort:"score", page:1, size:50
 };
 var TMPL_DEFAULT = [
   {name:"初次开发信（标准）", body:
@@ -2178,6 +2429,8 @@ var TMPL_DEFAULT = [
 function loadStore(){
   try{ NOTES = JSON.parse(localStorage.getItem(STORE_NOTES)||"{}") || {}; }catch(e){ NOTES = {}; }
   try{ DNS = JSON.parse(localStorage.getItem(STORE_DNS)||"{}") || {}; }catch(e){ DNS = {}; }
+  try{ OUT = JSON.parse(localStorage.getItem(STORE_OUT)||"null") || {day:"",wa:0,mail:0}; }catch(e){ OUT = {day:"",wa:0,mail:0}; }
+  refreshDay();
   var def = {
     myCompany:"", myProducts:"", myName:"", myPhone:"", myEmail:"", website:"", city:"", years:"10",
     tmplIdx:0, tmpls:JSON.parse(JSON.stringify(TMPL_DEFAULT))
@@ -2193,11 +2446,33 @@ function saveStore(){
     localStorage.setItem(STORE_NOTES, JSON.stringify(NOTES));
     localStorage.setItem(STORE_DNS, JSON.stringify(DNS));
     localStorage.setItem(STORE_SET, JSON.stringify(S));
+    localStorage.setItem(STORE_OUT, JSON.stringify(OUT));
   }catch(e){ toast("本地存储已满，请先导出备份"); }
+}
+/* 触达计数按自然日重置 */
+function todayStr(){
+  var d = new Date(), p = function(n){ return n < 10 ? "0"+n : ""+n; };
+  return d.getFullYear() + "-" + p(d.getMonth()+1) + "-" + p(d.getDate());
+}
+function refreshDay(){
+  var t = todayStr();
+  if(!OUT || OUT.day !== t){ OUT = {day:t, wa:0, mail:0}; }
+}
+function todayCount(ch){ refreshDay(); return ch === "wa" ? (OUT.wa||0) : (OUT.mail||0); }
+function bumpCount(ch){
+  refreshDay();
+  if(ch === "wa") OUT.wa = (OUT.wa||0) + 1; else OUT.mail = (OUT.mail||0) + 1;
+  saveStore();
 }
 function noteOf(id){
   if(!NOTES[id]) NOTES[id] = {status:"未联系", tags:[], note:"", last:0};
-  return NOTES[id];
+  var n = NOTES[id];
+  if(n.fair == null) n.fair = "";
+  if(n.li == null) n.li = "";
+  if(n.fb == null) n.fb = "";
+  if(n.ig == null) n.ig = "";
+  if(!n.tags) n.tags = [];
+  return n;
 }
 
 /* ---------------- 6. 载入名录 ---------------- */
@@ -2221,6 +2496,8 @@ function normalizeRows(raw){
     r.emailList = emailsOf(r.email);
     r.id = "b" + hash((r.buyer+"|"+r.country+"|"+r.emailList[0]).toLowerCase()) + "_" + idx;
     r.raw = [r.buyer,r.contact,r.mobile,r.tel,r.email,r.products].join(" ");
+    var fv = o.fair || o.Fair || "";
+    r.fairFromData = String(fv).replace(/[^\d]/g, "").slice(0, 3);
     return r;
   }).filter(function(r){ return r.buyer || r.email || r.mobile; });
   return rows;
@@ -2244,6 +2521,15 @@ function prepare(rows){
     if(n > 1 || m > 1) dup[r.id] = Math.max(n,m);
   });
   rows.forEach(function(r){ r.dialOK = dialCheck(r); analyze(r, dup); applyDns(r); });
+  /* 名录若自带「参展届数」列，导入时自动写入记录 */
+  var gotFair = false;
+  rows.forEach(function(r){
+    if(r.fairFromData){
+      if(!NOTES[r.id]) NOTES[r.id] = {status:"未联系", tags:[], note:"", last:0};
+      if(!NOTES[r.id].fair){ NOTES[r.id].fair = r.fairFromData; gotFair = true; }
+    }
+  });
+  if(gotFair) saveStore();
   ROWS = rows;
   ROWS.dupMap = dup;
   pruneIds();
@@ -2264,21 +2550,33 @@ function applyDns(r){
   r.score = r.baseScore;
   r.pros = r.basePros.slice();
   r.cons = r.baseCons.slice();
+  var delta = 0, why = "无可核查的企业邮箱域名";
   if(r.dns){
     var st = r.dns.status;
     if(st === "ok"){
-      r.score = Math.min(100, r.score + 4);
+      delta = 4;
+      why = "MX 生效，邮箱可正常收信" + (r.dns.spf ? "，且已配置 SPF" : "");
       r.pros.push("邮箱域名 " + d + " 已配置邮件服务（MX 生效），可正常收信");
       if(r.dns.spf) r.pros.push("域名配置了 SPF 发件策略，属正规运营企业");
     } else if(st === "nxdomain"){
-      r.score = Math.max(0, r.score - 18);
+      delta = -18;
+      why = "域名不存在（NXDOMAIN），邮箱必然退信";
       r.cons.push("邮箱域名 " + d + " 不存在（NXDOMAIN），该邮箱一定无法收信");
     } else if(st === "nomail"){
-      r.score = Math.max(0, r.score - 8);
+      delta = -8;
+      why = "域名存在但未配置 MX 邮件记录";
       r.cons.push("域名 " + d + " 存在但未配置 MX 邮件记录，邮箱可能无法收信");
+    } else {
+      why = "查询失败（网络受限，可重试）";
     }
   }
+  r.score = Math.max(0, Math.min(100, r.score + delta));
+  r.dnsDelta = delta;
+  if(r.dims && r.dims.length >= 6){ r.dims[5] = {k:"联网核查", got:delta, max:4, why:why}; }
   r.grade = r.score >= 75 ? "A" : (r.score >= 60 ? "B" : "C");
+  r.gradeReason = "评为 " + r.grade + " 级（" + r.score + " 分）：得分主要来自 " +
+    (r.pros.slice(0,2).join("；") || "无明显加分项") +
+    "；失分点 " + (r.cons.slice(0,2).join("；") || "无明显失分项");
 }
 function loadEmbedded(){
   var txt = document.getElementById("embedded-csv").textContent.trim();
@@ -2349,6 +2647,23 @@ function pass(r){
   var n = NOTES[r.id];
   if(f.status && (!n || n.status !== f.status)) return false;
   if(f.tag && (!n || n.tags.indexOf(f.tag) < 0)) return false;
+  if(f.fair){
+    var fv = (n && n.fair) ? parseInt(n.fair, 10) : 0;
+    if(!fv) fv = 0;
+    if(f.fair === "none" && fv) return false;
+    if(f.fair === "has" && !fv) return false;
+    if(f.fair === "ge2" && fv < 2) return false;
+    if(f.fair === "ge3" && fv < 3) return false;
+  }
+  if(count(f.social)){
+    var hasLi = !!(n && n.li), hasFb = !!(n && n.fb), hasIg = !!(n && n.ig);
+    var anySoc = hasLi || hasFb || hasIg;
+    if(f.social.any && !anySoc) return false;
+    if(f.social.none && anySoc) return false;
+    if(f.social.li && !hasLi) return false;
+    if(f.social.fb && !hasFb) return false;
+    if(f.social.ig && !hasIg) return false;
+  }
   return true;
 }
 function count(o){ return Object.keys(o).length; }
@@ -2364,6 +2679,11 @@ function sortView(){
     score:function(a,b){ return b.score - a.score || a.buyer.localeCompare(b.buyer); },
     country:function(a,b){ return (a.country||"~").localeCompare(b.country||"~","zh") || b.score-a.score; },
     role:function(a,b){ return a.role.key.localeCompare(b.role.key) || b.score-a.score; },
+    fair:function(a,b){
+      var av = NOTES[a.id] && NOTES[a.id].fair ? parseInt(NOTES[a.id].fair,10)||0 : 0;
+      var bv = NOTES[b.id] && NOTES[b.id].fair ? parseInt(NOTES[b.id].fair,10)||0 : 0;
+      return bv - av || b.score - a.score;
+    },
     status:function(a,b){
       var x = NOTES[a.id] ? NOTES[a.id].status : "未联系", y = NOTES[b.id] ? NOTES[b.id].status : "未联系";
       return x.localeCompare(y,"zh") || b.score-a.score;
@@ -2392,6 +2712,12 @@ function rowTags(r){
   if(r.role.key === "factory") out.push('<span class="tag y">疑似同行</span>');
   if(ROWS.dupMap && ROWS.dupMap[r.id]) out.push('<span class="tag y">重复记录</span>');
   if(r.cons.length >= 4) out.push('<span class="tag r">高核实需求</span>');
+  if(n && n.fair) out.push('<span class="tag i">已参加 '+esc(n.fair)+' 届</span>');
+  var soc = [];
+  if(n && n.li) soc.push("领英");
+  if(n && n.fb) soc.push("脸书");
+  if(n && n.ig) soc.push("IG");
+  if(soc.length) out.push('<span class="tag g">'+soc.join("·")+'</span>');
   return out.join("");
 }
 function render(){
@@ -2418,13 +2744,14 @@ function render(){
   var list = VIEW.slice(start, start+size);
   var tb = $("#tbody");
   if(!list.length){
-    tb.innerHTML = '<tr><td colspan="11"><div class="empty">没有符合条件的客户，请放宽筛选条件</div></td></tr>';
+    tb.innerHTML = '<tr><td colspan="12"><div class="empty">没有符合条件的客户，请放宽筛选条件</div></td></tr>';
   } else {
     tb.innerHTML = list.map(function(r, i){
       var n = start + i + 1;
       var sel = SEL[r.id] ? " sel" : "";
       var mob = r.mobile || '<span class="muted">—</span>';
       var mail = r.email ? esc(r.email.split(/[;,\s]+/)[0]) : '<span class="muted">无邮箱</span>';
+      var nf = NOTES[r.id] && NOTES[r.id].fair ? NOTES[r.id].fair : "";
       return '<tr class="'+sel.trim()+'" data-id="'+r.id+'">'+
         '<td data-label=""><input type="checkbox" class="rowsel" data-id="'+r.id+'"'+(SEL[r.id]?" checked":"")+'></td>'+
         '<td class="muted" data-label="序号">'+n+'</td>'+
@@ -2434,7 +2761,9 @@ function render(){
         '<td class="mono contactline" data-label="手机">'+mob+'</td>'+
         '<td data-label="邮箱"><span class="email">'+mail+'</span></td>'+
         '<td data-label="采购产品"><span class="prod">'+esc(r.products||"—")+'</span></td>'+
-        '<td data-label="背调评分">'+gradeBadge(r.grade, r.score)+'</td>'+
+        '<td data-label="评级依据"><span class="gradeReason" title="'+esc(r.gradeReason)+'">'+esc(r.gradeReason)+'</span></td>'+
+        '<td data-label="背调">'+gradeBadge(r.grade, r.score)+'</td>'+
+        '<td data-label="参展届数">'+(nf ? '<span class="tag i">'+esc(nf)+' 届</span>' : '<span class="muted">未记录</span>')+'</td>'+
         '<td class="muted" data-label="跟进">'+esc(NOTES[r.id] && NOTES[r.id].status!=='未联系' ? NOTES[r.id].status : "—")+'</td>'+
         '<td data-label="操作"><div class="ops">'+
           '<button class="iconbtn" data-act="detail" data-id="'+r.id+'" title="背调详情">☰</button>'+
@@ -2586,14 +2915,28 @@ function openDetail(id){
   var q = encodeURIComponent(r.buyer + " " + (r.country||""));
   $("#dTitle").innerHTML = esc(r.buyer) + ' <span class="badge g'+r.grade+'">'+r.score+' '+r.grade+'</span>';
   $("#dBody").innerHTML =
-    '<div class="sec"><h4>背调结论</h4>'+
-      '<div class="dl" style="margin-bottom:8px"><ul>'+
+    '<div class="sec"><h4>为什么是 '+r.grade+' 级（评分依据）</h4>'+
+      '<div class="reasonbox" style="margin-bottom:10px">'+esc(r.gradeReason)+'</div>'+
+      '<div class="dimgrid">'+
+        (r.dims||[]).map(function(d){
+          var pct = d.got < 0 ? 100 : Math.max(0, Math.min(100, Math.round(d.got / d.max * 100)));
+          var val = d.got < 0 ? ('扣 '+Math.abs(d.got)+' 分') : (d.got + ' / ' + d.max);
+          return '<div class="dimrow">'+
+            '<span class="k">'+esc(d.k)+'</span>'+
+            '<span class="dimbar"><i class="'+(d.got<0?"neg":"")+'" style="width:'+pct+'%"></i></span>'+
+            '<span class="v">'+val+'</span>'+
+          '</div><div class="dimwhy">'+esc(d.why)+'</div>';
+        }).join("")+
+      '</div>'+
+      '<div class="legalnote">评分上限：联系通道 30 · 客户类型 25 · 产品匹配 20 · 信息完整 15 · 数据可信 10，联网核查单独加减分。总分 ≥75 为 A 级，60-74 为 B 级，其余为 C 级。</div>'+
+    '</div>'+
+    '<div class="sec"><h4>背调结论明细</h4>'+
+      '<div class="dl"><ul>'+
         r.pros.map(function(p){ return '<li>＋ '+esc(p)+'</li>'; }).join("")+
         r.cons.map(function(p){ return '<li class="bad">－ '+esc(p)+'</li>'; }).join("")+
       '</ul></div>'+
-      '<div class="muted" style="font-size:12px">评分 '+r.score+' 分 · 客户类型：'+esc(r.role.label)+
-      ' · 采购类目：'+esc(r.cats.join("、")||"未识别")+' · 采购重叠：'+esc((r.cats.filter(function(c){
-        return (S.myProducts||"").indexOf(c)>=0; }).join("、"))||"—")+'</div>'+
+      '<div class="muted" style="font-size:12px;margin-top:6px">评分 '+r.score+' 分 · 客户类型：'+esc(r.role.label)+
+      ' · 采购类目：'+esc(r.cats.join("、")||"未识别")+' · 与我方主营重叠：'+esc((r.myHit||[]).join("、")||"—")+'</div>'+
     '</div>'+
     '<div class="sec"><h4>名录原始信息</h4><dl class="kv">'+
       '<dt>采购商</dt><dd>'+esc(r.buyer)+'</dd>'+
@@ -2606,6 +2949,41 @@ function openDetail(id){
       '<dt>官网/域名</dt><dd>'+(r.web? esc(r.web) : '<span class="muted">未发现</span>')+'</dd>'+
       (r.countryNote ? '<dt>数据问题</dt><dd class="muted">'+esc(r.countryNote)+'</dd>' : '')+
     '</dl></div>'+
+    '<div class="sec"><h4>参展届数（第几次参加广交会）</h4>'+
+      '<div style="display:flex;align-items:center;gap:9px;flex-wrap:wrap">'+
+        '<input class="inp" id="dFair" style="max-width:110px" placeholder="如 3" value="'+esc(n.fair||'')+'">'+
+        '<span class="muted" style="font-size:12px">届（原始名录不含此字段，需人工核验后填入）</span>'+
+      '</div>'+
+      '<div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:9px">'+
+        [1,2,3,4,5,6,8,10,15].map(function(x){ return '<button class="btn sm" data-fairset="'+x+'">'+x+' 届</button>'; }).join("")+
+        '<button class="btn sm danger" data-fairset="">清空</button>'+
+      '</div>'+
+      '<div style="display:flex;gap:7px;flex-wrap:wrap;margin-top:9px">'+
+        '<a class="btn sm" href="https://cn.bing.com/search?q='+encodeURIComponent(r.buyer+' 广交会 参展')+'" target="_blank" rel="noopener">必应查历届参展记录</a>'+
+        '<a class="btn sm" href="https://cn.bing.com/search?q='+encodeURIComponent(r.buyer+' canton fair exhibitor')+'" target="_blank" rel="noopener">英文查参展历史</a>'+
+        '<a class="btn sm" href="https://www.cantonfair.org.cn/zh-CN/search?keyword='+encodeURIComponent(r.buyer)+'" target="_blank" rel="noopener">广交会官网查询</a>'+
+      '</div>'+
+      '<div class="legalnote">若你手上另有带「参展届数」列的名录文件，可在顶部「导入名录」中导入，程序会自动识别该列。</div>'+
+    '</div>'+
+    '<div class="sec"><h4>海外社媒账号</h4>'+
+      '<div class="socgrid">'+
+        '<div class="socrow"><span class="pfx"><i class="socdot li"></i>领英</span>'+
+          '<input class="inp" id="dLi" placeholder="公司主页链接或账号名" value="'+esc(n.li||'')+'">'+
+          '<a class="btn sm" href="https://cn.bing.com/search?q='+encodeURIComponent(r.buyer+' site:linkedin.com')+'" target="_blank" rel="noopener">搜</a></div>'+
+        '<div class="socrow"><span class="pfx"><i class="socdot fb"></i>脸书</span>'+
+          '<input class="inp" id="dFb" placeholder="主页链接或账号名" value="'+esc(n.fb||'')+'">'+
+          '<a class="btn sm" href="https://cn.bing.com/search?q='+encodeURIComponent(r.buyer+' site:facebook.com')+'" target="_blank" rel="noopener">搜</a></div>'+
+        '<div class="socrow"><span class="pfx"><i class="socdot ig"></i>Instagram</span>'+
+          '<input class="inp" id="dIg" placeholder="账号或链接" value="'+esc(n.ig||'')+'">'+
+          '<a class="btn sm" href="https://cn.bing.com/search?q='+encodeURIComponent(r.buyer+' site:instagram.com')+'" target="_blank" rel="noopener">搜</a></div>'+
+      '</div>'+
+      '<div style="display:flex;gap:7px;flex-wrap:wrap;margin-top:9px">'+
+        '<button class="btn sm p" id="dSocSave">保存社媒记录</button>'+
+        '<a class="btn sm" href="https://www.linkedin.com/search/results/companies/?keywords='+q+'" target="_blank" rel="noopener">LinkedIn 站内搜（需外网）</a>'+
+        '<a class="btn sm" href="https://www.facebook.com/search/top?q='+q+'" target="_blank" rel="noopener">Facebook 站内搜（需外网）</a>'+
+      '</div>'+
+      '<div class="legalnote">名录不含社媒字段，上面「搜」按钮用公司名去必应检索对应平台页面；查到后填入并保存，会显示在客户行标签和导出表中。</div>'+
+    '</div>'+
     '<div class="sec"><h4>联网核查结果</h4>'+
       (r.dnsDomain ? '' : '<div class="note">该客户没有可核查的企业邮箱域名。</div>')+
       (r.dns ? '<dl class="kv">'+
@@ -2620,7 +2998,7 @@ function openDetail(id){
     '</div>'+
     '<div class="sec"><h4>核验与联系入口</h4>'+
       '<div style="display:flex;gap:7px;flex-wrap:wrap">'+
-        (digits(r.mobile).length>=8 ? '<a class="btn sm" href="https://wa.me/'+digits(r.mobile).replace(/^0+/,"")+'" target="_blank" rel="noopener">WhatsApp 直聊</a>' : '')+
+        (waNumber(r) ? '<a class="btn sm" href="https://wa.me/'+waNumber(r)+'" target="_blank" rel="noopener">WhatsApp 直聊（'+waNumber(r)+'）</a>' : '')+
         (r.emailList.length ? '<a class="btn sm" href="mailto:'+esc(r.emailList[0])+'">发邮件</a>' : '')+
         (r.web ? '<a class="btn sm" href="'+(/^https?:\/\//.test(r.web)?r.web:"http://"+r.web)+'" target="_blank" rel="noopener">访问官网</a>' : '')+
         '<a class="btn sm" href="https://cn.bing.com/search?q='+q+'" target="_blank" rel="noopener">必应背调（国内可开）</a>'+
@@ -2678,6 +3056,19 @@ function bindDetail(r){
     saveStore(); openDetail(r.id); render();
   };
   $("#dLetter").onclick = function(){ closeDrawer(); gotoTab("letter"); buildLetter([r]); };
+  var fair = $("#dFair");
+  if(fair) fair.onchange = function(){
+    n.fair = String(this.value||"").replace(/[^\d]/g, "").slice(0, 3);
+    saveStore(); render();
+  };
+  var socSave = $("#dSocSave");
+  if(socSave) socSave.onclick = function(){
+    n.li = ($("#dLi").value || "").trim();
+    n.fb = ($("#dFb").value || "").trim();
+    n.ig = ($("#dIg").value || "").trim();
+    saveStore(); render();
+    toast("社媒记录已保存" + ((n.li||n.fb||n.ig) ? "" : "（三项均为空）"));
+  };
   var dv = document.querySelector("[data-doverify]");
   if(dv) dv.onclick = function(){ verifyOne(r); };
 }
@@ -2826,10 +3217,12 @@ function renderLetters(){
     (cur.r.grade? " · 背调 "+cur.r.score+" 分（"+cur.r.grade+" 级）" : "");
 }
 function gotoTab(name){
-  $$(".tab").forEach(function(t){ t.classList.toggle("on", t.dataset.page === name); });
+  $$(".tab, .bottomnav button").forEach(function(t){ t.classList.toggle("on", t.dataset.page === name); });
   $$(".page").forEach(function(p){ p.classList.toggle("on", p.id === "page-"+name); });
   if(name === "letter") renderLetters();
   if(name === "follow") renderFollowList();
+  if(name === "outreach") renderQueue();
+  try{ window.scrollTo({top:0, behavior:"smooth"}); }catch(e){ window.scrollTo(0,0); }
 }
 function showLettersModal(){
   $("#mlCount").textContent = LETTERS.length;
@@ -2845,19 +3238,26 @@ function showLettersModal(){
 
 /* ---------------- 13. 导入 / 导出 ---------------- */
 const HEAD_CN = ["序号","采购商","国家/地区","联系人","手机/WhatsApp","公司电话","邮箱","采购产品",
-  "背调评分","客户等级","客户类型","采购类目","风险与优势提示","邮箱核查","跟进状态","标签","备注","最后跟进"];
+  "背调评分","客户等级","评级依据","客户类型","采购类目","参展届数","领英","脸书","Instagram",
+  "优势与风险提示","邮箱域名核查","WhatsApp发送时间","邮件发送时间","跟进状态","标签","备注","最后跟进"];
 function exportRows(headers, rows, name){
   download(name + "_" + new Date().toISOString().slice(0,10) + ".csv", toCsv(headers, rows));
+}
+function socOf(r, k){
+  var n = NOTES[r.id];
+  return (n && n[k]) ? n[k] : "";
 }
 function rowToArray(r){
   var n = NOTES[r.id] || {status:"未联系", tags:[], note:"", last:0};
   var dnsTxt = r.dns ? ({ok:"域名可收信", nomail:"域名存在但无邮件服务", nxdomain:"域名不存在", fail:"查询失败"}[r.dns.status] || "") : "未核查";
   return [
     r.seq, r.buyer, r.country, r.contact, r.mobile, r.tel, r.email, r.products,
-    r.score, r.grade, r.role.label, r.cats.join("、"),
+    r.score, r.grade, r.gradeReason, r.role.label, r.cats.join("、"),
+    (n.fair ? n.fair + " 届" : "未记录"), socOf(r,"li"), socOf(r,"fb"), socOf(r,"ig"),
     "优势：" + (r.pros.join(" | ")||"无") + " ；风险：" + (r.cons.join(" | ")||"无"),
     dnsTxt + (r.dns && r.dns.mx.length ? "（" + r.dns.mx.join(" | ") + "）" : ""),
-    n.status, n.tags.join("、"), n.note, n.last ? fmtDate(n.last) : ""
+    n.waAt ? fmtDate(n.waAt) : "", n.mailAt ? fmtDate(n.mailAt) : "",
+    n.status, (n.tags||[]).join("、"), n.note, n.last ? fmtDate(n.last) : ""
   ];
 }
 function exportCurrent(){
@@ -2915,7 +3315,8 @@ function importFile(file){
       "公司电话":"Tel","电话":"Tel","tel":"Tel","telephone":"Tel",
       "邮箱":"Email","email":"Email","e-mail":"Email","邮件":"Email",
       "采购产品":"Products","产品":"Products","products":"Products","进口产品":"Products","经营产品":"Products",
-      "地址":"Addr","address":"Addr"
+      "地址":"Addr","address":"Addr",
+      "参展届数":"Fair","届数":"Fair","参加届数":"Fair","参展次数":"Fair","fair":"Fair","faircount":"Fair"
     };
     var objs = [];
     for(var i=1;i<matrix.length;i++){
@@ -3025,14 +3426,287 @@ function buildFilterOptions(){
   }).join("");
 }
 
-/* ---------------- 15. 事件绑定 ---------------- */
+/* ---------------- 15. 批量触达：提取 / 差异化话术 / 半自动发送队列 ---------------- */
+/* WhatsApp 短消息模板：{cat} 为客户主要采购类目，其余变量同开发信 */
+var WA_TMPL = [
+  {n:"简洁问询", t:"Hello {contact}, this is {myName} from {myCompany}, a building materials factory in {city}, China. I see your company buys {cat}. We produce {myProducts} and supply importers in {country}. May I send you our catalogue and FOB price list?"},
+  {n:"展会跟进", t:"Hi {contact}, {myName} here from {myCompany}. We met at the Canton Fair (building materials). You are sourcing {cat} - we are a direct factory and can quote with CE / ISO certificates. Shall I share our price list here?"},
+  {n:"卖点切入", t:"Hello {contact}. {myCompany} manufactures {myProducts}. For {country} importers we focus on two things: stable quality and on-time loading. As you purchase {products}, may I send a short catalogue with prices?"},
+  {n:"问题式开场", t:"Hi {contact}, quick question - are you currently sourcing {cat} for the {country} market? I am {myName} from {myCompany}, a China factory making {myProducts}. If useful I can send our catalogue and best FOB prices."},
+  {n:"专业顾问式", t:"Dear {contact}, {myName} from {myCompany} ({city}, China). We supply {myProducts} to importers, contractors and distributors. Since your company works with {products}, I would like to send our specification sheet and price list for review. Would that be helpful?"},
+  {n:"短句低打扰", t:"Hello {contact}, {myName} from {myCompany} in China. We make {myProducts}. You buy {cat} - we can offer factory price with certificates. May I send the catalogue? Thank you."}
+];
+/* 邮件主题轮换（正文复用「开发信」页里的模板，实现同一批客户不同措辞） */
+var MAIL_SUBJ = [
+  "{myProducts} supply for {company} - direct factory from China",
+  "Regarding {cat} supply for the {country} market - {myCompany}",
+  "{company}: factory-direct {cat} with CE / ISO, catalogue & price list",
+  "Cooperation on {cat} - manufacturer in {city}, China"
+];
+
+var Q = {channel:"wa", items:[], idx:0, agreed:false, nextAt:0};
+var QTimer = null;
+
+function segFill(t, r){
+  return fillTmpl(String(t).replace(/\{cat\}/g, r.cats[0] || "building materials"), r);
+}
+/* 按种子稳定地取数组中的一项（数字哈希，不能直接用 hash()，它返回的是 36 进制字符串） */
+function pickBy(arr, seed){
+  var s = String(seed == null ? "" : seed), h = 7, i;
+  for(i=0;i<s.length;i++){ h = (h * 31 + s.charCodeAt(i)) % 2147483647; }
+  return arr[h % arr.length];
+}
+function buildOutMsg(r, channel){
+  if(channel === "wa"){
+    var t = pickBy(WA_TMPL, r.id);
+    return {tname:t.n, text:segFill(t.t, r), subject:""};
+  }
+  var tm = pickBy(S.tmpls, r.id + "|mail");
+  return {tname:tm.name, text:segFill(tm.body, r), subject:segFill(pickBy(MAIL_SUBJ, r.id + "|subj"), r)};
+}
+/* 我方资料改动后，重算队列里所有话术（带防抖，避免输入时卡顿） */
+var BQS_T = null;
+function buildQueueSilent(){
+  if(!Q.items.length) return;
+  clearTimeout(BQS_T);
+  BQS_T = setTimeout(function(){
+    var idx = {};
+    ROWS.forEach(function(r){ idx[r.id] = r; });
+    Q.items.forEach(function(it){
+      var r = idx[it.id];
+      if(!r) return;
+      it.r = r;
+      var m = buildOutMsg(r, Q.channel);
+      it.msg = m.text; it.subject = m.subject; it.tname = m.tname;
+    });
+    renderQueue();
+  }, 500);
+}
+function outPool(){
+  var sc = $("#qScope").value;
+  if(sc === "selected") return ROWS.filter(function(r){ return SEL[r.id]; });
+  if(sc === "gradeA") return VIEW.filter(function(r){ return r.grade === "A"; });
+  if(sc === "gradeAB") return VIEW.filter(function(r){ return r.grade !== "C"; });
+  if(sc === "checked") return VIEW.filter(function(r){ return r.dns && r.dns.status === "ok"; });
+  return VIEW.slice();
+}
+function nextPending(from){
+  for(var i=from;i<Q.items.length;i++){
+    if(Q.items[i].state !== "done" && Q.items[i].state !== "skip") return i;
+  }
+  for(var j=0;j<Q.items.length;j++){
+    if(Q.items[j].state !== "done" && Q.items[j].state !== "skip") return j;
+  }
+  return -1;
+}
+function buildQueue(){
+  var ch = Q.channel, pool = outPool();
+  var items = [], skipped = 0, seen = {};
+  pool.forEach(function(r){
+    var target = ch === "wa" ? waNumber(r) : (r.mail.valid[0] || "");
+    if(!target){ skipped++; return; }
+    if(seen[target]){ skipped++; return; }
+    seen[target] = 1;
+    var m = buildOutMsg(r, ch);
+    var n = NOTES[r.id] || {};
+    var already = ch === "wa" ? !!n.waAt : !!n.mailAt;
+    items.push({id:r.id, r:r, target:target, msg:m.text, subject:m.subject,
+      tname:m.tname, state: already ? "done" : "pending"});
+  });
+  items.sort(function(a,b){ return (a.state === "done" ? 1 : 0) - (b.state === "done" ? 1 : 0); });
+  Q.items = items;
+  Q.idx = nextPending(0);
+  if(Q.idx < 0) Q.idx = 0;
+  renderQueue();
+  $("#qBuildHint").innerHTML = "从 " + pool.length + " 条记录中提取出 <b>" + items.length + "</b> 条可触达目标" +
+    (skipped ? ("，跳过 " + skipped + " 条（无号码/无有效邮箱，或号码重复）") : "") +
+    "。不同客户按采购类目与等级使用了不同话术，措辞也随机变化。";
+  if(!items.length) toast("该范围内没有可触达的目标");
+}
+function renderGroups(){
+  var g = {}, names = {};
+  Q.items.forEach(function(it){
+    var key = (it.r.cats[0] || "未分类") + " · " + it.r.grade + " 级";
+    g[key] = (g[key] || 0) + 1;
+    names[key] = names[key] || {};
+    names[key][it.tname] = 1;
+  });
+  var keys = Object.keys(g).sort(function(a,b){ return g[b] - g[a]; });
+  if(!keys.length){ $("#qGroups").innerHTML = ""; return; }
+  $("#qGroups").innerHTML = '<label class="lab">话术分组（共 '+keys.length+' 组，自动差异化）</label>' +
+    keys.slice(0,10).map(function(k){
+      var tn = Object.keys(names[k]);
+      return '<div class="segcard"><div class="t">'+esc(k)+
+        '<span class="tag i">'+g[k]+' 条</span><span class="tag y">'+tn.length+' 种话术</span></div>'+
+        '<div class="muted" style="font-size:11.5px">'+esc(tn.join(" / "))+'</div></div>';
+    }).join("") +
+    (keys.length > 10 ? '<div class="muted" style="font-size:11.5px">还有 '+(keys.length-10)+' 组未显示，导出清单可看全部</div>' : "");
+}
+function renderQueue(){
+  var ch = Q.channel;
+  var limit = parseInt($("#qDayLimit").value, 10) || 30;
+  var doneN = 0, pendN = 0;
+  Q.items.forEach(function(i){ if(i.state === "done") doneN++; else pendN++; });
+  $("#qDayDone").value = todayCount(ch) + " 条";
+  $("#qInfo").textContent = Q.items.length ? ("共 " + Q.items.length + " 条 · 待处理 " + pendN + " · 已完成 " + doneN) : "";
+  if(!Q.items.length){
+    $("#qTop").innerHTML = '<div class="note">还没有提取目标。请在右侧选择范围后点击「一键提取并生成差异化话术」。<br>' +
+      'WhatsApp 渠道只提取手机号完整的客户；邮件渠道只提取邮箱格式有效的客户。</div>';
+    $("#qList").innerHTML = "";
+    renderGroups();
+    return;
+  }
+  var left = Math.max(0, limit - todayCount(ch));
+  var it = Q.items[Q.idx];
+  var top = '<div class="stat" style="grid-template-columns:repeat(4,1fr)">' +
+    '<div class="s"><b>'+Q.items.length+'</b><span>可触达客户</span></div>' +
+    '<div class="s"><b>'+pendN+'</b><span>待处理</span></div>' +
+    '<div class="s"><b>'+doneN+'</b><span>已发送</span></div>' +
+    '<div class="s"><b>'+left+'</b><span>今日剩余额度</span></div>' +
+  '</div>';
+  if(left <= 0){
+    top += '<div class="note" style="margin-top:10px;color:#a55a00;background:#fff9f2;border-color:#f6ddbc">' +
+      '今日发送量已达上限（'+limit+' 条）。继续发送会显著提高被风控的概率，建议明天再继续。</div>';
+  }
+  if(it){
+    top += '<div class="qitem now" style="margin-top:10px">' +
+      '<div class="qhd"><b>当前第 '+(Q.idx+1)+' 位：'+esc(it.r.buyer)+'</b>' +
+        '<span class="badge g'+it.r.grade+'">'+it.r.score+'</span>' +
+        '<span class="tag">'+esc(it.r.country || "—")+'</span>' +
+        '<span class="tag i">'+esc(it.r.cats[0] || "未分类")+'</span>' +
+        '<span class="tag y">话术：'+esc(it.tname)+'</span>' +
+      '</div>' +
+      '<div class="muted mono" style="font-size:12px;margin-top:6px">' +
+        (ch === "wa" ? ("WhatsApp: +" + it.target) : ("Email: " + it.target)) +
+        (ch === "wa" && digits(it.r.mobile) !== it.target ? '　（原始号码 '+esc(it.r.mobile)+'，已自动补齐国际区号）' : '') +
+      '</div>' +
+      (it.subject ? '<div style="font-size:12.5px;margin-top:6px"><b>主题：</b>'+esc(it.subject)+'</div>' : '') +
+      '<div class="qmsg" id="qCurMsg">'+esc(it.msg)+'</div>' +
+      '<div class="hintline" id="qGap">点右上角「打开当前这条」，会打开预填好内容的'+(ch === "wa" ? "WhatsApp" : "邮件客户端")+'，你确认后发送</div>' +
+    '</div>';
+  } else {
+    top += '<div class="note" style="margin-top:10px">队列已全部处理完，没有待发送的目标了。</div>';
+  }
+  $("#qTop").innerHTML = top;
+
+  var show = Q.items.slice(0, 300);
+  $("#qList").innerHTML = '<label class="lab">队列明细（' + Q.items.length + ' 条' + (Q.items.length > 300 ? '，仅显示前 300 条' : '') + '）</label>' +
+    show.map(function(x, i){
+      var st = x.state === "done" ? '<span class="tag g">已发送</span>'
+             : x.state === "opened" ? '<span class="tag y">已打开</span>'
+             : x.state === "skip" ? '<span class="tag">已跳过</span>'
+             : '<span class="tag i">待处理</span>';
+      return '<div class="qitem '+(x.state === "done" ? "done" : "")+' '+(i === Q.idx ? "now" : "")+'" data-qgo="'+i+'" style="cursor:pointer">' +
+        '<div class="qhd"><b>'+(i+1)+'. '+esc(x.r.buyer)+'</b>'+
+          '<span class="badge g'+x.r.grade+'">'+x.r.score+'</span>'+
+          '<span class="tag">'+esc(x.r.country||"—")+'</span>'+
+          '<span class="tag i">'+esc(x.r.cats[0]||"未分类")+'</span>'+
+          st+'<span style="flex:1"></span>'+
+          '<span class="muted mono" style="font-size:11.5px">'+(ch === "wa" ? "+" : "")+esc(x.target)+'</span>'+
+        '</div>'+
+      '</div>';
+    }).join("");
+  renderGroups();
+}
+function startGap(){
+  var gMin = parseInt($("#qGapMin").value, 10) || 25;
+  var gMax = parseInt($("#qGapMax").value, 10) || 70;
+  if(gMax < gMin) gMax = gMin;
+  var sec = gMin + Math.floor(Math.random() * (gMax - gMin + 1));
+  Q.nextAt = Date.now() + sec * 1000;
+  if(QTimer) clearInterval(QTimer);
+  QTimer = setInterval(function(){
+    var el = document.getElementById("qGap");
+    if(!el){ clearInterval(QTimer); QTimer = null; return; }
+    var left = Math.ceil((Q.nextAt - Date.now()) / 1000);
+    if(left > 0){
+      el.textContent = "本次随机间隔 " + sec + " 秒，还剩 " + left + " 秒可联系下一位（避免固定频率触发风控）";
+    } else {
+      el.textContent = "间隔已到，可以联系下一位了";
+      clearInterval(QTimer); QTimer = null;
+    }
+  }, 1000);
+}
+function needConsent(fn){
+  if(Q.agreed){ fn(); return; }
+  Q._after = fn;
+  $("#riskAgree").checked = false;
+  $("#riskOk").disabled = true;
+  $("#modalRisk").classList.add("on");
+}
+function openCurrent(){
+  var it = Q.items[Q.idx];
+  if(!it){ toast("队列里没有待处理的客户"); return; }
+  if(it.state === "done"){ toast("这一条已标记为发送过了"); }
+  if(Q.channel === "wa"){
+    window.open("https://wa.me/" + it.target + (it.msg ? ("?text=" + encodeURIComponent(it.msg)) : ""), "_blank");
+  } else {
+    window.open("mailto:" + it.target + "?subject=" + encodeURIComponent(it.subject) +
+      "&body=" + encodeURIComponent(it.msg), "_blank");
+  }
+  if(it.state !== "done") it.state = "opened";
+  renderQueue();
+  startGap();
+  toast("已打开预填内容，请在" + (Q.channel === "wa" ? "WhatsApp" : "邮件客户端") + "里确认发送");
+}
+function markDone(){
+  var it = Q.items[Q.idx];
+  if(!it){ toast("队列里没有待处理的客户"); return; }
+  var limit = parseInt($("#qDayLimit").value, 10) || 30;
+  if(todayCount(Q.channel) >= limit){
+    toast("已达今日上限 " + limit + " 条，请明天继续以降低风控风险");
+    return;
+  }
+  var n = noteOf(it.id);
+  var stamp = Date.now();
+  if(Q.channel === "wa") n.waAt = stamp; else n.mailAt = stamp;
+  n.last = stamp;
+  if(!n.status || n.status === "未联系") n.status = "已发信";
+  it.state = "done";
+  bumpCount(Q.channel);
+  saveStore();
+  var nx = nextPending(Q.idx + 1);
+  if(nx >= 0 && nx !== Q.idx) Q.idx = nx;
+  renderQueue(); render();
+  toast("已记录发送成功，队列表格里同步更新");
+}
+function skipCurrent(){
+  var it = Q.items[Q.idx];
+  if(!it) return;
+  it.state = "skip";
+  var nx = nextPending(Q.idx + 1);
+  if(nx >= 0) Q.idx = nx;
+  renderQueue();
+}
+function exportQueue(){
+  var ch = Q.channel;
+  if(!Q.items.length){ toast("请先提取目标客户"); return; }
+  if(ch === "wa"){
+    exportRows(["序号","采购商","国家/地区","联系人","WhatsApp号码（已规范化）","原始手机号","背调等级","评分","采购类目","话术模板","发送状态","消息内容"],
+      Q.items.map(function(it, i){
+        return [i+1, it.r.buyer, it.r.country, it.r.contact, "+"+it.target, it.r.mobile, it.r.grade, it.r.score,
+          it.r.cats.join("、"), it.tname,
+          it.state === "done" ? "已发送" : (it.state === "opened" ? "已打开" : (it.state === "skip" ? "已跳过" : "待处理")),
+          it.msg];
+      }), "WhatsApp触达清单");
+  } else {
+    exportRows(["序号","采购商","国家/地区","联系人","邮箱","背调等级","评分","采购类目","话术模板","发送状态","邮件主题","邮件正文"],
+      Q.items.map(function(it, i){
+        return [i+1, it.r.buyer, it.r.country, it.r.contact, it.target, it.r.grade, it.r.score,
+          it.r.cats.join("、"), it.tname,
+          it.state === "done" ? "已发送" : (it.state === "opened" ? "已打开" : (it.state === "skip" ? "已跳过" : "待处理")),
+          it.subject, it.msg];
+      }), "邮件触达清单");
+  }
+  toast("已导出 " + Q.items.length + " 条");
+}
+
+/* ---------------- 16. 事件绑定 ---------------- */
 function bindUI(){
   /* 手机端：筛选面板展开 / 收起 */
-  $("#btnMobFilter").onclick = function(){
-    $(".filters").classList.toggle("open");
-  };
-  /* 标签页 */
-  $$(".tab").forEach(function(t){
+  $("#btnMobFilter").onclick = function(){ $(".filters").classList.toggle("open"); };
+  /* 标签页（顶部标签栏 + 手机底部导航共用） */
+  $$(".tab, .bottomnav button").forEach(function(t){
     t.onclick = function(){ gotoTab(this.dataset.page); };
   });
   /* 清空筛选 */
@@ -3040,8 +3714,9 @@ function bindUI(){
     FILTERS.kw = ""; FILTERS.quick = ""; FILTERS.grades = {}; FILTERS.countries = {};
     FILTERS.cats = {}; FILTERS.mails = {}; FILTERS.verify = {}; FILTERS.roles = {};
     FILTERS.contacts = {}; FILTERS.status = ""; FILTERS.tag = "";
-    $("#fKeyword").value = ""; $("#fQuick").value = "";
-    $$(".pill").forEach(function(p){ p.classList.remove("on"); });
+    FILTERS.fair = ""; FILTERS.social = {};
+    $("#fKeyword").value = ""; $("#fQuick").value = ""; $("#fFair").value = "";
+    $$(".fgroup .pill").forEach(function(p){ p.classList.remove("on"); });
     buildFilterOptions(); applyFilters();
   };
   var kwT;
@@ -3260,8 +3935,75 @@ function bindUI(){
     el.onchange = el.oninput = function(){
       S[p[1]] = this.value; saveStore();
       if(LETTERS.length) buildLetter(LETTERS.map(function(x){ return x.r; }));
+      if(Q.items.length) buildQueueSilent();
     };
   });
+
+  /* ---------- 参展届数：详情里的快捷按钮（事件委托，只绑一次） ---------- */
+  $("#dBody").addEventListener("click", function(e){
+    var b = e.target.closest("[data-fairset]");
+    if(!b || !CUR) return;
+    var n = noteOf(CUR.id);
+    n.fair = b.getAttribute("data-fairset");
+    saveStore(); openDetail(CUR.id); render();
+    toast(n.fair ? ("已记录为第 " + n.fair + " 次参加广交会") : "已清空参展届数");
+  });
+  $("#btnBatchFair").onclick = function(){
+    var v = String($("#batchFair").value || "").replace(/[^\d]/g, "").slice(0, 3);
+    var ids = Object.keys(SEL);
+    if(!ids.length){ toast("请先勾选客户"); return; }
+    ids.forEach(function(id){ noteOf(id).fair = v; });
+    saveStore(); render();
+    toast(v ? ("已将 " + ids.length + " 个客户标记为第 " + v + " 届") : ("已清空 " + ids.length + " 个客户的届数"));
+  };
+  /* ---------- 参展届数 / 社媒 筛选 ---------- */
+  $("#fFair").onchange = function(){ FILTERS.fair = this.value; applyFilters(); };
+  $("#fSocial").onclick = function(e){
+    var b = e.target.closest(".pill"); if(!b) return;
+    var v = b.dataset.v;
+    if(FILTERS.social[v]) delete FILTERS.social[v]; else FILTERS.social[v] = 1;
+    b.classList.toggle("on");
+    applyFilters();
+  };
+  /* ---------- 批量触达 ---------- */
+  $$("#page-outreach .pill").forEach(function(p){
+    p.onclick = function(){
+      $$("#page-outreach .pill").forEach(function(x){ x.classList.remove("on"); });
+      this.classList.add("on");
+      Q.channel = this.dataset.channel;
+      Q.items = [];
+      renderQueue();
+    };
+  });
+  $("#qBuild").onclick = function(){ needConsent(buildQueue); };
+  $("#qOpen").onclick = function(){ needConsent(openCurrent); };
+  $("#qDone").onclick = function(){ needConsent(markDone); };
+  $("#qSkip").onclick = skipCurrent;
+  $("#qExport").onclick = exportQueue;
+  $("#qScope").onchange = function(){ Q.items = []; renderQueue(); };
+  $("#qDayLimit").onchange = renderQueue;
+  $("#qList").onclick = function(e){
+    var el = e.target.closest("[data-qgo]");
+    if(!el) return;
+    Q.idx = parseInt(el.getAttribute("data-qgo"), 10) || 0;
+    renderQueue();
+  };
+  $("#riskAgree").onchange = function(){ $("#riskOk").disabled = !this.checked; };
+  $("#riskOk").onclick = function(){
+    if(this.disabled) return;
+    Q.agreed = true;
+    $("#modalRisk").classList.remove("on");
+    var fn = Q._after; Q._after = null;
+    if(fn) fn();
+  };
+  $("#riskCancel").onclick = function(){ $("#modalRisk").classList.remove("on"); Q._after = null; };
+  $("#btnBatchOutreach").onclick = function(){
+    var ids = Object.keys(SEL);
+    if(!ids.length){ toast("请先在客户名录里勾选客户"); return; }
+    gotoTab("outreach");
+    $("#qScope").value = "selected";
+    needConsent(buildQueue);
+  };
 }
 function syncSettingsUI(){
   $("#sCompany").value = S.myCompany||""; $("#sName").value = S.myName||"";
@@ -3295,7 +4037,7 @@ function boot(){
     prepare(currentRows());
   }catch(e){
     document.getElementById("tbody").innerHTML =
-      '<tr><td colspan="11"><div class="empty">名录数据读取失败：'+esc(e.message)+'</div></td></tr>';
+      '<tr><td colspan="12"><div class="empty">名录数据读取失败：'+esc(e.message)+'</div></td></tr>';
     return;
   }
   bindUI();

@@ -702,14 +702,11 @@ tbody tr.sel td{background:var(--brand-l)}
           <div><label class="lab">间隔下限（秒）</label><input class="inp" id="qGapMin" value="25"></div>
           <div><label class="lab">间隔上限（秒）</label><input class="inp" id="qGapMax" value="70"></div>
         </div>
-        <label class="lab">邮件打开方式</label>
-        <select class="sel" id="qMailMode" style="margin-bottom:6px">
-          <option value="outlook">Outlook 网页版（推荐，写好的邮件直接打开）</option>
-          <option value="office">Outlook 365 / 公司邮箱网页版</option>
-          <option value="gmail">Gmail 网页版</option>
-          <option value="mailto">系统默认邮件客户端（Outlook/Foxmail）</option>
-        </select>
-        <div class="hintline" style="margin-bottom:11px">点「打开当前这条」时会按这里的设置打开：选网页版就直接出现写好的邮件窗口，不依赖电脑上装没装邮件软件。</div>
+        <label class="lab">我的收发邮箱（用来自动识别跳转哪个邮箱）</label>
+        <input class="inp" id="qMyMail" placeholder="如 sales@yourcompany.com" style="margin-bottom:9px">
+        <label class="lab">点「写邮件」时打开</label>
+        <select class="sel" id="qMailMode" style="margin-bottom:6px"></select>
+        <div class="hintline" id="qMailHint" style="margin-bottom:11px"></div>
         <button class="btn p" id="qBuild" style="width:100%;justify-content:center">一键提取并生成差异化话术</button>
         <div class="hintline" id="qBuildHint">按国家 / 采购类目 / 背调等级自动分组，不同组用不同话术，组内措辞也会随机变化</div>
         <div style="margin-top:12px" id="qGroups"></div>
@@ -2442,7 +2439,7 @@ function loadStore(){
   refreshDay();
   var def = {
     myCompany:"", myProducts:"", myName:"", myPhone:"", myEmail:"", website:"", city:"", years:"10",
-    tmplIdx:0, tmpls:JSON.parse(JSON.stringify(TMPL_DEFAULT)), mailMode:"mailto"
+    tmplIdx:0, tmpls:JSON.parse(JSON.stringify(TMPL_DEFAULT)), mailMode:"auto"
   };
   try{
     var saved = JSON.parse(localStorage.getItem(STORE_SET)||"null");
@@ -3009,10 +3006,9 @@ function openDetail(id){
       '<div style="display:flex;gap:7px;flex-wrap:wrap">'+
         (waNumber(r) ? '<a class="btn sm" href="https://wa.me/'+waNumber(r)+'" target="_blank" rel="noopener">WhatsApp 直聊（'+waNumber(r)+'）</a>' : '')+
         (r.mail.valid.length ?
-          '<button class="btn sm" data-mailmode="mailto" data-mailto="'+esc(r.mail.valid[0])+'">系统邮件客户端</button>'+
-          '<button class="btn sm" data-mailmode="outlook" data-mailto="'+esc(r.mail.valid[0])+'">Outlook 网页写邮件</button>'+
-          '<button class="btn sm" data-mailmode="office" data-mailto="'+esc(r.mail.valid[0])+'">Outlook 365 写邮件</button>'+
-          '<button class="btn sm" data-mailmode="gmail" data-mailto="'+esc(r.mail.valid[0])+'">Gmail 网页写邮件</button>'
+          '<button class="btn sm p" data-mailgo="1" data-mailto="'+esc(r.mail.valid[0])+'">写邮件</button>'+
+          '<button class="btn sm" data-mailcopy="1" data-mailto="'+esc(r.mail.valid[0])+'">复制邮件内容</button>'+
+          '<button class="btn sm" data-mailcp="1" data-mailto="'+esc(r.mail.valid[0])+'">复制对方邮箱</button>'
           : '')+
         (r.web ? '<a class="btn sm" href="'+(/^https?:\/\//.test(r.web)?r.web:"http://"+r.web)+'" target="_blank" rel="noopener">访问官网</a>' : '')+
         '<a class="btn sm" href="https://cn.bing.com/search?q='+q+'" target="_blank" rel="noopener">必应背调（国内可开）</a>'+
@@ -3205,20 +3201,93 @@ function fillTmpl(body, r){
     .replace(/\{city\}/g, S.city || "China")
     .replace(/\{years\}/g, S.years || "10");
 }
-/* 按选定的邮件打开方式生成写信链接：不走系统 mailto，可直接打开网页写邮件窗口 */
-function mailUrl(to, subject, body, mode){
-  mode = mode || S.mailMode || "mailto";
-  var t = encodeURIComponent(to || ""), su = encodeURIComponent(subject || ""), bd = encodeURIComponent(body || "");
-  if(mode === "gmail")   return "https://mail.google.com/mail/?view=cm&fs=1&to=" + t + "&su=" + su + "&body=" + bd;
-  if(mode === "outlook") return "https://outlook.live.com/mail/0/deeplink/compose?to=" + t + "&subject=" + su + "&body=" + bd;
-  if(mode === "office")  return "https://outlook.office.com/mail/deeplink/compose?to=" + t + "&subject=" + su + "&body=" + bd;
-  return "mailto:" + (to || "") + "?subject=" + su + "&body=" + bd;
+/* ---------------- 邮件跳转：适配任意邮箱服务商，不依赖本机 mailto 设置 ---------------- */
+/* 支持预填的服务商 → 直接打开写好的邮件窗口；
+   不支持预填的（163/QQ/企业邮等）→ 自动把「收件人+主题+正文」复制到剪贴板并打开邮箱，粘贴即用。*/
+var PROVIDERS = [
+  {id:"auto",    name:"自动识别（按我填的邮箱）", prefill:false},
+  {id:"gmail",   name:"Gmail 网页版", prefill:true,
+   compose:"https://mail.google.com/mail/?view=cm&fs=1&to={to}&su={su}&body={bd}",
+   home:"https://mail.google.com/mail/u/0/#inbox"},
+  {id:"outlook", name:"Outlook 网页版（个人）", prefill:true,
+   compose:"https://outlook.live.com/mail/0/deeplink/compose?to={to}&subject={su}&body={bd}",
+   home:"https://outlook.live.com/mail/0/"},
+  {id:"office",  name:"Outlook 365（公司邮箱）", prefill:true,
+   compose:"https://outlook.office.com/mail/deeplink/compose?to={to}&subject={su}&body={bd}",
+   home:"https://outlook.office.com/mail/"},
+  {id:"exmail",  name:"腾讯企业邮 / 企业微信邮箱", prefill:false, home:"https://exmail.qq.com/login"},
+  {id:"ali",     name:"阿里企业邮 / 阿里云邮",     prefill:false, home:"https://mail.mxhichina.com/"},
+  {id:"qq",      name:"QQ 邮箱",     prefill:false, home:"https://mail.qq.com/"},
+  {id:"mail163", name:"网易 163 邮箱", prefill:false, home:"https://mail.163.com/"},
+  {id:"mail126", name:"网易 126 邮箱", prefill:false, home:"https://mail.126.com/"},
+  {id:"sina",    name:"新浪邮箱",     prefill:false, home:"https://mail.sina.com.cn/"},
+  {id:"mailto",  name:"系统默认邮件客户端（Outlook / Foxmail）", prefill:true, compose:"mailto:{to}?subject={su}&body={bd}"}
+];
+function providerById(id){
+  for(var i=0;i<PROVIDERS.length;i++){ if(PROVIDERS[i].id === id) return PROVIDERS[i]; }
+  return PROVIDERS[PROVIDERS.length - 1];
 }
-function openMail(to, subject, body, mode){
-  var m = mode || S.mailMode || "mailto";
-  if(m === "mailto"){ window.location.href = mailUrl(to, subject, body, m); return; }
-  var w = window.open(mailUrl(to, subject, body, m), "_blank");
-  if(!w) toast("浏览器拦截了弹出窗口，请允许本网站弹窗后重试");
+/* 按我方邮箱域名自动判断服务商 */
+function detectProvider(email){
+  var d = String(email || "").split("@")[1];
+  if(!d) return null;
+  d = d.toLowerCase().replace(/^\s+|\s+$/g, "");
+  if(/(^|\.)gmail\.com$/.test(d)) return "gmail";
+  if(/(^|\.)(outlook|hotmail|live|msn)\.(com|cn)$/.test(d)) return "outlook";
+  if(/(^|\.)office365\.com$/.test(d)) return "office";
+  if(/(^|\.)exmail\.qq\.com$/.test(d)) return "exmail";
+  if(/(^|\.)qq\.com$/.test(d)) return "qq";
+  if(/(^|\.)(163|yeah)\.(com|net)$/.test(d)) return "mail163";
+  if(/(^|\.)126\.com$/.test(d)) return "mail126";
+  if(/(^|\.)sina\.(com|cn)$/.test(d)) return "sina";
+  if(/(^|\.)aliyun\.com$/.test(d)) return "ali";
+  return null;   /* 公司自有域名判断不出来，由使用者手选 */
+}
+function resolveProvider(){
+  var m = S.mailMode || "auto";
+  if(m === "auto"){
+    var p = detectProvider(S.myEmail);
+    return providerById(p || "mailto");
+  }
+  return providerById(m);
+}
+function fillUrl(tpl, to, subject, body){
+  return String(tpl)
+    .replace(/\{to\}/g, encodeURIComponent(to || ""))
+    .replace(/\{su\}/g, encodeURIComponent(subject || ""))
+    .replace(/\{bd\}/g, encodeURIComponent(body || ""));
+}
+function copyMailBlock(to, subject, body){
+  copyText("收件人：" + (to || "") + "\n主题：" + (subject || "") + "\n\n" + (body || ""));
+}
+function updateMailHint(){
+  var el = document.getElementById("qMailHint");
+  if(!el) return;
+  var pv = resolveProvider();
+  var warn = "";
+  if((S.mailMode || "auto") === "auto" && !detectProvider(S.myEmail)){
+    warn = '<br>⚠ 没能从你的邮箱域名自动识别服务商（公司自有域名很常见）。建议手动选一个，或者直接点详情里的「复制邮件内容」，粘到任何邮箱里都能用。';
+  }
+  if(pv.prefill){
+    el.innerHTML = "当前打开方式：<b>" + esc(pv.name) + "</b> —— 点「写邮件」会直接打开已填好的邮件窗口。" + warn;
+  } else {
+    el.innerHTML = "当前打开方式：<b>" + esc(pv.name) + "</b> —— 该邮箱不支持网址预填，程序会把「收件人+主题+正文」复制到剪贴板并打开邮箱，点「写信」粘贴即可。" + warn;
+  }
+}
+/* 统一入口：写邮件 */
+function openMail(to, subject, body, forceMode){
+  var pv = forceMode ? providerById(forceMode) : resolveProvider();
+  if(pv.prefill && pv.compose){
+    var url = fillUrl(pv.compose, to, subject, body);
+    if(url.indexOf("mailto:") === 0){ window.location.href = url; return; }
+    var w = window.open(url, "_blank");
+    if(!w){ copyMailBlock(to, subject, body); toast("浏览器拦截了弹窗，内容已复制，手动粘贴即可"); }
+    return;
+  }
+  copyMailBlock(to, subject, body);
+  var w2 = window.open(pv.home || "https://mail.google.com/", "_blank");
+  if(!w2) toast("弹窗被拦截，内容已复制，请手动打开你的邮箱粘贴");
+  else toast("已复制「收件人+主题+正文」，在打开的邮箱里点「写信」粘贴即可");
 }
 var LETTERS = [];
 function letterPool(){
@@ -3962,17 +4031,25 @@ function bindUI(){
       S[p[1]] = this.value; saveStore();
       if(LETTERS.length) buildLetter(LETTERS.map(function(x){ return x.r; }));
       if(Q.items.length) buildQueueSilent();
+      if(p[0] === "sEmail"){
+        var q2 = document.getElementById("qMyMail");
+        if(q2) q2.value = this.value;
+        updateMailHint();
+      }
     };
   });
 
   /* ---------- 参展届数：详情里的快捷按钮（事件委托，只绑一次） ---------- */
   $("#dBody").addEventListener("click", function(e){
-    /* 详情里的四种"写邮件"入口 */
-    var mb = e.target.closest("[data-mailmode]");
-    if(mb && CUR){
-      var to = mb.getAttribute("data-mailto");
-      var body = fillTmpl(S.tmpls[S.tmplIdx].body, CUR);
-      openMail(to, "Building materials supply from " + (S.myCompany || "China factory"), body, mb.getAttribute("data-mailmode"));
+    /* 详情里的写邮件 / 复制邮件内容 / 复制对方邮箱 */
+    var ma = e.target.closest("[data-mailgo],[data-mailcopy],[data-mailcp]");
+    if(ma && CUR){
+      var mto = ma.getAttribute("data-mailto");
+      var msu = "Building materials supply from " + (S.myCompany || "China factory");
+      var mbd = fillTmpl(S.tmpls[S.tmplIdx].body, CUR);
+      if(ma.hasAttribute("data-mailgo")) openMail(mto, msu, mbd);
+      else if(ma.hasAttribute("data-mailcopy")) copyMailBlock(mto, msu, mbd);
+      else { copyText(mto); toast("已复制对方邮箱：" + mto); }
       return;
     }
     var b = e.target.closest("[data-fairset]");
@@ -4017,9 +4094,18 @@ function bindUI(){
   $("#qScope").onchange = function(){ Q.items = []; renderQueue(); };
   $("#qDayLimit").onchange = renderQueue;
   $("#qMailMode").onchange = function(){
-    S.mailMode = this.value; saveStore();
-    toast("邮件打开方式已切换为：" + this.options[this.selectedIndex].text);
+    S.mailMode = this.value; saveStore(); updateMailHint();
+    toast("写邮件将打开：" + this.options[this.selectedIndex].text);
   };
+  var qMy = document.getElementById("qMyMail");
+  if(qMy){
+    qMy.onchange = qMy.oninput = function(){
+      S.myEmail = this.value.trim(); saveStore();
+      var e2 = document.getElementById("sEmail");
+      if(e2) e2.value = S.myEmail;
+      updateMailHint();
+    };
+  }
   $("#qList").onclick = function(e){
     var el = e.target.closest("[data-qgo]");
     if(!el) return;
@@ -4053,7 +4139,17 @@ function syncSettingsUI(){
   }).join("");
   $("#tmplBody").value = S.tmpls[S.tmplIdx] ? S.tmpls[S.tmplIdx].body : "";
   var qm = document.getElementById("qMailMode");
-  if(qm) qm.value = S.mailMode || "mailto";
+  if(qm){
+    if(!qm.options.length){
+      qm.innerHTML = PROVIDERS.map(function(p){
+        return '<option value="' + p.id + '">' + esc(p.name) + '</option>';
+      }).join("");
+    }
+    qm.value = S.mailMode || "auto";
+  }
+  var qmm = document.getElementById("qMyMail");
+  if(qmm) qmm.value = S.myEmail || "";
+  updateMailHint();
 }
 function copyText(t){
   if(navigator.clipboard && navigator.clipboard.writeText){

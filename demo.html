@@ -449,6 +449,11 @@ tbody tr.sel td{background:var(--brand-l)}
   text-align:center;line-height:1.75;position:relative;z-index:6}
 .demobar b{display:inline-block;background:rgba(255,255,255,.22);border-radius:5px;padding:1px 8px;margin-right:8px}
 .demobar a{color:#fff;font-weight:800;text-decoration:underline;white-space:nowrap}
+/* 授权信息（备份/恢复弹窗内） */
+.licbox{margin-top:16px;padding-top:14px;border-top:1px solid var(--line)}
+.licrow{display:flex;align-items:center;gap:10px;font-size:13px}
+.licrow span{color:var(--txt3);flex:0 0 auto}
+.licrow b{color:var(--ink)}
 .landmask{position:fixed;inset:0;z-index:900;display:none;align-items:center;justify-content:center;
   padding:20px;overflow:auto;background:rgba(6,12,28,.74);-webkit-backdrop-filter:blur(4px);backdrop-filter:blur(4px)}
 .landmask.on{display:flex}
@@ -918,6 +923,13 @@ tbody tr.sel td{background:var(--brand-l)}
         <button class="btn" id="bkExportCsv">导出全部客户（CSV）</button>
       </div>
       <div class="hintline" id="bkInfo"></div>
+      <div class="licbox">
+        <div class="licrow"><span>本机授权</span><b id="bkLic">—</b></div>
+        <div style="margin-top:11px"><button class="btn danger" id="bkLogout">解除本机授权（退出）</button></div>
+        <div class="hintline" style="color:#8a5700;margin-top:9px">
+          解除后本机立即回到未激活状态，客户数据将不可见，需要重新填写手机号和激活码。你的<b>跟进记录、标签、备注不会被删除</b>，重新激活后即可看到。同一个激活码可再次使用，不需要重新购买。
+        </div>
+      </div>
     </div>
     <div class="mf"><button class="btn" id="bkClose">关闭</button></div>
   </div>
@@ -3126,7 +3138,22 @@ function bindUI(){
       (getLic() && getLic().at ? "，激活于 " + esc(fmtDate(getLic().at)) : "") +
       "<br>当前已保存 " + Object.keys(NOTES).length + " 条跟进记录，" +
       Object.keys(DNS).length + " 个域名核查结果。" + (localStorage.getItem(STORE_IMPORT) ? "当前使用导入名录。" : "当前使用内置名录。");
+    $("#bkLic").textContent = licInfoText() || "未激活";
     $("#modalBackup").classList.add("on");
+  };
+  /* 解除本机授权（退出）：清掉本机授权记录，回到激活页；跟进数据保留 */
+  $("#bkLogout").onclick = function(){
+    var l = getLic();
+    if(!l){ toast("本机当前没有授权记录"); return; }
+    var t = String(l.phone || "");
+    var mask = t.length >= 11 ? (t.slice(0,3) + "****" + t.slice(7)) : t;
+    if(!confirm("确定要解除本机的授权吗？\n\n当前授权：" + (l.name || "未填写") + "　" + mask +
+      "\n授权号：" + (l.seq || "—") +
+      "\n\n解除后：\n· 本机立即回到未激活状态，客户数据不可见\n· 跟进记录、标签、备注不会被删除，重新激活后会回来\n· 需要重新填写手机号和激活码才能继续使用\n· 同一个激活码可以再次使用，不需要重新购买")) return;
+    try{ localStorage.removeItem(LIC_STORE); }catch(e){}
+    document.getElementById("modalBackup").classList.remove("on");
+    toast("已解除本机授权，正在返回激活页…");
+    setTimeout(function(){ location.reload(); }, 800);
   };
   $("#bkClose").onclick = function(){ $("#modalBackup").classList.remove("on"); };
   $("#bkExport").onclick = function(){

@@ -97,6 +97,12 @@ td{color:var(--txt2)}
 .faq:last-child{border-bottom:none;padding-bottom:0}
 .faq b{display:block;font-size:13.5px;margin-bottom:4px;color:var(--ink)}
 .faq p{margin:0}
+.buybtn{
+  display:inline-block;background:var(--grad);color:#fff !important;font-weight:800;
+  border-radius:10px;padding:12px 26px;font-size:14px;text-decoration:none !important;
+  box-shadow:0 6px 18px rgba(79,140,255,.30)
+}
+.buybtn:hover{filter:brightness(1.07)}
 .kv{display:grid;grid-template-columns:120px 1fr;gap:6px 12px;font-size:13px;color:var(--txt2)}
 .kv dt{color:var(--txt3)}
 .kv dd{color:var(--txt)}
@@ -143,8 +149,71 @@ td{color:var(--txt2)}
     <p>这套工具帮你把「广交会建材采购商名录」变成一份可直接开工的客户清单：自动背调打分、按 A/B/C 分级、逐条说明评级理由，再按客户的不同需求生成差异化话术，逐个触达并记录跟进。</p>
     <div class="links">
       <a class="p" href="https://jackyai001.github.io/my-website/" target="_blank" rel="noopener">打开系统（线上版）</a>
+      <a href="#buy">如何购买与激活</a>
       <a href="#toc">跳到目录</a>
       <a href="#faq">常见问题</a>
+    </div>
+  </div>
+
+  <div class="card" id="buy">
+    <h2><span class="no">★</span>如何购买与激活</h2>
+    <div class="bd">
+      <p><b>本产品是付费授权软件，需要激活后才能使用。</b>未激活时只能看到产品介绍首页，看不到任何客户数据 —— 名录是加密存放的，激活后才在本地解密。</p>
+      <p>激活方式是 <b>买断制</b>：一次付费，长期使用，没有月费年费、不会过期。</p>
+
+      <h3>第一步：加客服开通账号</h3>
+      <ol class="steps">
+        <li>点下面的按钮添加企业微信客服（手机上会自动打开企业微信）。</li>
+        <li>发送「<b>建材</b>」两个字，并说明你的公司名和主营产品，方便客服给你报价。</li>
+        <li>确认付款后，客服会把你的<b>专属激活码</b>发给你。</li>
+      </ol>
+      <p>
+        <a class="buybtn" href="https://work.weixin.qq.com/ca/cawcded2ec14ec119a" target="_blank" rel="noopener">点击添加客服，开通账号，可以试试</a>
+      </p>
+      <div class="tip">
+        <b>可以先试再说：</b>加客服后说明你的业务和需求，客服会带你确认功能是否匹配（比如你做的是卫浴还是门窗、主要出口哪些国家），再决定要不要买。
+      </div>
+
+      <h3>第二步：激活</h3>
+      <ol class="steps">
+        <li>打开系统：<a href="https://jackyai001.github.io/my-website/" target="_blank" rel="noopener">https://jackyai001.github.io/my-website/</a></li>
+        <li>首页会自动弹出「产品激活」窗口（关掉也能通过顶部按钮重新打开）。</li>
+        <li>填三样：<b>姓名 / 公司</b>、<b>手机号</b>（必须和你报给客服的号码一致）、<b>激活码</b>。</li>
+        <li>点「立即激活」。成功后页面自动刷新，直接进入系统。</li>
+      </ol>
+      <div class="warn">
+        <b>激活码与手机号绑定：</b>激活码里的校验串由「授权号 + 手机号后四位」生成，所以手机号填错会提示"激活码与手机号不匹配"。也不能把激活码转发给别人 —— 别人用自己的手机号激活不了。
+      </div>
+
+      <h3>第三步：换设备 / 清过浏览器数据后怎么办</h3>
+      <p>你的跟进记录、标签、备注都保存在<b>本机浏览器</b>里。如果清了浏览器数据、换了电脑，或者从线上版切到本地版，会出现"未激活"的状态：</p>
+      <ul>
+        <li><b>重新激活</b>：用<b>同一个手机号 + 同一个激活码</b>重新填一次即可 —— 激活码是买断的，可以一直重复使用</li>
+        <li><b>找回跟进记录</b>：换设备前先在旧设备上「备份/恢复」→「导出备份（JSON）」，再到新设备导入</li>
+        <li><b>忘了激活码</b>：加客服，报你的姓名和手机号，客服可以从发码台账里帮你查回来</li>
+      </ul>
+
+      <h3>关于授权的常见问题</h3>
+      <div class="faq">
+        <b>激活码能用几台设备？</b>
+        <p>同一个手机号可以在任意多台设备上激活，方便你换电脑、手机、平板。但激活码只跟一个手机号走，不能给别人用。</p>
+      </div>
+      <div class="faq">
+        <b>会过期吗？</b>
+        <p>不会。买断制，一次激活长期可用，没有月费或年费。</p>
+      </div>
+      <div class="faq">
+        <b>能给同事一起用吗？</b>
+        <p>需要给同事单独开通。因为跟进记录是各自保存在自己浏览器里的，一个账号无法让多人共享同一份跟进进度。如果需要团队协作，联系客服说明。</p>
+      </div>
+      <div class="faq">
+        <b>为什么我看不到客户数据？</b>
+        <p>未激活时名录是加密的，页面上不会出现任何客户信息，这是正常的。激活后即可看到全部 1132 条客户。</p>
+      </div>
+      <div class="faq">
+        <b>能修改或删掉内置的客户名录吗？</b>
+        <p>不能。内置名录是只读数据，产品里没有导入或删除名录的入口，避免误操作把客户数据弄丢。你可以在每位客户下补充参展届数、海外社媒和跟进记录。</p>
+      </div>
     </div>
   </div>
 
@@ -152,6 +221,7 @@ td{color:var(--txt2)}
     <h2><span class="no">目</span>目录</h2>
     <div class="bd">
       <div class="toc">
+        <a href="#buy">★ 如何购买与激活</a>
         <a href="#start">① 三分钟上手</a>
         <a href="#entry">② 三个入口怎么选</a>
         <a href="#list">③ 客户名录与筛选</a>

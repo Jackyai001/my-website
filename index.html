@@ -396,6 +396,49 @@ tbody tr.sel td{background:var(--brand-l)}
   line-height:1.8;text-align:center
 }
 .gfoot b{color:var(--brand)}
+/* ---------- 未激活首页 ---------- */
+.landing{position:fixed;inset:0;overflow:auto;color:#fff;
+  background:linear-gradient(160deg,#0b1a3a 0%,#152a58 42%,#3a2a6e 100%)}
+.landbar{display:flex;align-items:center;gap:12px;padding:14px 22px;border-bottom:1px solid rgba(255,255,255,.09)}
+.lbrand{display:flex;align-items:center;gap:11px}
+.lbrand b{display:block;font-size:17px;font-weight:800;letter-spacing:.4px;color:#fff}
+.lbrand span{display:block;font-size:11px;color:#93a6cc}
+.lbtn{margin-left:auto;border:1px solid rgba(255,255,255,.3);background:rgba(255,255,255,.1);color:#fff;
+  border-radius:9px;padding:9px 17px;font-size:13.5px;font-weight:700;cursor:pointer;white-space:nowrap}
+.lbtn:hover{background:rgba(255,255,255,.2)}
+.lhero{max-width:900px;margin:0 auto;padding:54px 22px 26px;text-align:center}
+.ltag{display:inline-block;background:rgba(34,201,224,.16);border:1px solid rgba(34,201,224,.35);
+  color:#8fe9f8;border-radius:20px;padding:5px 15px;font-size:12.5px;margin-bottom:20px}
+.lhero h1{font-size:34px;line-height:1.35;margin-bottom:16px;letter-spacing:.5px}
+.lhero p{font-size:14.5px;color:#b9c7e2;line-height:2;max-width:740px;margin:0 auto 26px}
+.lstats{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;max-width:700px;margin:0 auto 28px}
+.lstats div{background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.11);border-radius:12px;padding:14px 8px}
+.lstats b{display:block;font-size:24px;font-weight:800;
+  background:linear-gradient(92deg,#fff,#9fe6ff);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
+.lstats span{display:block;font-size:11.5px;color:#8fa2c4;margin-top:3px}
+.lcta{background:linear-gradient(135deg,#4f8cff,#7c5cff 62%,#22c9e0);border:none;color:#fff;border-radius:11px;
+  padding:15px 40px;font-size:16px;font-weight:800;letter-spacing:.5px;cursor:pointer;box-shadow:0 10px 30px rgba(79,140,255,.35)}
+.lcta:hover{filter:brightness(1.08)}
+.lsub{font-size:12.5px;color:#8fa2c4;margin-top:12px}
+.lfeats{max-width:1060px;margin:0 auto;padding:18px 22px 8px;display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+.lf{background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);border-radius:13px;padding:16px 17px}
+.lf b{display:block;font-size:14px;margin-bottom:7px;color:#fff}
+.lf span{font-size:12.5px;color:#a8b8d6;line-height:1.85}
+.lfoot{text-align:center;font-size:12.5px;color:#8fa2c4;padding:32px 22px 46px;line-height:1.9}
+.lfoot b{color:#8fe9f8}
+.landmask{position:fixed;inset:0;z-index:900;display:none;align-items:center;justify-content:center;
+  padding:20px;overflow:auto;background:rgba(6,12,28,.74);-webkit-backdrop-filter:blur(4px);backdrop-filter:blur(4px)}
+.landmask.on{display:flex}
+@media (max-width:860px){
+  .lhero{padding:32px 18px 18px}
+  .lhero h1{font-size:23px;line-height:1.45}
+  .lhero p{font-size:13.5px;line-height:1.9}
+  .lstats{grid-template-columns:repeat(2,1fr)}
+  .lfeats{grid-template-columns:1fr;padding:14px}
+  .landbar{padding:12px 14px}
+  .lbtn{padding:8px 12px;font-size:12.5px}
+  .lcta{padding:13px 26px;font-size:15px}
+}
 </style>
 </head>
 <body>
@@ -425,10 +468,8 @@ tbody tr.sel td{background:var(--brand-l)}
   <div class="spacer"></div>
   <div class="tools">
     <a class="btn" href="使用指南.html" target="_blank" rel="noopener">使用指南</a>
-    <button class="btn" id="btnImport">导入名录</button>
     <button class="btn" id="btnExport">导出结果</button>
     <button class="btn" id="btnBackup">备份/恢复</button>
-    <button class="btn danger" id="btnReset">恢复内置名录</button>
     <input type="file" id="fileInput" accept=".csv,.tsv,.txt,.xlsx,.xls" style="display:none">
   </div>
 </header>
@@ -1130,35 +1171,75 @@ function licInfoText(){
   var mask = p.length >= 11 ? (p.slice(0,3) + "****" + p.slice(7)) : p;
   return (l.name ? l.name + " · " : "") + mask;
 }
-/* 未激活时的全屏门禁：整页替换，未激活连界面都看不到，客户数据也不会被解密 */
+/* 未激活时：显示产品首页（介绍）+ 自动弹出激活窗；激活前不加载任何客户数据 */
+var LIC_FEATURES = [
+  ["自动背调分级","六维评分（联系通道 / 客户类型 / 产品匹配 / 信息完整 / 数据可信 / 联网核查），每条客户都给出可读的 A/B/C 评级理由，不靠感觉猜"],
+  ["多维精准筛选","按国家、建材类目、邮箱类型、客户角色、参展届数、海外社媒、跟进状态组合筛选，一步锁定今天要打的人"],
+  ["邮箱真实性核查","用国内公共 DNS 核查邮箱域名的 MX / SPF / DMARC，剔除注定退信的地址，无需外网"],
+  ["差异化批量触达","按采购类目与背调等级自动分组，一人一套话术；逐个打开 WhatsApp 或邮件并预填内容，带随机间隔与每日上限，附风控提示"],
+  ["参展届数与社媒留档","逐条记录第几次参加广交会、领英 / 脸书 / Instagram 账号，可筛选、可导出"],
+  ["跟进管理","从未联系到成交全流程留档，标签与备注随客户保存，可导出 Excel 交接同事"]
+];
 function showGate(){
+  var feats = LIC_FEATURES.map(function(f){
+    return '<div class="lf"><b>' + f[0] + '</b><span>' + f[1] + '</span></div>';
+  }).join("");
+  var mark = '<svg viewBox="0 0 48 48" width="42" height="42" aria-hidden="true">' +
+      '<defs><linearGradient id="lg1" x1="0" y1="0" x2="1" y2="1">' +
+      '<stop offset="0" stop-color="#4f8cff"/><stop offset=".55" stop-color="#7c5cff"/><stop offset="1" stop-color="#22c9e0"/>' +
+      '</linearGradient></defs>' +
+      '<rect width="48" height="48" rx="13" fill="url(#lg1)"/>' +
+      '<path d="M30.4 11.6v19.1c0 4.3-2.9 6.9-7.2 6.9-3.4 0-6-1.7-7.3-4.5" fill="none" stroke="#fff" stroke-width="4.2" stroke-linecap="round"/>' +
+      '<circle cx="34.6" cy="14.4" r="3.1" fill="#fff" opacity=".95"/>' +
+      '<circle cx="14.6" cy="34.6" r="2.3" fill="#fff" opacity=".7"/></svg>';
   document.body.innerHTML =
-    '<div class="gate"><div class="gatebox">' +
-      '<div class="gbrand">' +
-        '<svg viewBox="0 0 48 48" width="46" height="46" aria-hidden="true">' +
-          '<defs><linearGradient id="gg" x1="0" y1="0" x2="1" y2="1">' +
-          '<stop offset="0" stop-color="#4f8cff"/><stop offset=".55" stop-color="#7c5cff"/><stop offset="1" stop-color="#22c9e0"/>' +
-          '</linearGradient></defs>' +
-          '<rect width="48" height="48" rx="13" fill="url(#gg)"/>' +
-          '<path d="M30.4 11.6v19.1c0 4.3-2.9 6.9-7.2 6.9-3.4 0-6-1.7-7.3-4.5" fill="none" stroke="#fff" stroke-width="4.2" stroke-linecap="round"/>' +
-          '<circle cx="34.6" cy="14.4" r="3.1" fill="#fff" opacity=".95"/>' +
-          '<circle cx="14.6" cy="34.6" r="2.3" fill="#fff" opacity=".7"/>' +
-        '</svg>' +
-        '<div><b>JackyAiTeam</b><span>建材外贸客户背调与智能触达系统</span></div>' +
+    '<div class="landing">' +
+      '<div class="landbar">' +
+        '<div class="lbrand">' + mark + '<div><b>JackyAiTeam</b><span>建材外贸客户背调与智能触达系统</span></div></div>' +
+        '<button class="lbtn" id="lActTop">立即激活 / 进入系统</button>' +
       '</div>' +
-      '<h2>产品激活</h2>' +
-      '<p class="gsub">本产品为授权使用。请填写卖家发给你的专属激活码，激活码与手机号后四位绑定，一码一人。</p>' +
-      '<label class="glab">姓名 / 公司</label>' +
-      '<input class="ginp" id="gName" placeholder="如：张三 / 深圳某某建材" autocomplete="off">' +
-      '<label class="glab">手机号</label>' +
-      '<input class="ginp" id="gPhone" maxlength="11" inputmode="numeric" placeholder="11 位手机号" autocomplete="off">' +
-      '<label class="glab">激活码</label>' +
-      '<input class="ginp gcode" id="gCode" placeholder="JAT-XXX-XXXXXXXXXX" autocomplete="off">' +
-      '<button class="gbtn" id="gGo">立即激活</button>' +
-      '<div class="gmsg" id="gMsg"></div>' +
-      '<div class="gfoot">还没有激活码？联系卖家购买后获取<br><b>' + esc(LIC_CONTACT) + '</b></div>' +
-      '<div class="gfoot" style="opacity:.6;font-size:11.5px">已购买过？用同一个手机号和激活码重新激活即可恢复使用</div>' +
-    '</div></div>';
+      '<div class="lhero">' +
+        '<div class="ltag">2026 春季广交会 · 建材采购商</div>' +
+        '<h1>把一份名录，变成能直接开工的客户清单</h1>' +
+        '<p>自动背调打分并说明 A/B/C 理由 · 按国家与类目精准筛选 · 按客户需求生成差异化话术 · WhatsApp 与邮件逐个触达 · 全流程跟进记录</p>' +
+        '<div class="lstats">' +
+          '<div><b>1132</b><span>条建材采购商</span></div>' +
+          '<div><b>18</b><span>个建材类目</span></div>' +
+          '<div><b>6</b><span>项背调维度</span></div>' +
+          '<div><b>42</b><span>组差异化话术</span></div>' +
+        '</div>' +
+        '<button class="lcta" id="lActHero">立即激活，开始开发客户</button>' +
+        '<div class="lsub">已购买并拿到激活码？点上面的按钮直接进入</div>' +
+      '</div>' +
+      '<div class="lfeats">' + feats + '</div>' +
+      '<div class="lfoot">本产品为授权使用，需激活后方可操作 · 联系购买：<b>' + esc(LIC_CONTACT) + '</b></div>' +
+      '<div class="landmask on" id="lMask">' +
+        '<div class="gatebox">' +
+          '<div class="gbrand">' + mark.replace('id="lg1"','id="lg2"').replace('url(#lg1)','url(#lg2)') +
+            '<div><b>JackyAiTeam</b><span>建材外贸客户背调与智能触达系统</span></div></div>' +
+          '<h2>产品激活</h2>' +
+          '<p class="gsub">本产品为授权使用。请填写卖家发给你的专属激活码，激活码与手机号后四位绑定，一码一人。</p>' +
+          '<label class="glab">姓名 / 公司</label>' +
+          '<input class="ginp" id="gName" placeholder="如：张三 / 深圳某某建材" autocomplete="off">' +
+          '<label class="glab">手机号</label>' +
+          '<input class="ginp" id="gPhone" maxlength="11" inputmode="numeric" placeholder="11 位手机号" autocomplete="off">' +
+          '<label class="glab">激活码</label>' +
+          '<input class="ginp gcode" id="gCode" placeholder="JAT-XXX-XXXXXXXXXX" autocomplete="off">' +
+          '<button class="gbtn" id="gGo">立即激活</button>' +
+          '<div class="gmsg" id="gMsg"></div>' +
+          '<div class="gfoot">还没有激活码？联系卖家购买后获取<br><b>' + esc(LIC_CONTACT) + '</b></div>' +
+          '<div class="gfoot" style="cursor:pointer" id="lClose"><span style="color:#2f6bff">先看看产品介绍 →</span></div>' +
+        '</div>' +
+      '</div>' +
+    '</div>';
+  var lMask = document.getElementById("lMask");
+  function openAct(){ lMask.classList.add("on"); var f = document.getElementById("gName"); if(f) f.focus(); }
+  ["lActTop","lActHero"].forEach(function(id){
+    var b = document.getElementById(id);
+    if(b) b.onclick = openAct;
+  });
+  document.getElementById("lClose").onclick = function(){ lMask.classList.remove("on"); };
+  lMask.onclick = function(e){ if(e.target === lMask) lMask.classList.remove("on"); };
   var msg = document.getElementById("gMsg");
   function fail(t){ msg.className = "gmsg bad"; msg.textContent = t; }
   document.getElementById("gGo").onclick = function(){
@@ -2972,14 +3053,16 @@ function bindUI(){
   });
   /* 导出 / 导入 */
   $("#btnExport").onclick = exportCurrent;
-  $("#btnImport").onclick = function(){ $("#fileInput").click(); };
+  var bImp = $("#btnImport");
+  if(bImp) bImp.onclick = function(){ $("#fileInput").click(); };
   $("#fileInput").onchange = function(){
     var f = this.files[0]; if(!f) return;
     if(/\.(xlsx|xls)$/i.test(f.name)) loadXlsx(f);
     else importFile(f);
     this.value = "";
   };
-  $("#btnReset").onclick = function(){
+  var bRst = $("#btnReset");
+  if(bRst) bRst.onclick = function(){
     if(!confirm("确定放弃导入的名录，恢复内置的 2026 春季广交会建材采购商名录？\n（跟进记录与标签会保留）")) return;
     localStorage.removeItem(STORE_IMPORT);
     prepare(loadEmbedded());

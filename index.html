@@ -454,6 +454,8 @@ tbody tr.sel td{background:var(--brand-l)}
 .licrow{display:flex;align-items:center;gap:10px;font-size:13px}
 .licrow span{color:var(--txt3);flex:0 0 auto}
 .licrow b{color:var(--ink)}
+.btn.danger{color:#c33;border-color:#eec2c2}
+.btn.danger:hover{border-color:#e5a8a8;background:#fdecec;color:#c33}
 .landmask{position:fixed;inset:0;z-index:900;display:none;align-items:center;justify-content:center;
   padding:20px;overflow:auto;background:rgba(6,12,28,.74);-webkit-backdrop-filter:blur(4px);backdrop-filter:blur(4px)}
 .landmask.on{display:flex}
@@ -500,6 +502,7 @@ tbody tr.sel td{background:var(--brand-l)}
     <a class="btn" href="使用指南.html" target="_blank" rel="noopener">使用指南</a>
     <button class="btn" id="btnExport">导出结果</button>
     <button class="btn" id="btnBackup">备份/恢复</button>
+    <button class="btn" id="btnLogoutTop" title="解除本机授权，回到激活页">退出</button>
     <input type="file" id="fileInput" accept=".csv,.tsv,.txt,.xlsx,.xls" style="display:none">
   </div>
 </header>
@@ -1173,6 +1176,21 @@ function demoBlock(what){
   if(!DEMO) return false;
   toast("这是只读演示版，不能" + what + "。点顶部横幅「添加客服」开通正式账号即可使用");
   return true;
+}
+/* 解除本机授权（退出）：清掉本机授权记录回到激活页，跟进数据保留 */
+function doLogout(){
+  var l = getLic();
+  if(!l){ toast("本机当前没有授权记录"); return; }
+  var t = String(l.phone || "");
+  var mask = t.length >= 11 ? (t.slice(0,3) + "****" + t.slice(7)) : t;
+  if(!confirm("确定要解除本机的授权（退出）吗？\n\n当前授权：" + (l.name || "未填写") + "　" + mask +
+    "\n授权号：" + (l.seq || "—") +
+    "\n\n解除后：\n· 本机立即回到未激活状态，客户数据不可见\n· 跟进记录、标签、备注不会被删除，重新激活后会回来\n· 需要重新填写手机号和激活码才能继续使用\n· 同一个激活码可以再次使用，不需要重新购买")) return;
+  try{ localStorage.removeItem(LIC_STORE); }catch(e){}
+  var m = document.getElementById("modalBackup");
+  if(m) m.classList.remove("on");
+  toast("已解除本机授权，正在返回激活页…");
+  setTimeout(function(){ location.reload(); }, 800);
 }
 /* 演示版顶部横幅 */
 function showDemoBar(){
@@ -3140,20 +3158,10 @@ function bindUI(){
     $("#bkLic").textContent = licInfoText() || "未激活";
     $("#modalBackup").classList.add("on");
   };
-  /* 解除本机授权（退出）：清掉本机授权记录，回到激活页；跟进数据保留 */
-  $("#bkLogout").onclick = function(){
-    var l = getLic();
-    if(!l){ toast("本机当前没有授权记录"); return; }
-    var t = String(l.phone || "");
-    var mask = t.length >= 11 ? (t.slice(0,3) + "****" + t.slice(7)) : t;
-    if(!confirm("确定要解除本机的授权吗？\n\n当前授权：" + (l.name || "未填写") + "　" + mask +
-      "\n授权号：" + (l.seq || "—") +
-      "\n\n解除后：\n· 本机立即回到未激活状态，客户数据不可见\n· 跟进记录、标签、备注不会被删除，重新激活后会回来\n· 需要重新填写手机号和激活码才能继续使用\n· 同一个激活码可以再次使用，不需要重新购买")) return;
-    try{ localStorage.removeItem(LIC_STORE); }catch(e){}
-    document.getElementById("modalBackup").classList.remove("on");
-    toast("已解除本机授权，正在返回激活页…");
-    setTimeout(function(){ location.reload(); }, 800);
-  };
+  /* 解除本机授权（退出）：顶栏「退出」按钮与弹窗内按钮共用同一逻辑 */
+  $("#bkLogout").onclick = doLogout;
+  var loTop = $("#btnLogoutTop");
+  if(loTop) loTop.onclick = doLogout;
   $("#bkClose").onclick = function(){ $("#modalBackup").classList.remove("on"); };
   $("#bkExport").onclick = function(){
     downloadRaw("客户背调系统备份_" + new Date().toISOString().slice(0,10) + ".json",
@@ -3395,6 +3403,7 @@ function boot(){
   buildLetter([]);
   $("#letterScope").value = "filtered";
   if(DEMO) showDemoBar();
+  if(DEMO){ var loTop2 = $("#btnLogoutTop"); if(loTop2) loTop2.style.display = "none"; }
 }
 boot();
 </script>

@@ -1,0 +1,3370 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>JackyAiTeam · 建材外贸客户背调与智能触达系统</title>
+<meta name="description" content="JackyAiTeam 出品：广交会建材采购商自动背调、A/B/C 分级筛选、参展届数与社媒核查、差异化话术半自动触达与跟进管理">
+<meta name="theme-color" content="#0b1a3a">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 48 48'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0' y1='0' x2='1' y2='1'%3E%3Cstop offset='0' stop-color='%234f8cff'/%3E%3Cstop offset='1' stop-color='%237c5cff'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='48' height='48' rx='12' fill='url(%23g)'/%3E%3Cpath d='M30 12v18c0 4-3 7-7 7-3 0-5-2-6-4' stroke='white' stroke-width='4' fill='none' stroke-linecap='round'/%3E%3C/svg%3E">
+<style>
+:root{
+  --bg:#eef1f7; --panel:#ffffff; --line:#e2e7ef; --line2:#eef1f6;
+  --txt:#141c2b; --txt2:#546074; --txt3:#8894a8;
+  --brand:#2f6bff; --brand-d:#1f55dd; --brand-l:#eaf1ff; --brand-2:#7c5cff; --brand-3:#22c9e0;
+  --ink:#0b1a3a; --ink-2:#152a58;
+  --ok:#0f9d58; --ok-l:#e7f7ee; --warn:#d98300; --warn-l:#fff5e6;
+  --bad:#d93838; --bad-l:#fdecec; --gray:#8c97a8; --gray-l:#f0f2f6;
+  --shadow:0 1px 2px rgba(15,26,58,.05),0 8px 24px rgba(15,26,58,.06);
+  --shadow-l:0 10px 34px rgba(15,26,58,.12);
+  --r:12px; --r-s:8px;
+  --grad:linear-gradient(135deg,#4f8cff 0%,#7c5cff 62%,#22c9e0 100%);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%}
+body{
+  font-family:"Microsoft YaHei","PingFang SC","Hiragino Sans GB","Segoe UI",Arial,sans-serif;
+  background:var(--bg); color:var(--txt); font-size:13px; line-height:1.55;
+  -webkit-font-smoothing:antialiased;
+}
+input,select,button,textarea{font-family:inherit;font-size:13px;color:inherit}
+button{cursor:pointer;border:none;background:none}
+a{color:var(--brand);text-decoration:none}
+a:hover{text-decoration:underline}
+::-webkit-scrollbar{width:9px;height:9px}
+::-webkit-scrollbar-thumb{background:#c9d2de;border-radius:5px}
+::-webkit-scrollbar-thumb:hover{background:#adb9c9}
+::-webkit-scrollbar-track{background:transparent}
+
+/* ---------- 品牌顶栏 ---------- */
+.appbar{
+  background:linear-gradient(118deg,#0b1a3a 0%,#152a58 46%,#3a2a6e 100%);
+  padding:11px 18px; display:flex; align-items:center; gap:14px; flex-wrap:wrap;
+  position:sticky; top:0; z-index:50; box-shadow:0 2px 16px rgba(11,26,58,.24)
+}
+.appbar:after{
+  content:""; position:absolute; left:0; right:0; bottom:0; height:1px;
+  background:linear-gradient(90deg,transparent,rgba(124,92,255,.75),rgba(34,201,224,.6),transparent)
+}
+.brand{display:flex;align-items:center;gap:11px;white-space:nowrap}
+.brand .mark{width:40px;height:40px;border-radius:12px;box-shadow:0 5px 16px rgba(79,140,255,.38)}
+.brand-txt b{
+  display:block;font-size:17px;letter-spacing:.4px;font-weight:800;
+  background:linear-gradient(92deg,#fff,#cfe0ff 58%,#9fe6ff);
+  -webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent
+}
+.brand-txt span{display:block;font-size:11px;color:#93a6cc;letter-spacing:.2px;line-height:1.5}
+.chips{display:flex;gap:7px;flex-wrap:wrap;align-items:center;margin-left:6px}
+.chip{
+  background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.11);
+  border-radius:20px;padding:4px 11px;font-size:11.5px;color:#b9c7e2;
+  display:flex;align-items:center;gap:5px;white-space:nowrap
+}
+.chip b{color:#fff;font-weight:700}
+.chip.a{background:rgba(15,157,88,.18);border-color:rgba(15,157,88,.34);color:#7fe0ab}
+.chip.a b{color:#a9f0c9}
+.chip.b{background:rgba(217,131,0,.18);border-color:rgba(217,131,0,.34);color:#f3bd6a}
+.chip.b b{color:#ffd79a}
+.appbar .spacer{flex:1}
+.tools{display:flex;gap:7px;flex-wrap:wrap}
+.tools .btn{background:rgba(255,255,255,.09);border-color:rgba(255,255,255,.15);color:#dbe5f7}
+.tools .btn:hover{background:rgba(255,255,255,.17);border-color:rgba(255,255,255,.3);color:#fff}
+.tools .btn.p{background:var(--grad);border-color:transparent;color:#fff}
+.tools .btn.danger:hover{background:rgba(217,56,56,.22);border-color:rgba(217,56,56,.42);color:#ffb3b3}
+
+/* ---------- 通用控件 ---------- */
+.btn{
+  border:1px solid var(--line); background:#fff; border-radius:6px; padding:6px 12px;
+  font-size:12.5px; color:var(--txt2); display:inline-flex; align-items:center; gap:6px;
+  transition:.15s; white-space:nowrap
+}
+.btn:hover{border-color:#c3cedd;background:#f7f9fc;color:var(--txt)}
+.btn.p{background:var(--brand);border-color:var(--brand);color:#fff;font-weight:600}
+.btn.p:hover{background:var(--brand-d);border-color:var(--brand-d);color:#fff}
+.btn.danger:hover{border-color:#f0b4b4;background:var(--bad-l);color:var(--bad)}
+.btn.sm{padding:3px 8px;font-size:12px}
+.btn:disabled{opacity:.5;cursor:not-allowed}
+.inp,.sel{
+  border:1px solid var(--line);border-radius:6px;padding:5px 9px;background:#fff;width:100%;
+  outline:none;transition:.15s
+}
+.inp:focus,.sel:focus{border-color:var(--brand);box-shadow:0 0 0 3px rgba(26,111,224,.1)}
+.lab{font-size:11.5px;color:var(--txt3);margin-bottom:4px;display:block;font-weight:600}
+.muted{color:var(--txt3)}
+.mono{font-family:Consolas,Monaco,"Courier New",monospace}
+
+/* ---------- 标签页 ---------- */
+.tabs{
+  display:flex;gap:2px;padding:0 18px;background:#fff;border-bottom:1px solid var(--line);
+  position:sticky;top:62px;z-index:40;overflow-x:auto
+}
+.tab{
+  padding:11px 16px;font-size:13px;color:var(--txt2);border-bottom:2px solid transparent;
+  font-weight:600;transition:.15s;white-space:nowrap;display:flex;align-items:center;gap:6px
+}
+.tab:hover{color:var(--txt);background:var(--gray-l)}
+.tab.on{color:var(--brand);border-bottom-color:var(--brand)}
+.page{display:none;padding:16px 18px 44px;max-width:1560px;margin:0 auto}
+.page.on{display:block}
+
+/* ---------- 名录布局 ---------- */
+.layout{display:grid;grid-template-columns:264px 1fr;gap:14px;align-items:start}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:var(--r);box-shadow:var(--shadow)}
+.card .hd{
+  padding:10px 13px;border-bottom:1px solid var(--line2);font-weight:700;font-size:13px;
+  display:flex;align-items:center;justify-content:space-between;gap:8px
+}
+.card .bd{padding:12px 13px}
+.filters{position:sticky;top:104px;max-height:calc(100vh - 120px);overflow:auto}
+.fgroup{padding:11px 13px;border-bottom:1px solid var(--line2)}
+.fgroup:last-child{border-bottom:none}
+.fgroup h4{font-size:12px;color:var(--txt2);font-weight:700;margin-bottom:8px;display:flex;justify-content:space-between;align-items:center}
+.checklist{max-height:150px;overflow:auto;border:1px solid var(--line2);border-radius:6px;padding:5px}
+.checklist.short{max-height:118px}
+.checklist label{
+  display:flex;align-items:center;gap:6px;padding:3px 5px;border-radius:4px;cursor:pointer;font-size:12px
+}
+.checklist label:hover{background:var(--gray-l)}
+.checklist .n{margin-left:auto;color:var(--txt3);font-size:11px}
+.checklist input{accent-color:var(--brand)}
+.row{display:flex;gap:8px;align-items:flex-end}
+.row>*{flex:1}
+.pills{display:flex;gap:6px;flex-wrap:wrap}
+.pill{
+  border:1px solid var(--line);border-radius:20px;padding:3px 10px;font-size:12px;color:var(--txt2);
+  background:#fff;transition:.15s
+}
+.pill:hover{border-color:#c3cedd}
+.pill.on{background:var(--brand-l);border-color:#b9d5f8;color:var(--brand-d);font-weight:600}
+
+/* ---------- 表格 ---------- */
+.tablewrap{overflow:auto;max-height:calc(100vh - 250px)}
+table{border-collapse:separate;border-spacing:0;width:100%;font-size:12.5px}
+thead th{
+  position:sticky;top:0;z-index:5;background:#f8fafc;border-bottom:1px solid var(--line);
+  padding:8px 9px;text-align:left;font-weight:700;color:var(--txt2);white-space:nowrap;font-size:12px
+}
+thead th.sortable{cursor:pointer;user-select:none}
+thead th.sortable:hover{background:#eff3f9;color:var(--txt)}
+tbody td{border-bottom:1px solid var(--line2);padding:7px 9px;vertical-align:top}
+tbody tr:hover td{background:#fbfcfe}
+tbody tr.sel td{background:var(--brand-l)}
+.bname{font-weight:600;color:var(--txt);max-width:250px;display:block;line-height:1.4}
+.contactline{color:var(--txt2)}
+.email{word-break:break-all;max-width:210px;display:block}
+.prod{max-width:230px;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden;color:var(--txt2)}
+.badge{
+  display:inline-flex;align-items:center;justify-content:center;min-width:22px;height:20px;padding:0 6px;
+  border-radius:5px;font-weight:700;font-size:11.5px
+}
+.gA{background:var(--ok-l);color:var(--ok)}
+.gB{background:var(--warn-l);color:var(--warn)}
+.gC{background:var(--gray-l);color:var(--txt3)}
+.score{font-weight:700;font-variant-numeric:tabular-nums}
+.tag{
+  display:inline-block;padding:1px 6px;border-radius:4px;font-size:11px;margin:1px 3px 1px 0;
+  background:var(--gray-l);color:var(--txt2);white-space:nowrap
+}
+.tag.r{background:var(--bad-l);color:var(--bad)}
+.tag.g{background:var(--ok-l);color:var(--ok)}
+.tag.y{background:var(--warn-l);color:var(--warn)}
+.tag.i{background:var(--brand-l);color:var(--brand-d)}
+.ops{display:flex;gap:3px;flex-wrap:wrap}
+.iconbtn{
+  width:24px;height:24px;border-radius:5px;display:grid;place-items:center;border:1px solid transparent;
+  color:var(--txt3);font-size:13px
+}
+.iconbtn:hover{background:var(--brand-l);color:var(--brand);border-color:#cfe2fb}
+.empty{padding:50px 20px;text-align:center;color:var(--txt3)}
+.pager{display:flex;align-items:center;gap:9px;padding:9px 13px;border-top:1px solid var(--line2);flex-wrap:wrap}
+.pager .spacer{flex:1}
+.pbtn{border:1px solid var(--line);border-radius:5px;min-width:28px;height:26px;padding:0 7px;background:#fff;color:var(--txt2)}
+.pbtn:hover:not(:disabled){border-color:var(--brand);color:var(--brand)}
+.pbtn.on{background:var(--brand);border-color:var(--brand);color:#fff;font-weight:700}
+.pbtn:disabled{opacity:.4;cursor:not-allowed}
+
+/* ---------- 进度 ---------- */
+.progress{height:6px;background:var(--gray-l);border-radius:4px;overflow:hidden;flex:1}
+.progress i{display:block;height:100%;background:linear-gradient(90deg,#1a6fe0,#4a9bff);width:0;transition:width .2s}
+.bar{height:9px;background:var(--gray-l);border-radius:5px;overflow:hidden;margin-top:5px}
+.bar i{display:block;height:100%;background:linear-gradient(90deg,#1a6fe0,#4a9bff)}
+
+/* ---------- 抽屉 ---------- */
+.mask{position:fixed;inset:0;background:rgba(19,28,44,.42);z-index:100;display:none}
+.mask.on{display:block}
+.drawer{
+  position:fixed;top:0;right:0;bottom:0;width:660px;max-width:96vw;background:#fff;z-index:101;
+  transform:translateX(100%);transition:transform .22s;display:flex;flex-direction:column;box-shadow:-8px 0 30px rgba(19,28,44,.14)
+}
+.drawer.on{transform:none}
+.drawer .dh{padding:12px 16px;border-bottom:1px solid var(--line);display:flex;align-items:center;gap:10px}
+.drawer .dh h3{font-size:15px;flex:1;line-height:1.35}
+.drawer .db{overflow:auto;padding:14px 16px;flex:1}
+.sec{margin-bottom:16px}
+.sec h4{font-size:12.5px;color:var(--txt2);font-weight:700;margin-bottom:8px;padding-left:8px;border-left:3px solid var(--brand)}
+.kv{display:grid;grid-template-columns:92px 1fr;gap:6px 10px;font-size:12.5px}
+.kv dt{color:var(--txt3)}
+.kv dd{color:var(--txt);word-break:break-all}
+.dl{background:#fbfcfe;border:1px solid var(--line2);border-radius:6px;padding:9px 11px;font-size:12.5px}
+.dl li{list-style:none;padding:2px 0;color:var(--ok)}
+.dl li.bad{color:var(--bad)}
+.dl li.warn{color:var(--warn)}
+.stat{display:grid;grid-template-columns:repeat(2,1fr);gap:9px}
+.stat .s{border:1px solid var(--line2);border-radius:6px;padding:9px 11px;background:#fbfcfe}
+.stat .s b{display:block;font-size:19px;font-weight:700;line-height:1.2}
+.stat .s span{font-size:11.5px;color:var(--txt3)}
+
+/* ---------- 弹窗 ---------- */
+.modal{position:fixed;inset:0;background:rgba(19,28,44,.45);z-index:120;display:none;align-items:center;justify-content:center;padding:20px}
+.modal.on{display:flex}
+.modal .box{background:#fff;border-radius:10px;width:560px;max-width:96vw;max-height:86vh;display:flex;flex-direction:column;overflow:hidden}
+.modal .box.wide{width:820px}
+.modal .mh{padding:13px 16px;border-bottom:1px solid var(--line);font-weight:700;font-size:14px;display:flex;align-items:center;flex:0 0 auto}
+.modal .mb{padding:15px 16px;overflow:auto;flex:1 1 auto;min-height:0}
+.modal .mf{padding:11px 16px;border-top:1px solid var(--line);display:flex;gap:9px;justify-content:flex-end;background:#fbfcfe;flex:0 0 auto}
+.tmpl{font-family:Consolas,Monaco,"Courier New",monospace;font-size:12.5px;line-height:1.7;min-height:230px;resize:vertical;white-space:pre-wrap}
+.hintline{font-size:12px;color:var(--txt3);margin-top:7px;line-height:1.6}
+.copybox{background:#fbfcfe;border:1px solid var(--line2);border-radius:6px;padding:11px;font-size:12.5px;white-space:pre-wrap;line-height:1.75;max-height:320px;overflow:auto}
+.toast{
+  position:fixed;left:50%;bottom:36px;transform:translateX(-50%) translateY(20px);background:#1f2733;color:#fff;
+  padding:9px 18px;border-radius:8px;font-size:13px;z-index:200;opacity:0;transition:.22s;pointer-events:none
+}
+.toast.on{opacity:1;transform:translateX(-50%)}
+.batchbar{
+  display:none;align-items:center;gap:9px;padding:8px 13px;background:var(--brand-l);border-bottom:1px solid #d4e5fb;
+  font-size:12.5px;flex-wrap:wrap
+}
+.batchbar.on{display:flex}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:11px}
+.grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:11px}
+.note{font-size:12px;color:var(--txt3);background:#fbfcfe;border:1px solid var(--line2);border-radius:6px;padding:9px 11px;line-height:1.65}
+.legend{display:flex;gap:13px;flex-wrap:wrap;font-size:11.5px;color:var(--txt3);margin-top:9px}
+.legend i{display:inline-block;width:9px;height:9px;border-radius:3px;margin-right:4px}
+.split{display:grid;grid-template-columns:1fr 320px;gap:14px;align-items:start}
+.setlist{display:flex;flex-direction:column;gap:7px;max-height:520px;overflow:auto}
+.setitem{border:1px solid var(--line2);border-radius:6px;padding:8px 10px;font-size:12.5px;transition:.15s}
+.setitem:hover{border-color:#cfe2fb;background:#fbfcfe}
+.setitem .t{display:flex;align-items:center;gap:7px;font-weight:600}
+.setitem .m{color:var(--txt3);font-size:11.5px;margin-top:2px}
+
+/* ---------- 等级依据 / 评分明细 ---------- */
+.dimgrid{display:flex;flex-direction:column;gap:6px}
+.dimrow{display:grid;grid-template-columns:60px 1fr 56px;gap:9px;align-items:center;font-size:12.5px}
+.dimrow .k{color:var(--txt2);font-weight:600}
+.dimbar{height:8px;background:var(--gray-l);border-radius:5px;overflow:hidden}
+.dimbar i{display:block;height:100%;background:var(--grad)}
+.dimbar i.neg{background:linear-gradient(90deg,#d93838,#ef6b6b)}
+.dimrow .v{text-align:right;font-weight:700;font-variant-numeric:tabular-nums;color:var(--txt)}
+.dimwhy{font-size:11.5px;color:var(--txt3);margin:1px 0 6px 69px;line-height:1.55}
+.reasonbox{
+  background:linear-gradient(135deg,#f6f9ff,#fbf8ff);border:1px solid #e5ecfc;
+  border-radius:9px;padding:10px 12px;font-size:12.5px;line-height:1.8;color:var(--txt2)
+}
+.gradeReason{font-size:11.5px;color:var(--txt3);line-height:1.5;margin-top:2px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+
+/* ---------- 社媒 ---------- */
+.socgrid{display:flex;flex-direction:column;gap:7px}
+.socrow{display:flex;align-items:center;gap:8px}
+.socrow .pfx{width:78px;font-size:12px;color:var(--txt2);font-weight:600;display:flex;align-items:center;gap:6px;flex:0 0 auto}
+.socrow .inp{flex:1;min-width:0}
+.socdot{width:9px;height:9px;border-radius:3px;display:inline-block;flex:0 0 auto}
+.socdot.li{background:#0a66c2}
+.socdot.fb{background:#1877f2}
+.socdot.ig{background:linear-gradient(45deg,#f09433,#e6683c,#dc2743,#cc2366,#bc1888)}
+
+/* ---------- 触达队列 ---------- */
+.qitem{border:1px solid var(--line);border-radius:10px;padding:9px 11px;margin-bottom:8px;background:#fff;transition:.15s}
+.qitem.done{border-color:#c8ead6;background:#f7fdfa}
+.qitem.now{border-color:var(--brand);box-shadow:0 0 0 3px var(--brand-l)}
+.qhd{display:flex;align-items:center;gap:7px;flex-wrap:wrap}
+.qmsg{background:#fbfcfe;border:1px solid var(--line2);border-radius:8px;padding:9px;font-size:12.5px;white-space:pre-wrap;line-height:1.72;max-height:200px;overflow:auto;margin-top:7px}
+.segcard{border:1px solid var(--line);border-radius:10px;padding:10px 11px;margin-bottom:8px;background:#fbfcfe}
+.segcard .t{display:flex;align-items:center;gap:7px;font-weight:700;font-size:12.5px;margin-bottom:5px}
+
+/* ---------- 风控提示 ---------- */
+.riskbox{background:#fff9f2;border:1px solid #f6ddbc;border-radius:10px;padding:13px 15px}
+.riskbox h4{color:#a55a00;font-size:13.5px;margin-bottom:7px;display:flex;align-items:center;gap:6px}
+.riskbox ul{margin:0 0 11px 17px;font-size:12.5px;color:#7d5520;line-height:1.85}
+.riskchk{display:flex;align-items:flex-start;gap:9px;font-size:12.5px;color:#7d5520;font-weight:700;cursor:pointer;user-select:none}
+.riskchk input{margin-top:2px;accent-color:#d98300;width:16px;height:16px;flex:0 0 auto}
+.legalnote{font-size:11.5px;color:var(--txt3);line-height:1.7;margin-top:8px}
+
+/* ---------- 手机端 ---------- */
+.mobfilterbtn{display:none}
+.bottomnav{display:none}
+@media (max-width: 900px){
+  body{font-size:13.5px;-webkit-text-size-adjust:100%}
+  .appbar{position:static;padding:10px 12px;gap:9px}
+  .brand .mark{width:34px;height:34px;border-radius:10px}
+  .brand-txt b{font-size:15px}
+  .brand-txt span{font-size:10px}
+  .chips{width:100%;margin-left:0;gap:6px}
+  .appbar .spacer{display:none}
+  .tools{gap:6px;width:100%}
+  .tools .btn{flex:1;justify-content:center;padding:8px 6px}
+  .tabs{display:none}
+  .page{padding:12px 11px 86px}
+  .layout{grid-template-columns:1fr}
+  .mobfilterbtn{display:flex;width:100%;justify-content:center;margin-bottom:10px;padding:10px}
+  .filters{position:static;max-height:none;display:none}
+  .filters.open{display:block}
+  .split{grid-template-columns:1fr}
+  .grid2,.grid3{grid-template-columns:1fr}
+  .stat,#followStats{grid-template-columns:repeat(2,1fr)!important}
+  .drawer{width:100%}
+  .modal{padding:0}
+  .modal .box,.modal .box.wide{width:100%;max-width:100%;max-height:100vh;border-radius:0}
+  .checklist,.checklist.short{max-height:190px}
+  /* 表格转卡片 */
+  .tablewrap{max-height:none;overflow:visible}
+  table,thead,tbody{display:block}
+  thead{display:none}
+  tbody tr{
+    display:block;border:1px solid var(--line);border-radius:11px;padding:11px 12px;
+    margin-bottom:10px;background:#fff;box-shadow:var(--shadow)
+  }
+  tbody td{display:block;border:none;padding:2px 0;font-size:13px}
+  tbody td:before{
+    content:attr(data-label);display:inline-block;min-width:66px;color:var(--txt3);
+    font-size:11.5px;vertical-align:top
+  }
+  tbody td[data-label=""]:before{display:none}
+  tbody tr:hover td{background:transparent}
+  tbody tr.sel{border-color:#b9d5f8;background:var(--brand-l)}
+  tbody tr.sel td{background:transparent}
+  .bname{max-width:none;font-size:14.5px}
+  .prod{max-width:none;-webkit-line-clamp:5}
+  .email{max-width:none}
+  .ops{gap:6px;padding-top:8px;flex-wrap:wrap}
+  .iconbtn{width:36px;height:36px;font-size:15px;border:1px solid var(--line);background:#fff}
+  .pager{gap:6px;padding:10px}
+  .pager .spacer{display:none}
+  .pbtn{min-width:34px;height:32px}
+  .batchbar{gap:6px;padding:9px 11px}
+  .copybox{max-height:280px}
+  .tmpl{min-height:190px}
+  .fgroup{padding:12px 13px}
+  .checklist label{padding:6px 5px;font-size:13px}
+  .pill{padding:6px 12px;font-size:12.5px}
+  .bottomnav{
+    display:flex;position:fixed;left:0;right:0;bottom:0;z-index:60;
+    background:rgba(255,255,255,.97);-webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px);
+    border-top:1px solid var(--line);padding:5px 4px calc(5px + env(safe-area-inset-bottom));
+    box-shadow:0 -4px 20px rgba(15,26,58,.09)
+  }
+  .bottomnav button{
+    flex:1;display:flex;flex-direction:column;align-items:center;gap:2px;
+    padding:6px 2px;font-size:10.5px;color:var(--txt3);border-radius:10px;line-height:1.2
+  }
+  .bottomnav button .ic{font-size:19px;line-height:1.1}
+  .bottomnav button.on{color:var(--brand);background:var(--brand-l);font-weight:700}
+  .dimrow{grid-template-columns:54px 1fr 52px}
+  .dimwhy{margin-left:63px}
+}
+/* ---------- 激活门禁 ---------- */
+.gate{
+  position:fixed;inset:0;z-index:900;display:flex;align-items:center;justify-content:center;
+  padding:20px;overflow:auto;background:linear-gradient(135deg,#0b1a3a,#152a58 45%,#3a2a6e)
+}
+.gatebox{
+  width:430px;max-width:100%;background:#fff;border-radius:16px;padding:22px 24px 18px;
+  box-shadow:0 24px 60px rgba(0,0,0,.42);margin:auto;color:var(--txt)
+}
+.gbrand{display:flex;align-items:center;gap:12px;margin-bottom:15px}
+.gbrand svg{flex:0 0 auto}
+.gbrand b{display:block;font-size:17px;font-weight:800;color:var(--ink);letter-spacing:.3px}
+.gbrand span{display:block;font-size:11.5px;color:var(--txt3)}
+.gatebox h2{font-size:19px;margin-bottom:6px;color:var(--ink)}
+.gsub{font-size:12.5px;color:var(--txt2);line-height:1.7;margin-bottom:14px}
+.glab{display:block;font-size:12px;font-weight:700;color:var(--txt2);margin-bottom:4px}
+.ginp{
+  width:100%;border:1px solid var(--line);border-radius:9px;padding:9px 12px;font-size:14px;
+  margin-bottom:10px;outline:none;background:#fbfcfe;
+  color:var(--ink);caret-color:var(--ink);-webkit-text-fill-color:var(--ink)
+}
+.ginp::placeholder{color:#9aa6b8;-webkit-text-fill-color:#9aa6b8}
+.ginp:focus{border-color:var(--brand);background:#fff;box-shadow:0 0 0 3px var(--brand-l)}
+.gcode{font-family:Consolas,Monaco,monospace;letter-spacing:1.5px;font-size:15px}
+.gbtn{
+  width:100%;padding:12px;border-radius:9px;background:var(--grad);color:#fff;font-size:15px;
+  font-weight:700;letter-spacing:.5px;margin-top:2px
+}
+.gbtn:hover{filter:brightness(1.07)}
+.gmsg{font-size:12.5px;min-height:18px;margin-top:10px;line-height:1.6}
+.gmsg.bad{color:var(--bad)}
+.gmsg.ok{color:var(--ok);font-weight:700}
+.gfoot{
+  font-size:12px;color:var(--txt3);margin-top:14px;padding-top:13px;border-top:1px solid var(--line2);
+  line-height:1.8;text-align:center
+}
+.gfoot b{color:var(--brand)}
+/* ---------- 未激活首页 ---------- */
+.landing{position:fixed;inset:0;overflow:auto;color:#fff;
+  background:linear-gradient(160deg,#0b1a3a 0%,#152a58 42%,#3a2a6e 100%)}
+.landbar{display:flex;align-items:center;gap:12px;padding:14px 22px;border-bottom:1px solid rgba(255,255,255,.09)}
+.lbrand{display:flex;align-items:center;gap:11px}
+.lbrand b{display:block;font-size:17px;font-weight:800;letter-spacing:.4px;color:#fff}
+.lbrand span{display:block;font-size:11px;color:#93a6cc}
+.lbtn{margin-left:auto;border:1px solid rgba(255,255,255,.3);background:rgba(255,255,255,.1);color:#fff;
+  border-radius:9px;padding:9px 17px;font-size:13.5px;font-weight:700;cursor:pointer;white-space:nowrap}
+.lbtn:hover{background:rgba(255,255,255,.2)}
+.lhero{max-width:900px;margin:0 auto;padding:54px 22px 26px;text-align:center}
+.ltag{display:inline-block;background:rgba(34,201,224,.16);border:1px solid rgba(34,201,224,.35);
+  color:#8fe9f8;border-radius:20px;padding:5px 15px;font-size:12.5px;margin-bottom:20px}
+.lhero h1{font-size:34px;line-height:1.35;margin-bottom:16px;letter-spacing:.5px}
+.lhero p{font-size:14.5px;color:#b9c7e2;line-height:2;max-width:740px;margin:0 auto 26px}
+.lstats{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;max-width:700px;margin:0 auto 28px}
+.lstats div{background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.11);border-radius:12px;padding:14px 8px}
+.lstats b{display:block;font-size:24px;font-weight:800;
+  background:linear-gradient(92deg,#fff,#9fe6ff);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
+.lstats span{display:block;font-size:11.5px;color:#8fa2c4;margin-top:3px}
+.lcta{background:linear-gradient(135deg,#4f8cff,#7c5cff 62%,#22c9e0);border:none;color:#fff;border-radius:11px;
+  padding:15px 40px;font-size:16px;font-weight:800;letter-spacing:.5px;cursor:pointer;box-shadow:0 10px 30px rgba(79,140,255,.35)}
+.lcta:hover{filter:brightness(1.08)}
+.lsub{font-size:12.5px;color:#8fa2c4;margin-top:12px}
+.lfeats{max-width:1060px;margin:0 auto;padding:18px 22px 8px;display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+.lf{background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);border-radius:13px;padding:16px 17px}
+.lf b{display:block;font-size:14px;margin-bottom:7px;color:#fff}
+.lf span{font-size:12.5px;color:#a8b8d6;line-height:1.85}
+.lfoot{text-align:center;font-size:12.5px;color:#8fa2c4;padding:32px 22px 46px;line-height:1.9}
+.lfoot b{color:#8fe9f8}
+.lcta2{display:inline-block;margin-left:12px;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.32);
+  color:#fff;border-radius:11px;padding:15px 26px;font-size:14.5px;font-weight:700;text-decoration:none;cursor:pointer}
+.lcta2:hover{background:rgba(255,255,255,.2)}
+.lcontact{max-width:780px;margin:26px auto 4px;padding:26px 26px 22px;text-align:center;
+  background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.13);border-radius:16px}
+.lcontact h3{font-size:19px;margin-bottom:12px;color:#fff}
+.lcontact p{font-size:13.5px;color:#a8b8d6;line-height:1.95;margin-bottom:20px}
+.glink{color:#2f6bff;font-weight:700;text-decoration:none;border-bottom:1px dashed #9dc0ff}
+.glink:hover{color:#1e57e0}
+.demobar{background:linear-gradient(92deg,#c97a00,#e8a020);color:#fff;font-size:12.5px;padding:9px 16px;
+  text-align:center;line-height:1.75;position:relative;z-index:6}
+.demobar b{display:inline-block;background:rgba(255,255,255,.22);border-radius:5px;padding:1px 8px;margin-right:8px}
+.demobar a{color:#fff;font-weight:800;text-decoration:underline;white-space:nowrap}
+.landmask{position:fixed;inset:0;z-index:900;display:none;align-items:center;justify-content:center;
+  padding:20px;overflow:auto;background:rgba(6,12,28,.74);-webkit-backdrop-filter:blur(4px);backdrop-filter:blur(4px)}
+.landmask.on{display:flex}
+@media (max-width:860px){
+  .lhero{padding:32px 18px 18px}
+  .lhero h1{font-size:23px;line-height:1.45}
+  .lhero p{font-size:13.5px;line-height:1.9}
+  .lstats{grid-template-columns:repeat(2,1fr)}
+  .lfeats{grid-template-columns:1fr;padding:14px}
+  .landbar{padding:12px 14px}
+  .lbtn{padding:8px 12px;font-size:12.5px}
+  .lcta{padding:13px 26px;font-size:15px}
+  .lcta2{display:block;margin:12px 0 0;padding:13px 20px;font-size:14px}
+  .lcontact{margin:18px 14px 0;padding:20px 18px}
+}
+</style>
+</head>
+<body>
+<script>window.__JAT_DEMO__=true;</script>
+
+<header class="appbar">
+  <div class="brand">
+    <svg class="mark" viewBox="0 0 48 48" aria-hidden="true">
+      <defs>
+        <linearGradient id="jlg" x1="0" y1="0" x2="1" y2="1">
+          <stop offset="0" stop-color="#4f8cff"/>
+          <stop offset=".55" stop-color="#7c5cff"/>
+          <stop offset="1" stop-color="#22c9e0"/>
+        </linearGradient>
+      </defs>
+      <rect x="0" y="0" width="48" height="48" rx="13" fill="url(#jlg)"/>
+      <path d="M30.4 11.6v19.1c0 4.3-2.9 6.9-7.2 6.9-3.4 0-6-1.7-7.3-4.5"
+            fill="none" stroke="#fff" stroke-width="4.2" stroke-linecap="round"/>
+      <circle cx="34.6" cy="14.4" r="3.1" fill="#fff" opacity=".95"/>
+      <circle cx="14.6" cy="34.6" r="2.3" fill="#fff" opacity=".7"/>
+    </svg>
+    <div class="brand-txt">
+      <b>JackyAiTeam</b>
+      <span>建材外贸客户背调与智能触达系统 · 2026 春季广交会</span>
+    </div>
+  </div>
+  <div class="chips" id="chips"></div>
+  <div class="spacer"></div>
+  <div class="tools">
+    <a class="btn" href="使用指南.html" target="_blank" rel="noopener">使用指南</a>
+    <button class="btn" id="btnExport">导出结果</button>
+    <button class="btn" id="btnBackup">备份/恢复</button>
+    <input type="file" id="fileInput" accept=".csv,.tsv,.txt,.xlsx,.xls" style="display:none">
+  </div>
+</header>
+
+<nav class="tabs">
+  <button class="tab on" data-page="list"><span class="ic">▤</span>客户名录</button>
+  <button class="tab" data-page="board"><span class="ic">◔</span>背调看板</button>
+  <button class="tab" data-page="outreach"><span class="ic">✈</span>批量触达</button>
+  <button class="tab" data-page="letter"><span class="ic">✉</span>开发信</button>
+  <button class="tab" data-page="follow"><span class="ic">☑</span>跟进管理</button>
+</nav>
+
+<nav class="bottomnav" id="bottomnav">
+  <button class="on" data-page="list"><span class="ic">▤</span>名录</button>
+  <button data-page="board"><span class="ic">◔</span>看板</button>
+  <button data-page="outreach"><span class="ic">✈</span>触达</button>
+  <button data-page="letter"><span class="ic">✉</span>开发信</button>
+  <button data-page="follow"><span class="ic">☑</span>跟进</button>
+</nav>
+
+<!-- ============ 客户名录 ============ -->
+<div class="page on" id="page-list">
+  <button class="btn mobfilterbtn" id="btnMobFilter">筛选条件（点击展开 / 收起）</button>
+  <div class="layout">
+    <div class="card filters">
+      <div class="hd">筛选条件 <button class="btn sm" id="btnClearFilter">清空</button></div>
+      <div class="fgroup">
+        <label class="lab">关键词（公司 / 联系人 / 邮箱 / 产品）</label>
+        <input class="inp" id="fKeyword" placeholder="如：ceramic、瓷砖、Ahmed">
+      </div>
+      <div class="fgroup">
+        <h4>客户等级（背调评分）</h4>
+        <div class="pills" id="fGrade">
+          <button class="pill" data-v="A">A 优先开发</button>
+          <button class="pill" data-v="B">B 可开发</button>
+          <button class="pill" data-v="C">C 低优先</button>
+        </div>
+      </div>
+      <div class="fgroup">
+        <h4>国家 / 地区 <span class="muted" id="ctyToggle" style="font-weight:400;cursor:pointer">展开</span></h4>
+        <input class="inp" id="fCountrySearch" placeholder="搜索国家" style="margin-bottom:6px">
+        <div class="checklist" id="fCountry"></div>
+      </div>
+      <div class="fgroup">
+        <h4>采购产品类目</h4>
+        <div class="checklist short" id="fCat"></div>
+      </div>
+      <div class="fgroup">
+        <h4>邮箱情况</h4>
+        <div class="pills" id="fMail">
+          <button class="pill" data-v="corp">企业邮箱</button>
+          <button class="pill" data-v="free">个人邮箱</button>
+          <button class="pill" data-v="none">无邮箱</button>
+          <button class="pill" data-v="bad">格式无效</button>
+        </div>
+      </div>
+      <div class="fgroup">
+        <h4>背调状态</h4>
+        <div class="pills" id="fVerify">
+          <button class="pill" data-v="unchecked">未核查</button>
+          <button class="pill" data-v="ok">域名可收信</button>
+          <button class="pill" data-v="nomail">无邮件服务</button>
+          <button class="pill" data-v="nxdomain">域名不存在</button>
+        </div>
+      </div>
+      <div class="fgroup">
+        <h4>客户类型</h4>
+        <div class="pills" id="fRole">
+          <button class="pill" data-v="trader">贸易商/进口商</button>
+          <button class="pill" data-v="contractor">工程承包商</button>
+          <button class="pill" data-v="dealer">经销商/门店</button>
+          <button class="pill" data-v="factory">同行工厂</button>
+          <button class="pill" data-v="agent">驻华采购办</button>
+        </div>
+      </div>
+      <div class="fgroup">
+        <h4>参展届数（第几次参加广交会）</h4>
+        <select class="sel" id="fFair">
+          <option value="">全部</option>
+          <option value="has">已记录届数</option>
+          <option value="none">尚未记录</option>
+          <option value="ge2">2 届及以上</option>
+          <option value="ge3">3 届及以上</option>
+        </select>
+      </div>
+      <div class="fgroup">
+        <h4>海外社媒</h4>
+        <div class="pills" id="fSocial">
+          <button class="pill" data-v="any">有任意社媒</button>
+          <button class="pill" data-v="li">领英</button>
+          <button class="pill" data-v="fb">脸书</button>
+          <button class="pill" data-v="ig">Instagram</button>
+          <button class="pill" data-v="none">未记录</button>
+        </div>
+      </div>
+      <div class="fgroup">
+        <h4>跟进状态 / 标签</h4>
+        <select class="sel" id="fStatus" style="margin-bottom:6px"></select>
+        <select class="sel" id="fTag"></select>
+      </div>
+      <div class="fgroup">
+        <h4>联系方式</h4>
+        <div class="pills" id="fContact">
+          <button class="pill" data-v="hasMail">有邮箱</button>
+          <button class="pill" data-v="hasMobile">有手机</button>
+          <button class="pill" data-v="hasTel">有座机</button>
+          <button class="pill" data-v="hasWeb">有网址</button>
+          <button class="pill" data-v="risk">含风险标记</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="hd">
+        <span>客户列表 <span class="muted" id="countInfo"></span></span>
+        <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+          <input class="inp" id="fQuick" placeholder="表内快速搜索" style="width:180px">
+          <select class="sel" id="sortSel" style="width:158px">
+            <option value="score">按评分排序</option>
+            <option value="country">按国家排序</option>
+            <option value="role">按客户类型排序</option>
+            <option value="fair">按参展届数排序</option>
+            <option value="seq">按名录原顺序</option>
+            <option value="status">按跟进状态排序</option>
+          </select>
+          <button class="btn" id="btnVerify">联网核查</button>
+        </div>
+      </div>
+      <div class="batchbar" id="batchbar">
+        <span>已选 <b id="selCount">0</b> 条</span>
+        <select class="sel" id="batchStatus" style="width:130px"></select>
+        <button class="btn sm" id="btnBatchStatus">设置状态</button>
+        <select class="sel" id="batchTag" style="width:130px"></select>
+        <button class="btn sm" id="btnBatchTag">加标签</button>
+        <button class="btn sm" id="btnBatchClear">清除标签</button>
+        <button class="btn sm" id="btnBatchLetter">批量生成开发信</button>
+        <input class="inp" id="batchFair" placeholder="届数" style="width:66px">
+        <button class="btn sm" id="btnBatchFair">设参展届数</button>
+        <button class="btn sm p" id="btnBatchOutreach">加入触达队列</button>
+        <button class="btn sm" id="btnBatchExport">导出选中</button>
+        <button class="btn sm" id="btnSelNone">取消选择</button>
+      </div>
+      <div class="tablewrap">
+        <table>
+          <thead>
+            <tr>
+              <th style="width:30px"><input type="checkbox" id="selAll" title="全选本页"></th>
+              <th style="width:30px">#</th>
+              <th class="sortable" data-k="buyer">采购商公司</th>
+              <th class="sortable" data-k="country" style="width:88px">国家</th>
+              <th style="width:104px">联系人</th>
+              <th style="width:132px">手机 / WhatsApp</th>
+              <th style="width:186px">邮箱</th>
+              <th>采购产品</th>
+              <th style="width:216px">评级依据（为什么是这个等级）</th>
+              <th class="sortable" data-k="score" style="width:74px">背调</th>
+              <th class="sortable" data-k="fair" style="width:86px">参展届数</th>
+              <th style="width:92px">跟进</th>
+              <th style="width:112px">操作</th>
+            </tr>
+          </thead>
+          <tbody id="tbody"></tbody>
+        </table>
+      </div>
+      <div class="pager" id="pager"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ============ 背调看板 ============ -->
+<div class="page" id="page-board">
+  <div class="grid3" style="margin-bottom:14px">
+    <div class="card"><div class="bd">
+      <div style="font-size:12.5px;color:var(--txt2);font-weight:700;margin-bottom:9px">客户等级分布（背调评分）</div>
+      <div id="gradeChart"></div>
+    </div></div>
+    <div class="card"><div class="bd">
+      <div style="font-size:12.5px;color:var(--txt2);font-weight:700;margin-bottom:9px">客户类型分布</div>
+      <div id="roleChart"></div>
+    </div></div>
+    <div class="card"><div class="bd">
+      <div style="font-size:12.5px;color:var(--txt2);font-weight:700;margin-bottom:9px">邮箱情况</div>
+      <div id="mailChart"></div>
+    </div></div>
+  </div>
+  <div class="split">
+    <div class="card">
+      <div class="hd">重点国家分布（Top 20）</div>
+      <div class="bd" id="countryChart"></div>
+    </div>
+    <div class="card">
+      <div class="hd">数据质量与风险提示</div>
+      <div class="bd" id="riskPanel"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ============ 开发信 ============ -->
+<div class="page" id="page-letter">
+  <div class="split">
+    <div class="card">
+      <div class="hd">
+        开发信预览
+        <div style="display:flex;gap:8px">
+          <button class="btn sm" id="btnLetterRefresh">重新生成</button>
+          <button class="btn sm p" id="btnLetterCopy">复制当前</button>
+          <button class="btn sm" id="btnLetterExport">导出全部（CSV）</button>
+        </div>
+      </div>
+      <div class="bd">
+        <div class="row" style="margin-bottom:11px">
+          <div style="flex:2">
+            <label class="lab">目标客户范围</label>
+            <select class="sel" id="letterScope">
+              <option value="filtered">当前筛选结果（全部）</option>
+              <option value="selected">已勾选的客户</option>
+              <option value="topA">仅 A 级客户</option>
+            </select>
+          </div>
+          <div style="flex:1">
+            <label class="lab">切换查看第几条</label>
+            <input class="inp mono" id="letterIdx" value="1" style="text-align:center">
+          </div>
+        </div>
+        <div class="copybox" id="letterPreview">（请先在右侧填写我方公司与产品信息）</div>
+        <div class="hintline" id="letterMeta"></div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="hd">我方资料与模板</div>
+      <div class="bd">
+        <div class="grid2" style="margin-bottom:11px">
+          <div><label class="lab">我方公司名（英文）</label><input class="inp" id="sCompany"></div>
+          <div><label class="lab">业务员姓名</label><input class="inp" id="sName"></div>
+          <div><label class="lab">主营产品（英文）</label><input class="inp" id="sProducts"></div>
+          <div><label class="lab">WhatsApp / 电话</label><input class="inp" id="sPhone"></div>
+          <div><label class="lab">邮箱</label><input class="inp" id="sEmail"></div>
+          <div><label class="lab">公司网站</label><input class="inp" id="sWebsite"></div>
+          <div><label class="lab">工厂所在城市</label><input class="inp" id="sCity"></div>
+          <div><label class="lab">年出口经验</label><input class="inp" id="sYears"></div>
+        </div>
+        <label class="lab">开发信模板</label>
+        <select class="sel" id="tmplSel" style="margin-bottom:8px"></select>
+        <textarea class="inp tmpl" id="tmplBody"></textarea>
+        <div class="hintline">
+          可用变量：{contact} 联系人 · {company} 客户公司 · {country} 国家 · {products} 客户采购产品 · {myCompany} · {myProducts} · {myName} · {myPhone} · {myEmail} · {city} · {years}
+        </div>
+        <div style="display:flex;gap:8px;margin-top:11px">
+          <button class="btn sm p" id="btnTmplSave">保存模板</button>
+          <button class="btn sm" id="btnTmplReset">恢复默认</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ============ 跟进管理 ============ -->
+<div class="page" id="page-follow">
+  <div class="card" style="margin-bottom:14px">
+    <div class="hd">跟进进度总览 <button class="btn sm" id="btnFollowExport">导出跟进记录</button></div>
+    <div class="bd"><div class="stat" id="followStats" style="grid-template-columns:repeat(4,1fr)"></div></div>
+  </div>
+  <div class="card">
+    <div class="hd">已建立跟进记录的客户 <span class="muted">（状态、标签、备注自动保存在本机浏览器）</span></div>
+    <div class="bd"><div class="setlist" id="followList"></div></div>
+  </div>
+</div>
+
+<!-- ============ 批量触达 ============ -->
+<div class="page" id="page-outreach">
+  <div class="split">
+    <div class="card">
+      <div class="hd">
+        <span>触达队列 <span class="muted" id="qInfo"></span></span>
+        <div style="display:flex;gap:8px;flex-wrap:wrap">
+          <button class="btn sm p" id="qOpen">打开当前这条</button>
+          <button class="btn sm" id="qDone">标记已发送 → 下一条</button>
+          <button class="btn sm" id="qSkip">跳过</button>
+          <button class="btn sm" id="qExport">导出清单</button>
+        </div>
+      </div>
+      <div class="bd">
+        <div class="segbar" style="margin-bottom:11px">
+          <button class="pill on" data-channel="wa">WhatsApp 触达</button>
+          <button class="pill" data-channel="mail">邮件触达</button>
+        </div>
+        <div id="qTop"></div>
+        <div id="qList" style="margin-top:11px"></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="hd">触达设置</div>
+      <div class="bd">
+        <label class="lab">目标范围</label>
+        <select class="sel" id="qScope" style="margin-bottom:10px">
+          <option value="filtered">当前筛选结果</option>
+          <option value="selected">已勾选的客户</option>
+          <option value="gradeA">仅 A 级客户</option>
+          <option value="gradeAB">A + B 级客户</option>
+          <option value="checked">仅已联网核查通过的客户</option>
+        </select>
+        <div class="grid2" style="margin-bottom:10px">
+          <div><label class="lab">今日发送上限</label><input class="inp" id="qDayLimit" value="30"></div>
+          <div><label class="lab">已发送（本机累计）</label><input class="inp mono" id="qDayDone" readonly></div>
+          <div><label class="lab">间隔下限（秒）</label><input class="inp" id="qGapMin" value="25"></div>
+          <div><label class="lab">间隔上限（秒）</label><input class="inp" id="qGapMax" value="70"></div>
+        </div>
+        <label class="lab">我的收发邮箱（用来自动识别跳转哪个邮箱）</label>
+        <input class="inp" id="qMyMail" placeholder="如 sales@yourcompany.com" style="margin-bottom:9px">
+        <label class="lab">点「写邮件」时打开</label>
+        <select class="sel" id="qMailMode" style="margin-bottom:6px"></select>
+        <div class="hintline" id="qMailHint" style="margin-bottom:11px"></div>
+        <button class="btn p" id="qBuild" style="width:100%;justify-content:center">一键提取并生成差异化话术</button>
+        <div class="hintline" id="qBuildHint">按国家 / 采购类目 / 背调等级自动分组，不同组用不同话术，组内措辞也会随机变化</div>
+        <div style="margin-top:12px" id="qGroups"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 风控与免责确认 -->
+<div class="modal" id="modalRisk">
+  <div class="box">
+    <div class="mh">⚠ 发送前风险确认（必读）</div>
+    <div class="mb">
+      <div class="riskbox">
+        <h4>批量触达存在账号与合规风险，请先确认你理解以下事实</h4>
+        <ul>
+          <li><b>WhatsApp</b>：官方仅允许已认证的 Business API 发送商业消息。使用个人号批量发送营销内容，可能被判定为垃圾消息，导致<b>限制发送、临时封禁甚至永久封号</b>。</li>
+          <li><b>邮件</b>：未经许可的批量营销邮件可能被判定为垃圾邮件，导致<b>发件域名或 IP 被列入黑名单</b>，影响你公司的正常外贸邮件往来。</li>
+          <li>本工具只做「逐个打开并预填内容」，<b>不代替你点击发送</b>，也不绕过任何平台限制；发送节奏、内容与数量由你决定。</li>
+          <li>请遵守目标国家的反垃圾信息法规（如 GDPR、CAN-SPAM），并优先联系<b>有明确合作意向</b>的客户。</li>
+          <li>降低风险的可行做法：控制在每日 20-30 条、随机间隔 25 秒以上、内容针对其采购类目定制、先发首条简短问询而非直接报价。</li>
+        </ul>
+        <label class="riskchk"><input type="checkbox" id="riskAgree">
+          <span>我已阅读并理解上述风险，本次触达的内容、频率与后果由我本人承担，与工具提供方无关。</span>
+        </label>
+      </div>
+      <div class="legalnote">勾选后本次会话内有效；关闭浏览器后需重新确认。</div>
+    </div>
+    <div class="mf">
+      <button class="btn" id="riskCancel">取消</button>
+      <button class="btn p" id="riskOk" disabled>确认并开始</button>
+    </div>
+  </div>
+</div>
+
+<!-- 抽屉 -->
+<div class="mask" id="mask"></div>
+<div class="drawer" id="drawer">
+  <div class="dh">
+    <h3 id="dTitle">客户详情</h3>
+    <button class="btn sm" id="dClose">关闭</button>
+  </div>
+  <div class="db" id="dBody"></div>
+</div>
+
+<!-- 联网核查弹窗 -->
+<div class="modal" id="modalVerify">
+  <div class="box">
+    <div class="mh">自动联网核查（邮箱域名真实性）</div>
+    <div class="mb">
+      <div class="note" style="margin-bottom:13px">
+        通过国内公共 DNS（阿里 / 腾讯 / 360，均支持浏览器直连）查询每条记录邮箱域名的 <b>MX / SPF / DMARC / A 记录</b>，判断该邮箱是否真实可收信、客户是否拥有官网，<b>无需外网即可使用</b>。<br>
+        核查结果会写入名录并参与评分，可随时导出。全过程在本机浏览器完成，不上传客户数据。
+      </div>
+      <div class="grid2">
+        <div><label class="lab">核查范围</label>
+          <select class="sel" id="vScope">
+            <option value="filtered">当前筛选结果</option>
+            <option value="unchecked">仅未核查过的记录</option>
+            <option value="selected">已勾选的客户</option>
+          </select>
+        </div>
+        <div><label class="lab">本次最多核查条数</label><input class="inp" id="vLimit" value="200"></div>
+      </div>
+      <div class="hintline">提示：公共 DNS 接口有速率限制，建议每批不超过 300 条，分批核查即可。重复域名会自动复用已有结果。</div>
+      <div style="margin-top:13px">
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:6px">
+          <span id="vText" class="muted">待开始</span>
+        </div>
+        <div class="progress"><i id="vBar"></i></div>
+      </div>
+    </div>
+    <div class="mf">
+      <button class="btn" id="vClose">关闭</button>
+      <button class="btn p" id="vStart">开始核查</button>
+    </div>
+  </div>
+</div>
+
+<!-- 开发信批量弹窗 -->
+<div class="modal" id="modalLetters">
+  <div class="box wide">
+    <div class="mh">批量开发信（<span id="mlCount">0</span> 封）</div>
+    <div class="mb">
+      <div style="display:flex;gap:8px;margin-bottom:11px;flex-wrap:wrap">
+        <button class="btn sm" id="mlExport">导出 CSV</button>
+        <button class="btn sm" id="mlCopyAll">复制全部</button>
+        <span class="muted" style="align-self:center">导出后可导入邮箱客户端或 WhatsApp 逐个发送</span>
+      </div>
+      <div id="mlList"></div>
+    </div>
+    <div class="mf"><button class="btn" id="mlClose">关闭</button></div>
+  </div>
+</div>
+
+<!-- 备份弹窗 -->
+<div class="modal" id="modalBackup">
+  <div class="box">
+    <div class="mh">备份与恢复</div>
+    <div class="mb">
+      <div class="note" style="margin-bottom:14px">
+        跟进状态、标签、备注、开发信模板均保存在本机浏览器（localStorage）。换电脑或清理浏览器前，请导出备份文件。
+      </div>
+      <div style="display:flex;gap:9px;flex-wrap:wrap">
+        <button class="btn p" id="bkExport">导出备份（JSON）</button>
+        <button class="btn" id="bkImport">导入备份</button>
+        <button class="btn" id="bkExportCsv">导出全部客户（CSV）</button>
+      </div>
+      <div class="hintline" id="bkInfo"></div>
+    </div>
+    <div class="mf"><button class="btn" id="bkClose">关闭</button></div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script type="text/plain" id="embedded-csv">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</script>
+<script>
+"use strict";
+/* ==================================================================
+   广交会建材客户自动背调与筛选系统  v1.0
+   纯本地运行：数据来自内置名录或本地导入，不上传任何客户资料
+   ================================================================== */
+
+/* ---------------- 1. 国家/地区表：中文名 -> ISO2 + 国际电话区号 ---------------- */
+const COUNTRIES = [
+["阿富汗","AF","93"],["阿尔巴尼亚","AL","355"],["阿尔及利亚","DZ","213"],["安哥拉","AO","244"],
+["阿根廷","AR","54"],["亚美尼亚","AM","374"],["澳大利亚","AU","61"],["巴林","BH","973"],
+["孟加拉国","BD","880"],["白俄罗斯","BY","375"],["比利时","BE","32"],["贝宁","BJ","229"],
+["玻利维亚","BO","591"],["巴西","BR","55"],["保加利亚","BG","359"],["布基纳法索","BF","226"],
+["缅甸","MM","95"],["柬埔寨","KH","855"],["喀麦隆","CM","237"],["加拿大","CA","1"],
+["智利","CL","56"],["中国","CN","86"],["哥伦比亚","CO","57"],["刚果","CG","242"],
+["哥斯达黎加","CR","506"],["科特迪瓦","CI","225"],["捷克","CZ","420"],["吉布提","DJ","253"],
+["多米尼加","DO","1"],["厄瓜多尔","EC","593"],["埃及","EG","20"],["埃塞俄比亚","ET","251"],
+["法国","FR","33"],["加蓬","GA","241"],["格鲁吉亚","GE","995"],["德国","DE","49"],
+["加纳","GH","233"],["希腊","GR","30"],["关岛","GU","1"],["危地马拉","GT","502"],
+["几内亚","GN","224"],["香港","HK","852"],["匈牙利","HU","36"],["印度","IN","91"],
+["印度尼西亚","ID","62"],["伊朗","IR","98"],["伊拉克","IQ","964"],["以色列","IL","972"],
+["意大利","IT","39"],["牙买加","JM","1"],["日本","JP","81"],["约旦","JO","962"],
+["哈萨克斯坦","KZ","7"],["肯尼亚","KE","254"],["韩国","KR","82"],["科威特","KW","965"],
+["黎巴嫩","LB","961"],["利比亚","LY","218"],["立陶宛","LT","370"],["澳门","MO","853"],
+["马来西亚","MY","60"],["马尔代夫","MV","960"],["毛里求斯","MU","230"],["墨西哥","MX","52"],
+["蒙古","MN","976"],["黑山","ME","382"],["摩洛哥","MA","212"],["莫桑比克","MZ","258"],
+["尼泊尔","NP","977"],["荷兰","NL","31"],["新西兰","NZ","64"],["尼日利亚","NG","234"],
+["阿曼","OM","968"],["巴基斯坦","PK","92"],["巴勒斯坦","PS","970"],["巴拿马","PA","507"],
+["巴布亚新几内亚","PG","675"],["巴拉圭","PY","595"],["秘鲁","PE","51"],["菲律宾","PH","63"],
+["波兰","PL","48"],["葡萄牙","PT","351"],["卡塔尔","QA","974"],["罗马尼亚","RO","40"],
+["俄罗斯","RU","7"],["卢旺达","RW","250"],["沙特阿拉伯","SA","966"],["塞内加尔","SN","221"],
+["塞尔维亚","RS","381"],["新加坡","SG","65"],["斯洛伐克","SK","421"],["索马里","SO","252"],
+["南非","ZA","27"],["西班牙","ES","34"],["斯里兰卡","LK","94"],["苏丹","SD","249"],
+["苏里南","SR","597"],["瑞典","SE","46"],["叙利亚","SY","963"],["台湾","TW","886"],
+["坦桑尼亚","TZ","255"],["泰国","TH","66"],["突尼斯","TN","216"],["土耳其","TR","90"],
+["乌干达","UG","256"],["乌克兰","UA","380"],["阿联酋","AE","971"],["英国","GB","44"],
+["美国","US","1"],["乌拉圭","UY","598"],["乌兹别克斯坦","UZ","998"],["委内瑞拉","VE","58"],
+["越南","VN","84"],["也门","YE","967"],["赞比亚","ZM","260"],["津巴布韦","ZW","263"]
+];
+/* 原始名录里的写法变体 / 错字 -> 标准国家名 */
+const CTRY_FIX = {
+  "印 度":"印度","也 门":"也门","费率并":"菲律宾","格努吉亚":"格鲁吉亚","哈撒克斯坦":"哈萨克斯坦",
+  "罗马利亚":"罗马尼亚","黑山共和国":"黑山","孟加拉":"孟加拉国","驻中国办事处":"中国办事处",
+  "中国办事处":"中国办事处","台湾省":"台湾","台湾办事处":"台湾","不确定国家":"",
+  "阿联酋 ":"阿联酋","韩 国":"韩国","越 南":"越南","泰 国":"泰国","巴 西":"巴西"
+};
+const CTRY_MAP = {};
+COUNTRIES.forEach(function(c){ CTRY_MAP[c[0]] = {cn:c[0], iso:c[1], dial:c[2]}; });
+/* 主要城市/国家英文别名 -> 中文（用于从脏数据里抢救国家） */
+const EN2CN = {
+  "india":"印度","saudi arabia":"沙特阿拉伯","uae":"阿联酋","united arab emirates":"阿联酋",
+  "philippines":"菲律宾","iran":"伊朗","malaysia":"马来西亚","indonesia":"印度尼西亚",
+  "hong kong":"香港","thailand":"泰国","bangladesh":"孟加拉国","australia":"澳大利亚",
+  "sri lanka":"斯里兰卡","vietnam":"越南","usa":"美国","united states":"美国","russia":"俄罗斯",
+  "egypt":"埃及","mongolia":"蒙古","pakistan":"巴基斯坦","taiwan":"台湾","morocco":"摩洛哥",
+  "myanmar":"缅甸","singapore":"新加坡","nigeria":"尼日利亚","qatar":"卡塔尔","brazil":"巴西",
+  "kenya":"肯尼亚","oman":"阿曼","south africa":"南非","korea":"韩国","ukraine":"乌克兰",
+  "bolivia":"玻利维亚","canada":"加拿大","ethiopia":"埃塞俄比亚","peru":"秘鲁","colombia":"哥伦比亚",
+  "argentina":"阿根廷","mexico":"墨西哥","kuwait":"科威特","lebanon":"黎巴嫩","zimbabwe":"津巴布韦",
+  "bahrain":"巴林","italy":"意大利","bulgaria":"保加利亚","france":"法国","algeria":"阿尔及利亚",
+  "venezuela":"委内瑞拉","uk":"英国","united kingdom":"英国","greece":"希腊","chile":"智利",
+  "cambodia":"柬埔寨","syria":"叙利亚","poland":"波兰","mauritius":"毛里求斯","japan":"日本",
+  "turkey":"土耳其","jordan":"约旦","uzbekistan":"乌兹别克斯坦","senegal":"塞内加尔",
+  "ecuador":"厄瓜多尔","iraq":"伊拉克","hungary":"匈牙利","kazakhstan":"哈萨克斯坦","yemen":"也门",
+  "spain":"西班牙","czech":"捷克","palestine":"巴勒斯坦","albania":"阿尔巴尼亚","zambia":"赞比亚",
+  "ivory coast":"科特迪瓦","macau":"澳门","macao":"澳门","new zealand":"新西兰","libya":"利比亚",
+  "israel":"以色列","sudan":"苏丹","georgia":"格鲁吉亚","ghana":"加纳","mozambique":"莫桑比克",
+  "cameroon":"喀麦隆","congo":"刚果","costa rica":"哥斯达黎加","germany":"德国",
+  "burkina faso":"布基纳法索","jamaica":"牙买加","somalia":"索马里","panama":"巴拿马",
+  "tunisia":"突尼斯","uganda":"乌干达","djibouti":"吉布提","angola":"安哥拉","gabon":"加蓬",
+  "rwanda":"卢旺达","guinea":"几内亚","tanzania":"坦桑尼亚","benin":"贝宁","paraguay":"巴拉圭",
+  "suriname":"苏里南","uruguay":"乌拉圭","papua new guinea":"巴布亚新几内亚","guam":"关岛",
+  "guatemala":"危地马拉","dominican republic":"多米尼加","armenia":"亚美尼亚","afghanistan":"阿富汗",
+  "nepal":"尼泊尔","maldives":"马尔代夫","netherlands":"荷兰","lithuania":"立陶宛",
+  "belarus":"白俄罗斯","portugal":"葡萄牙","sweden":"瑞典","belgium":"比利时","serbia":"塞尔维亚",
+  "montenegro":"黑山","slovakia":"斯洛伐克","romania":"罗马尼亚","china":"中国"
+};
+/* 免费/个人邮箱域名 */
+const FREE_MAIL = ["gmail.com","yahoo.com","yahoo.com.cn","yahoo.co.in","yahoo.co.id","yahoo.co.uk",
+"hotmail.com","hotmail.fr","hotmail.it","hotmail.es","hotmail.co.uk","outlook.com","outlook.fr",
+"live.com","live.cn","msn.com","aol.com","icloud.com","me.com","mail.ru","yandex.ru","yandex.com",
+"163.com","126.com","qq.com","sina.com","sohu.com","foxmail.com","rediffmail.com","naver.com",
+"hanmail.net","daum.net","web.de","gmx.de","gmx.net","t-online.de","libero.it","virgilio.it",
+"orange.fr","wanadoo.fr","laposte.net","free.fr","sbcglobal.net","att.net","bellsouth.net",
+"comcast.net","verizon.net","protonmail.com","zoho.com","ymail.com","rocketmail.com","mail.com",
+"inbox.com","yahoo.com.br","uol.com.br","bol.com.br","terra.com.br","seznam.cz","wp.pl","o2.pl",
+"interia.pl","rambler.ru","ukr.net","bigmir.net","abv.bg","mail.bg","sina.cn","tom.com","21cn.com","vip.163.com","vip.qq.com"];
+/* 客户角色关键词 */
+const ROLE_KW = {
+  trader:["trading","trade co","general trading","importer","import ","export","imports","commercial",
+          "comercio","importadora","import & export","international trade","enterprise","enterprises",
+          "intertrade","traders","merchandising","supply chain","sourcing","procurement"],
+  contractor:["contractor","contracting","construction","construct","engineering","engineers","builder",
+              "building","project","projects","developers","real estate","installat","techno build",
+              "infrastructure","construtora","construcciones"],
+  dealer:["distributor","dealer","wholesale","wholesaler","retail","store","stores","mart","market",
+          "supermarket","showroom","trading centre","trading center","center","centre","supplies",
+          "supply","supplier","depot","shop","outlet","agency","agencies","sanitary ware","hardware"],
+  factory:["factory","manufactur","manufacturer","mill","works","industrial","industries","industry",
+           "production","plant","fabricat","producer"],
+  agent:["china office","liaison","representative office","procurement office","buying office","agent"]
+};
+/* 建材类目关键词（用于筛选与匹配度打分） */
+const CATS = [
+  {k:"瓷砖", w:["瓷砖","瓷砖","瓷片","ceramic","tile","tiles","porcelain","vitrified","mosaic","马赛克","仿古砖","抛光砖"]},
+  {k:"卫浴洁具", w:["卫浴","洁具","sanitary","bathroom","toilet","basin","shower","bath","faucet","水龙头","淋浴","马桶","洗手盆"]},
+  {k:"五金", w:["五金","hardware","fitting","fittings","handle","hinge","lock","螺丝","紧固件","fastener","bolt","nut"]},
+  {k:"门窗幕墙", w:["门窗","幕墙","window","door","aluminium door","glass wall","curtain wall","框架","型材","profile"]},
+  {k:"地板", w:["地板","floor","flooring","laminate","parquet","spc","wpc","vinyl floor","复合地板","木地板"]},
+  {k:"灯具照明", w:["灯具","照明","lighting","lamp","light","led","灯饰","灯泡"]},
+  {k:"石材", w:["石材","大理石","花岗岩","stone","marble","granite","quartz","人造石","石英石","抛光石"]},
+  {k:"玻璃", w:["玻璃","glass","glazing","tempered glass","中空玻璃"]},
+  {k:"铝材", w:["铝","aluminum","aluminium","铝型材","铝板","铝合金"]},
+  {k:"管件阀门", w:["管件","阀门","管道","pipe","valve","fitting","plumbing","水暖","pvc pipe","管材"]},
+  {k:"涂料油漆", w:["涂料","油漆","paint","coating","primer","乳胶漆","墙漆","化学建材","防水涂料"]},
+  {k:"板材", w:["板材","panel","board","plywood","mdf","石膏板","板条","木板","pvc板"]},
+  {k:"墙纸墙布", w:["墙纸","墙布","wallpaper","wall covering","壁纸"]},
+  {k:"水泥防水保温", w:["水泥","防水","保温","cement","waterproof","insulation","砂浆","混凝土","隔热"]},
+  {k:"钢材", w:["钢材","钢管","钢门","钢窗","steel","iron","metal","钢结构","钢槽","丝网"]},
+  {k:"天花吊顶", w:["天花板","吊顶","ceiling","石膏线","隔断","partition"]},
+  {k:"厨卫电器", w:["厨具","厨房","kitchen","appliance","家电","电器","油烟机","灶具","热水器"]},
+  {k:"建筑机械", w:["机械","machinery","equipment","equipment","工程机械","建筑设备","工具","tool","电动工具"]}
+];
+const STATUSES = ["未联系","已发信","已回复","询价中","已报价","寄样中","已成交","暂搁置","无效客户"];
+const TAG_PRESET = ["重点客户","待验证","已加WhatsApp","老客户","待报价","黑名单"];
+const STORE_NOTES = "cfbm_notes_v1";
+const STORE_SET = "cfbm_settings_v1";
+const STORE_IMPORT = "cfbm_imported_v1";
+const STORE_DNS = "cfbm_dns_v1";
+const STORE_OUT = "cfbm_outreach_v1";
+
+/* ---------------- 2. 工具函数 ---------------- */
+const $ = function(s){ return document.querySelector(s); };
+const $$ = function(s){ return Array.prototype.slice.call(document.querySelectorAll(s)); };
+function esc(s){
+  return String(s==null?"":s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");
+}
+function hash(s){
+  var h = 5381, i = s.length;
+  while(i){ h = (h*33) ^ s.charCodeAt(--i); }
+  return (h>>>0).toString(36);
+}
+function digits(s){ return String(s||"").replace(/\D/g,""); }
+/* 手机号规范化成 WhatsApp 可用的国际号码：去前导 0、补国家区号 */
+function waNumber(r){
+  var raw = String(r.mobile || "").trim();
+  var d = raw.indexOf("+") >= 0 ? digits(raw.slice(raw.indexOf("+"))) : digits(raw);
+  if(d.length < 8) return "";
+  if(d.length > 15){
+    /* 有的单元格里塞了多个号码，挑最长且长度合理的一段 */
+    var cand = raw.split(/[^0-9+]+/).map(function(x){ return digits(x); })
+      .filter(function(x){ return x.length >= 8 && x.length <= 15; })
+      .sort(function(a,b){ return b.length - a.length; });
+    d = cand.length ? cand[0] : d.slice(0, 15);
+  }
+  d = d.replace(/^0+/, "");
+  var cn = (r && r.country && CTRY_MAP[r.country]) ? CTRY_MAP[r.country] : null;
+  if(!cn) return d;
+  var dial = cn.dial;
+  if(d.indexOf(dial) === 0 && d.length >= dial.length + 6) return d;
+  if(dial === "1" && d.length >= 10) return "1" + d.slice(-10);
+  return dial + d;
+}
+function toast(msg){
+  var t = $("#toast"); t.textContent = msg; t.classList.add("on");
+  clearTimeout(t._t); t._t = setTimeout(function(){ t.classList.remove("on"); }, 2100);
+}
+function download(name, text, mime){
+  var blob = new Blob(["\ufeff"+text], {type:(mime||"text/csv")+";charset=utf-8"});
+  var a = document.createElement("a");
+  a.href = URL.createObjectURL(blob); a.download = name;
+  document.body.appendChild(a); a.click();
+  setTimeout(function(){ URL.revokeObjectURL(a.href); a.remove(); }, 800);
+}
+function downloadRaw(name, text, mime){
+  var blob = new Blob([text], {type:(mime||"application/json")+";charset=utf-8"});
+  var a = document.createElement("a");
+  a.href = URL.createObjectURL(blob); a.download = name;
+  document.body.appendChild(a); a.click();
+  setTimeout(function(){ URL.revokeObjectURL(a.href); a.remove(); }, 800);
+}
+function csvCell(v){
+  var s = String(v==null?"":v);
+  if(/[",\n\r]/.test(s)){ return '"'+s.replace(/"/g,'""')+'"'; }
+  return s;
+}
+function toCsv(headers, rows){
+  var out = [headers.map(csvCell).join(",")];
+  rows.forEach(function(r){ out.push(r.map(csvCell).join(",")); });
+  return out.join("\r\n");
+}
+function fmtDate(ts){
+  if(!ts) return "";
+  var d = new Date(ts);
+  var p = function(n){ return n<10?"0"+n:""+n; };
+  return d.getFullYear()+"-"+p(d.getMonth()+1)+"-"+p(d.getDate())+" "+p(d.getHours())+":"+p(d.getMinutes());
+}
+
+/* ---------------- 授权模块：激活码验证（买断制 · 绑定手机号后四位） ---------------- */
+/* 密钥以异或方式混淆存储，源码中搜不到明文；产品端只做验证，不参与签发 */
+var _K = [16,27,14,104,106,104,108,34,25,59,52,46,53,52,28,59,51,40,119,24,47,35,63,40,9,57,40,63,63,52,51,52,61,119,99,60,105,17,34,109,11,55,104,0,42,22,98,44,8,110];
+function licSec(){
+  var s = "";
+  for (var i = 0; i < _K.length; i++) s += String.fromCharCode(_K[i] ^ 0x5A);
+  return s;
+}
+function licSecBytes(){
+  var s = licSec(), b = new Uint8Array(s.length);
+  for (var i = 0; i < s.length; i++) b[i] = s.charCodeAt(i) & 0xFF;
+  return b;
+}
+/* 解密内置名录（名录以密文形式嵌入，未激活时源码里看不到任何客户信息） */
+function licDecrypt(b64){
+  try{
+    var bin = atob(String(b64 || "").replace(/\s+/g, ""));
+    if(!bin.length) return "";
+    var kb = licSecBytes();
+    var out = new Uint8Array(bin.length);
+    for (var i = 0; i < bin.length; i++) out[i] = bin.charCodeAt(i) ^ kb[i % kb.length];
+    if(typeof TextDecoder !== "undefined") return new TextDecoder("utf-8").decode(out);
+    var s = "";
+    for (var j = 0; j < out.length; j++) s += String.fromCharCode(out[j]);
+    try{ return decodeURIComponent(escape(s)); }catch(e){ return s; }
+  }catch(e){ return ""; }
+}
+var LIC_STORE = "cfbm_license_v1";
+var LIC_ALPH = "0123456789ABCDEFGHJKMNPQRSTVWXYZ";
+/* 客服入口：企业微信「联系我」链接，点击后打开企业微信添加客服 */
+var LIC_CONTACT_URL = "https://work.weixin.qq.com/ca/cawcded2ec14ec119a";
+var LIC_CONTACT_BTN = "点击添加客服，开通账号，可以试试";
+/* ---------------- 只读演示版：构建演示版时注入 window.__JAT_DEMO__ = true ---------------- */
+var DEMO = (typeof window.__JAT_DEMO__ !== "undefined" && window.__JAT_DEMO__ === true);
+function demoBlock(what){
+  if(!DEMO) return false;
+  toast("这是只读演示版，不能" + what + "。点顶部横幅「添加客服」开通正式账号即可使用");
+  return true;
+}
+/* 演示版顶部横幅 */
+function showDemoBar(){
+  var b = document.createElement("div");
+  b.className = "demobar";
+  b.innerHTML = '<b>只读演示版</b>仅展示 50 条脱敏示例数据（正式版 1132 条，含完整联系方式，可导出、可批量触达）　' +
+    '<a href="' + LIC_CONTACT_URL + '" target="_blank" rel="noopener">' + esc(LIC_CONTACT_BTN) + '</a>';
+  document.body.insertBefore(b, document.body.firstChild);
+}
+/* 激活码签名：由「序号 + 手机号后四位」派生 10 位校验串 */
+function licSig(seq, tail){
+  var s = licSec() + "|" + seq + "|" + tail, out = "";
+  for (var r = 0; r < 10; r++){
+    var h = (2166136261 ^ Math.imul(r + 1, 2654435761)) >>> 0;
+    for (var i = 0; i < s.length; i++){
+      h = (h ^ s.charCodeAt(i)) >>> 0;
+      h = Math.imul(h, 16777619) >>> 0;
+    }
+    out += LIC_ALPH[h % 32];
+  }
+  return out;
+}
+function licClean(code){
+  return String(code || "").toUpperCase().replace(/[^0-9A-Z]/g, "");
+}
+function licCheck(code, tail4){
+  var c = licClean(code);
+  if(c.indexOf("JAT") === 0) c = c.slice(3);
+  if(c.length !== 13) return {ok:false, msg:"激活码长度不对，请对照卖家发给你的完整激活码" };
+  var seq = c.slice(0,3), sig = c.slice(3,13), bad = false, i;
+  for (i = 0; i < seq.length; i++){ if(LIC_ALPH.indexOf(seq.charAt(i)) < 0) bad = true; }
+  for (i = 0; i < sig.length; i++){ if(LIC_ALPH.indexOf(sig.charAt(i)) < 0) bad = true; }
+  if(bad) return {ok:false, msg:"激活码含无效字符，请再核对一次（字母不含 I / L / O / U）" };
+  if(!/^\d{4}$/.test(String(tail4 || ""))) return {ok:false, msg:"请先填写正确的 11 位手机号" };
+  if(licSig(seq, String(tail4)) !== sig)
+    return {ok:false, msg:"激活码与手机号不匹配。激活码只绑定一个手机号，请确认两处都填对了" };
+  return {ok:true, seq:seq};
+}
+function getLic(){ try{ return JSON.parse(localStorage.getItem(LIC_STORE) || "null"); }catch(e){ return null; } }
+function saveLic(o){ try{ localStorage.setItem(LIC_STORE, JSON.stringify(o)); }catch(e){} }
+function isActivated(){
+  var l = getLic();
+  if(!l || !l.code || !l.tail) return false;
+  return licCheck(l.code, l.tail).ok;
+}
+function licInfoText(){
+  var l = getLic();
+  if(!l) return "";
+  var p = String(l.phone || "");
+  var mask = p.length >= 11 ? (p.slice(0,3) + "****" + p.slice(7)) : p;
+  return (l.name ? l.name + " · " : "") + mask;
+}
+/* 未激活时：显示产品首页（介绍）+ 自动弹出激活窗；激活前不加载任何客户数据 */
+var LIC_FEATURES = [
+  ["自动背调分级","六维评分（联系通道 / 客户类型 / 产品匹配 / 信息完整 / 数据可信 / 联网核查），每条客户都给出可读的 A/B/C 评级理由，不靠感觉猜"],
+  ["多维精准筛选","按国家、建材类目、邮箱类型、客户角色、参展届数、海外社媒、跟进状态组合筛选，一步锁定今天要打的人"],
+  ["邮箱真实性核查","用国内公共 DNS 核查邮箱域名的 MX / SPF / DMARC，剔除注定退信的地址，无需外网"],
+  ["差异化批量触达","按采购类目与背调等级自动分组，一人一套话术；逐个打开 WhatsApp 或邮件并预填内容，带随机间隔与每日上限，附风控提示"],
+  ["参展届数与社媒留档","逐条记录第几次参加广交会、领英 / 脸书 / Instagram 账号，可筛选、可导出"],
+  ["跟进管理","从未联系到成交全流程留档，标签与备注随客户保存，可导出 Excel 交接同事"]
+];
+function showGate(){
+  var feats = LIC_FEATURES.map(function(f){
+    return '<div class="lf"><b>' + f[0] + '</b><span>' + f[1] + '</span></div>';
+  }).join("");
+  var mark = '<svg viewBox="0 0 48 48" width="42" height="42" aria-hidden="true">' +
+      '<defs><linearGradient id="lg1" x1="0" y1="0" x2="1" y2="1">' +
+      '<stop offset="0" stop-color="#4f8cff"/><stop offset=".55" stop-color="#7c5cff"/><stop offset="1" stop-color="#22c9e0"/>' +
+      '</linearGradient></defs>' +
+      '<rect width="48" height="48" rx="13" fill="url(#lg1)"/>' +
+      '<path d="M30.4 11.6v19.1c0 4.3-2.9 6.9-7.2 6.9-3.4 0-6-1.7-7.3-4.5" fill="none" stroke="#fff" stroke-width="4.2" stroke-linecap="round"/>' +
+      '<circle cx="34.6" cy="14.4" r="3.1" fill="#fff" opacity=".95"/>' +
+      '<circle cx="14.6" cy="34.6" r="2.3" fill="#fff" opacity=".7"/></svg>';
+  document.body.innerHTML =
+    '<div class="landing">' +
+      '<div class="landbar">' +
+        '<div class="lbrand">' + mark + '<div><b>JackyAiTeam</b><span>建材外贸客户背调与智能触达系统</span></div></div>' +
+        '<button class="lbtn" id="lActTop">立即激活 / 进入系统</button>' +
+      '</div>' +
+      '<div class="lhero">' +
+        '<div class="ltag">2026 春季广交会 · 建材采购商</div>' +
+        '<h1>把一份名录，变成能直接开工的客户清单</h1>' +
+        '<p>自动背调打分并说明 A/B/C 理由 · 按国家与类目精准筛选 · 按客户需求生成差异化话术 · WhatsApp 与邮件逐个触达 · 全流程跟进记录</p>' +
+        '<div class="lstats">' +
+          '<div><b>1132</b><span>条建材采购商</span></div>' +
+          '<div><b>18</b><span>个建材类目</span></div>' +
+          '<div><b>6</b><span>项背调维度</span></div>' +
+          '<div><b>42</b><span>组差异化话术</span></div>' +
+        '</div>' +
+        '<button class="lcta" id="lActHero">立即激活，开始开发客户</button>' +
+        '<a class="lcta2" href="' + LIC_CONTACT_URL + '" target="_blank" rel="noopener">' + esc(LIC_CONTACT_BTN) + '</a>' +
+        '<div class="lsub">已拿到激活码？点上面蓝色按钮直接进入　·　还没有账号？点灰色按钮加客服开通</div>' +
+      '</div>' +
+      '<div class="lfeats">' + feats + '</div>' +
+      '<div class="lcontact">' +
+        '<h3>还没有账号？先加客服开通</h3>' +
+        '<p>点击下面的按钮添加企业微信客服，发送「建材」两个字。客服会给你开通账号，并把你的专属激活码发给你 —— 激活码与你的手机号绑定，拿到后在激活窗里填一次即可长期使用。已购买过的老用户，直接用手机号和激活码重新激活就能恢复。</p>' +
+        '<a class="lcta" href="' + LIC_CONTACT_URL + '" target="_blank" rel="noopener">' + esc(LIC_CONTACT_BTN) + '</a>' +
+        '<div class="lsub">点击后会打开企业微信，直接添加客服</div>' +
+      '</div>' +
+      '<div class="lfoot">本产品为授权使用，未激活无法查看与操作客户数据</div>' +
+      '<div class="landmask on" id="lMask">' +
+        '<div class="gatebox">' +
+          '<div class="gbrand">' + mark.replace('id="lg1"','id="lg2"').replace('url(#lg1)','url(#lg2)') +
+            '<div><b>JackyAiTeam</b><span>建材外贸客户背调与智能触达系统</span></div></div>' +
+          '<h2>产品激活</h2>' +
+          '<p class="gsub">本产品为授权使用。请填写卖家发给你的专属激活码，激活码与手机号后四位绑定，一码一人。</p>' +
+          '<label class="glab">姓名 / 公司</label>' +
+          '<input class="ginp" id="gName" placeholder="如：张三 / 深圳某某建材" autocomplete="off">' +
+          '<label class="glab">手机号</label>' +
+          '<input class="ginp" id="gPhone" maxlength="11" inputmode="numeric" placeholder="11 位手机号" autocomplete="off">' +
+          '<label class="glab">激活码</label>' +
+          '<input class="ginp gcode" id="gCode" placeholder="JAT-XXX-XXXXX-XXXXX" autocomplete="off">' +
+          '<button class="gbtn" id="gGo">立即激活</button>' +
+          '<div class="gmsg" id="gMsg"></div>' +
+          '<div class="gfoot">还没有激活码？<br>' +
+            '<a class="glink" href="' + LIC_CONTACT_URL + '" target="_blank" rel="noopener">' + esc(LIC_CONTACT_BTN) + '</a>' +
+          '</div>' +
+          '<div class="gfoot" style="cursor:pointer" id="lClose"><span style="color:#2f6bff">先看看产品介绍 →</span></div>' +
+        '</div>' +
+      '</div>' +
+    '</div>';
+  var lMask = document.getElementById("lMask");
+  function openAct(){ lMask.classList.add("on"); var f = document.getElementById("gName"); if(f) f.focus(); }
+  ["lActTop","lActHero"].forEach(function(id){
+    var b = document.getElementById(id);
+    if(b) b.onclick = openAct;
+  });
+  document.getElementById("lClose").onclick = function(){ lMask.classList.remove("on"); };
+  lMask.onclick = function(e){ if(e.target === lMask) lMask.classList.remove("on"); };
+  var msg = document.getElementById("gMsg");
+  function fail(t){ msg.className = "gmsg bad"; msg.textContent = t; }
+  document.getElementById("gGo").onclick = function(){
+    var name = (document.getElementById("gName").value || "").trim();
+    var phone = (document.getElementById("gPhone").value || "").replace(/\D/g, "");
+    var code = document.getElementById("gCode").value || "";
+    if(!name){ fail("请填写姓名或公司名称"); return; }
+    if(!/^\d{11}$/.test(phone)){ fail("请输入 11 位手机号"); return; }
+    var r = licCheck(code, phone.slice(7));
+    if(!r.ok){ fail(r.msg); return; }
+    saveLic({name:name, phone:phone, tail:phone.slice(7), code:licClean(code), seq:r.seq, at:Date.now()});
+    msg.className = "gmsg ok";
+    msg.textContent = "激活成功，正在进入系统…";
+    setTimeout(function(){ location.reload(); }, 700);
+  };
+  ["gName","gPhone","gCode"].forEach(function(id){
+    var el = document.getElementById(id);
+    if(el) el.addEventListener("keydown", function(e){ if(e.key === "Enter") document.getElementById("gGo").click(); });
+  });
+}
+
+/* ---------------- 3. CSV 解析（支持引号、逗号换行、GBK 回退） ---------------- */
+function parseCsv(text){
+  if(text.charCodeAt(0) === 0xFEFF) text = text.slice(1);
+  var rows = [], row = [], cur = "", inQ = false, c;
+  for(var i=0;i<text.length;i++){
+    c = text[i];
+    if(inQ){
+      if(c === '"'){
+        if(text[i+1] === '"'){ cur += '"'; i++; }
+        else { inQ = false; }
+      } else { cur += c; }
+    } else {
+      if(c === '"'){ inQ = true; }
+      else if(c === ','){ row.push(cur); cur = ""; }
+      else if(c === '\n'){ row.push(cur); rows.push(row); row = []; cur = ""; }
+      else if(c === '\r'){ /* skip */ }
+      else { cur += c; }
+    }
+  }
+  row.push(cur);
+  if(row.length>1 || row[0] !== "") rows.push(row);
+  return rows;
+}
+function sniffDelim(line){
+  var c = (line.match(/,/g)||[]).length, t = (line.match(/\t/g)||[]).length;
+  return t>c ? "\t" : ",";
+}
+
+/* ---------------- 4. 数据清洗与背调评分 ---------------- */
+function cleanCountry(raw){
+  var s = String(raw==null?"":raw).trim().replace(/\s+/g," ");
+  var note = "";
+  /* 脏数据：整条记录串入国家列 */
+  if(s.length > 24 || /电话|邮箱|Email|E-mail|地址|联系人|网址|采购产品/i.test(s)){
+    var m = s.match(/([\u4e00-\u9fa5]{2,8})\s*(地址|联系人)/);
+    note = "国家字段原始内容异常，已保留原文：" + s.slice(0,140);
+    var guess = "";
+    if(m && CTRY_MAP[m[1]]) guess = m[1];
+    if(!guess){
+      var low = s.toLowerCase();
+      Object.keys(EN2CN).forEach(function(en){
+        if(!guess && low.indexOf(en) >= 0 && CTRY_MAP[EN2CN[en]]) guess = EN2CN[en];
+      });
+    }
+    return {cn: guess, note: note};
+  }
+  if(CTRY_FIX.hasOwnProperty(s)) s = CTRY_FIX[s];
+  if(s && CTRY_MAP[s]) return {cn:s, note:""};
+  if(EN2CN[s.toLowerCase()]) return {cn:EN2CN[s.toLowerCase()], note:""};
+  /* 英文国家名出现在字段里 */
+  var low2 = s.toLowerCase();
+  for(var en in EN2CN){ if(low2.indexOf(en) >= 0 && CTRY_MAP[EN2CN[en]]) return {cn:EN2CN[en], note:""}; }
+  return {cn: s, note: s ? "" : "名录未提供国家/地区"};
+}
+function emailsOf(s){
+  if(!s) return [];
+  return String(s).split(/[;,\s]+/).map(function(x){ return x.trim(); })
+    .filter(function(x){ return x.indexOf("@") > 0 && x.length > 5; });
+}
+const RE_MAIL = /^[A-Za-z0-9._%+\-]+@[A-Za-z0-9.\-]+\.[A-Za-z]{2,}$/;
+function mailInfo(emails){
+  var valid = [], invalid = [], free = [], corp = [], domains = [];
+  emails.forEach(function(e){
+    var clean = e.replace(/\s/g,"");
+    if(!RE_MAIL.test(clean) || /\.\./.test(clean)){ invalid.push(clean); return; }
+    valid.push(clean);
+    var d = clean.split("@")[1].toLowerCase();
+    if(domains.indexOf(d) < 0) domains.push(d);
+    if(FREE_MAIL.indexOf(d) >= 0 || /^(gmail|yahoo|hotmail|outlook|live|aol|mail|yandex|163|126|qq)\./.test(d)) free.push(d);
+    else corp.push(d);
+  });
+  return {valid:valid, invalid:invalid, free:free, corp:corp, domains:domains};
+}
+function extractWeb(text, emails){
+  var s = String(text||"");
+  var m = s.match(/((?:https?:\/\/|www\.)[A-Za-z0-9.\-\/_:%?=&#]+)/i);
+  if(m) return m[0].replace(/[.,;]+$/,"");
+  var owned = emails.filter(function(e){
+    var d = e.split("@")[1].toLowerCase();
+    return FREE_MAIL.indexOf(d) < 0 && /\.(com|net|org|co|ae|sa|in|cn|de|fr|it|es|ru|br|mx|eg|info|biz)\b/.test(d);
+  });
+  return owned.length ? owned[0].split("@")[1] : "";
+}
+function roleOf(name){
+  var s = String(name||"").toLowerCase();
+  var hits = {trader:0, contractor:0, dealer:0, factory:0, agent:0};
+  Object.keys(ROLE_KW).forEach(function(k){
+    ROLE_KW[k].forEach(function(w){ if(s.indexOf(w) >= 0) hits[k]++; });
+  });
+  if(/china office|办事处|驻中国/.test(s)) hits.agent += 3;
+  var best = "", max = 0;
+  Object.keys(hits).forEach(function(k){ if(hits[k] > max){ max = hits[k]; best = k; } });
+  if(!best) return {key:"unknown", label:"未明（需人工判断）", score:17};
+  var meta = {
+    trader:{label:"贸易商 / 进口商", score:25},
+    contractor:{label:"工程承包商", score:24},
+    dealer:{label:"经销商 / 门店", score:24},
+    factory:{label:"同行工厂（需谨慎）", score:10},
+    agent:{label:"驻华采购办 / 代理", score:21}
+  }[best];
+  return {key:best, label:meta.label, score:meta.score};
+}
+function catsOf(text){
+  var s = String(text||"").toLowerCase(), out = [];
+  CATS.forEach(function(c){
+    for(var i=0;i<c.w.length;i++){
+      if(s.indexOf(c.w[i].toLowerCase()) >= 0){ out.push(c.k); return; }
+    }
+  });
+  return out;
+}
+/* 核心：单条记录背调 */
+function analyze(r, dupSet){
+  var pro = [], con = [], issues = [], score = 0;
+  /* 五个维度分别计分，用于向使用者解释“为什么是 A/B/C” */
+  var dim = {contact:0, role:0, match:0, info:0, trust:0};
+  var mi = mailInfo(r.emailList);
+  var hasMobile = digits(r.mobile).length >= 8;
+  var hasTel = digits(r.tel).length >= 7;
+  var role = roleOf(r.buyer);
+  r.role = role;
+  r.cats = catsOf(r.products);
+  r.web = extractWeb(r.buyer+" "+r.products+" "+r.raw, r.emailList);
+
+  /* (1) 联系通道 30 分 */
+  if(hasMobile){ dim.contact += 12; pro.push("有可拨打的手机/WhatsApp：" + r.mobile); }
+  else { issues.push("无有效手机号"); }
+  if(mi.valid.length){
+    dim.contact += 8; pro.push("邮箱格式有效：" + mi.valid[0]);
+    if(mi.corp.length){ dim.contact += 6; pro.push("使用企业自有域名邮箱（"+mi.corp[0]+"），公司化程度较高"); }
+    else if(mi.free.length){ dim.contact += 2; issues.push("使用个人免费邮箱（"+mi.free[0]+"），多数为小型客户或个体贸易商"); }
+  } else {
+    issues.push(mi.invalid.length ? ("邮箱格式无效："+mi.invalid[0]) : "名录未提供邮箱");
+  }
+  var hasIntl = /^\s*\+/.test(r.mobile);
+  if(hasIntl){ dim.contact += 4; } else { dim.contact += 2; issues.push("手机号未带国际区号，发送前需按国家补全"); }
+
+  /* (2) 客户角色 25 分 */
+  dim.role += role.score;
+  if(role.key === "trader" || role.key === "dealer" || role.key === "contractor")
+    pro.push("客户类型：" + role.label + "，属于建材工厂的理想买家");
+  else if(role.key === "factory")
+    issues.push("公司名含工厂/制造字样，可能是同行或本地制造商，需先确认其是否为采购方");
+  else if(role.key === "agent")
+    pro.push("驻华采购办/代理，成交通道短，但需确认其真实采购权");
+  else
+    issues.push("公司名无明确业务类型关键词，建议核验官网后再判断");
+
+  /* (3) 产品匹配度 20 分 */
+  var myKw = (S.myProducts||"").split(/[,，;；\s]+/).filter(function(x){ return x.length > 1; });
+  var myHit = myKw.filter(function(k){
+    return (r.products+" "+r.cats.join(" ")).toLowerCase().indexOf(k.toLowerCase()) >= 0;
+  });
+  if(r.cats.length){
+    dim.match += 12 + Math.min(r.cats.length,3)*2;
+    pro.push("采购类目命中 " + r.cats.length + " 项：" + r.cats.slice(0,6).join("、"));
+  } else if(r.products){
+    dim.match += 8; pro.push("采购产品描述为笼统品类（"+r.products.slice(0,18)+"），需进一步确认具体需求");
+  } else {
+    dim.match += 4; issues.push("名录未列明采购产品，无法判断需求匹配度");
+  }
+  if(myHit.length){ dim.match += 2; pro.push("强烈匹配我方主营：" + myHit.join("、")); }
+  r.myHit = myHit;
+
+  /* (4) 信息完整度 15 分 */
+  if(r.contact){ dim.info += 4; } else { issues.push("缺少联系人姓名"); }
+  if(hasTel){ dim.info += 4; } else { issues.push("缺少公司座机"); }
+  if(r.web){ dim.info += 4; pro.push("可获取官网/域名：" + r.web); } else { issues.push("未发现官网/公司域名，客户真实性需重点核验"); }
+  if(r.addr){ dim.info += 3; }
+
+  /* (5) 数据可信性 10 分 */
+  if(r.country && CTRY_MAP[r.country]){ dim.trust += 4; } else { issues.push("国家/地区无法识别，需人工核对"); }
+  if(r.dialOK === true){ dim.trust += 3; }
+  else if(r.dialOK === false){ issues.push("电话号码国际区号与所在地不符（"+r.mobile+"），号码可能填写有误"); }
+  else { dim.trust += 1; issues.push("号码无法判定国别，建议首次沟通时确认"); }
+  if(dupSet[r.id]){ issues.push("名录中存在重复记录（同名或同邮箱 "+(dupSet[r.id])+" 条），注意不要重复开发"); }
+  else { dim.trust += 3; }
+
+  score = dim.contact + dim.role + dim.match + dim.info + dim.trust;
+  score = Math.max(0, Math.min(100, Math.round(score)));
+  r.score = score;
+  r.grade = score >= 75 ? "A" : (score >= 60 ? "B" : "C");
+  r.pros = pro; r.cons = issues; r.mail = mi;
+
+  /* 评分明细：让客户等级有据可查 */
+  r.dims = [
+    {k:"联系通道", got:dim.contact, max:30, why:
+      (hasMobile?"手机可拨打":"无手机号") + " · " +
+      (mi.corp.length ? "企业域名邮箱" : (mi.free.length ? "个人免费邮箱" : (mi.invalid.length ? "邮箱格式无效" : "无邮箱"))) +
+      (hasIntl ? " · 含国际区号" : " · 缺国际区号")},
+    {k:"客户类型", got:dim.role, max:25, why: role.label},
+    {k:"产品匹配", got:dim.match, max:20, why:
+      r.cats.length ? ("命中 "+r.cats.length+" 个类目："+r.cats.slice(0,3).join("、")) :
+      (r.products ? "采购产品描述笼统，需进一步确认" : "名录未列明采购产品")},
+    {k:"信息完整", got:dim.info, max:15, why:
+      "联系人"+(r.contact?"✓":"✗")+" · 座机"+(hasTel?"✓":"✗")+" · 官网"+(r.web?"✓":"✗")+" · 地址"+(r.addr?"✓":"✗")},
+    {k:"数据可信", got:dim.trust, max:10, why:
+      (CTRY_MAP[r.country]?"国家可识别":"国家不可识别") + " · " +
+      (r.dialOK===true?"区号匹配":(r.dialOK===false?"区号不符":"区号无法判定")) + " · " +
+      (dupSet[r.id]?"疑似重复记录":"无重复")},
+    {k:"联网核查", got:0, max:4, why:"尚未核查邮箱域名"}
+  ];
+  r.gradeReason = "评为 " + r.grade + " 级（" + score + " 分）：得分主要来自 " +
+    (pro.slice(0,2).join("；") || "无明显加分项") +
+    "；失分点 " + (issues.slice(0,2).join("；") || "无明显失分项");
+
+  /* 保存基础分，便于联网核查结果幂等叠加 */
+  r.baseScore = score; r.basePros = pro.slice(); r.baseCons = issues.slice();
+  return r;
+}
+/* 电话区号是否与国别一致 */
+function dialCheck(r){
+  var d = digits(r.mobile);
+  if(!d) return null;
+  var cn = r.country && CTRY_MAP[r.country] ? CTRY_MAP[r.country] : null;
+  if(!cn) return null;
+  var own = cn.dial;
+  if(/^\s*\+/.test(r.mobile)){
+    var rest = d;
+    if(rest.indexOf(own) === 0) return true;
+    /* 特例：+1 北美、+7 俄哈共用 */
+    if(own === "1" && rest[0] === "1") return true;
+    if(own === "7" && rest[0] === "7") return true;
+    var others = COUNTRIES.filter(function(c){
+      return c[2] !== own && rest.indexOf(c[2]) === 0 && c[2].length >= 2;
+    });
+    if(others.length && (own === "1" || own === "7")) return true;
+    return false;
+  }
+  /* 无 + 时做宽松判断：号码去掉前导 0 后若以本国区号开头则视为一致 */
+  var stripped = d.replace(/^0+/, "");
+  if(stripped.indexOf(own) === 0) return true;
+  return null; /* 无法判定 */
+}
+
+/* ---------------- 5. 状态与注册表 ---------------- */
+var S = {};                 /* 我方资料与模板 */
+var ROWS = [];               /* 全部记录 */
+var VIEW = [];               /* 筛选后 */
+var SEL = {};                /* 勾选集合 */
+var NOTES = {};              /* id -> {status,tags,note,last,fair,li,fb,ig,waAt,mailAt} */
+var DNS = {};                /* domain -> 核查结果 */
+var OUT = {day:"", wa:0, mail:0};   /* 触达计数器（按日重置） */
+var FILTERS = {
+  kw:"", quick:"", grades:{}, countries:{}, cats:{}, mails:{}, verify:{}, roles:{}, contacts:{},
+  status:"", tag:"", fair:"", social:{}, sort:"score", page:1, size:50
+};
+var TMPL_DEFAULT = [
+  {name:"初次开发信（标准）", body:
+"Dear {contact},\n\n"+
+"Greetings from {myCompany}, a manufacturer of {myProducts} based in {city}, China. We have been exporting building materials for {years} years and are now expanding our buyer network in {country}.\n\n"+
+"I noticed your company ({company}) purchases {products}. Our products are a direct fit, and we can offer:\n"+
+"  - Factory-direct pricing with full export documentation\n"+
+"  - CE / ISO certified production, OEM and ODM available\n"+
+"  - Free samples for confirmed projects\n\n"+
+"Could you kindly share the specification and annual volume you usually require? I will send our catalogue and best FOB quotation accordingly.\n\n"+
+"Best regards,\n{myName} | Sales Manager\n{myCompany}\nWhatsApp/Tel: {myPhone}\nEmail: {myEmail} | {website}"},
+  {name:"广交会展会后跟进", body:
+"Dear {contact},\n\n"+
+"It was a pleasure meeting you at the Canton Fair. Thank you for visiting our booth and for your interest in {products}.\n\n"+
+"As promised, please find attached our catalogue and the quotation for the models you selected. A few points to highlight for {country} buyers:\n"+
+"  - Production lead time: 15-25 days after deposit\n"+
+"  - Loading: 1x40HQ can be mixed with different items (MOQ per model is low)\n"+
+"  - Certification and test reports can be provided for customs clearance\n\n"+
+"If the specification is confirmed, I can reserve production capacity for your order this month.\n\n"+
+"Looking forward to your reply.\n\n"+
+"Best regards,\n{myName} | {myCompany}\nWhatsApp/Tel: {myPhone}\nEmail: {myEmail}"},
+  {name:"WhatsApp 短消息", body:
+"Hello {contact}, this is {myName} from {myCompany} (China manufacturer of {myProducts}). We met at the Canton Fair / I got your contact from the fair buyer list. You buy {products} - we are a direct factory and can quote at factory price with certificates. May I send you our catalogue and price list on WhatsApp? Thanks!"},
+  {name:"报价后催单", body:
+"Dear {contact},\n\n"+
+"I am following up on the quotation we sent on {{date}} for {products}. Have you had a chance to review it with your team?\n\n"+
+"For orders placed this month we can hold the current price and arrange shipment before the season peak. If the target price is a concern, tell me your target and required quantity - we will find a way to work on it.\n\n"+
+"Shall I prepare a proforma invoice for your confirmation?\n\n"+
+"Best regards,\n{myName} | {myCompany}\nWhatsApp/Tel: {myPhone}"}
+];
+
+function loadStore(){
+  try{ NOTES = JSON.parse(localStorage.getItem(STORE_NOTES)||"{}") || {}; }catch(e){ NOTES = {}; }
+  try{ DNS = JSON.parse(localStorage.getItem(STORE_DNS)||"{}") || {}; }catch(e){ DNS = {}; }
+  try{ OUT = JSON.parse(localStorage.getItem(STORE_OUT)||"null") || {day:"",wa:0,mail:0}; }catch(e){ OUT = {day:"",wa:0,mail:0}; }
+  refreshDay();
+  var def = {
+    myCompany:"", myProducts:"", myName:"", myPhone:"", myEmail:"", website:"", city:"", years:"10",
+    tmplIdx:0, tmpls:JSON.parse(JSON.stringify(TMPL_DEFAULT)), mailMode:"auto"
+  };
+  try{
+    var saved = JSON.parse(localStorage.getItem(STORE_SET)||"null");
+    S = saved ? Object.assign(def, saved) : def;
+  }catch(e){ S = def; }
+  if(!S.tmpls || !S.tmpls.length) S.tmpls = JSON.parse(JSON.stringify(TMPL_DEFAULT));
+}
+function saveStore(){
+  if(DEMO) return;   /* 只读演示版不写入任何数据 */
+  try{
+    localStorage.setItem(STORE_NOTES, JSON.stringify(NOTES));
+    localStorage.setItem(STORE_DNS, JSON.stringify(DNS));
+    localStorage.setItem(STORE_SET, JSON.stringify(S));
+    localStorage.setItem(STORE_OUT, JSON.stringify(OUT));
+  }catch(e){ toast("本地存储已满，请先导出备份"); }
+}
+/* 触达计数按自然日重置 */
+function todayStr(){
+  var d = new Date(), p = function(n){ return n < 10 ? "0"+n : ""+n; };
+  return d.getFullYear() + "-" + p(d.getMonth()+1) + "-" + p(d.getDate());
+}
+function refreshDay(){
+  var t = todayStr();
+  if(!OUT || OUT.day !== t){ OUT = {day:t, wa:0, mail:0}; }
+}
+function todayCount(ch){ refreshDay(); return ch === "wa" ? (OUT.wa||0) : (OUT.mail||0); }
+function bumpCount(ch){
+  refreshDay();
+  if(ch === "wa") OUT.wa = (OUT.wa||0) + 1; else OUT.mail = (OUT.mail||0) + 1;
+  saveStore();
+}
+function noteOf(id){
+  if(!NOTES[id]) NOTES[id] = {status:"未联系", tags:[], note:"", last:0};
+  var n = NOTES[id];
+  if(n.fair == null) n.fair = "";
+  if(n.li == null) n.li = "";
+  if(n.fb == null) n.fb = "";
+  if(n.ig == null) n.ig = "";
+  if(!n.tags) n.tags = [];
+  return n;
+}
+
+/* ---------------- 6. 载入名录 ---------------- */
+function normalizeRows(raw){
+  /* raw: [{Buyer,Country,Contact,Mobile,Tel,Email,Products,Addr?...}] */
+  var rows = raw.map(function(o, idx){
+    var r = {
+      seq: idx+1,
+      buyer: (o.buyer||o.Buyer||"").trim().replace(/\s+/g," "),
+      contact: (o.contact||o.Contact||"").trim().replace(/\s+/g," "),
+      mobile: (o.mobile||o.Mobile||o["WhatsApp(手机)"]||o["手机"]||"").trim().replace(/\s+/g," "),
+      tel: (o.tel||o.Tel||o["公司电话"]||o["电话"]||"").trim().replace(/\s+/g," "),
+      email: (o.email||o.Email||o["邮箱"]||"").trim(),
+      products: (o.products||o.Products||o["采购产品"]||o["进口产品"]||"").trim(),
+      addr: (o.addr||o.Addr||o["地址"]||"").trim(),
+      raw: ""
+    };
+    var c = cleanCountry(o.country||o.Country||o["国家/地区"]||o["国家"]||"");
+    r.country = c.cn;
+    r.countryNote = c.note;
+    r.emailList = emailsOf(r.email);
+    r.id = "b" + hash((r.buyer+"|"+r.country+"|"+r.emailList[0]).toLowerCase()) + "_" + idx;
+    r.raw = [r.buyer,r.contact,r.mobile,r.tel,r.email,r.products].join(" ");
+    var fv = o.fair || o.Fair || "";
+    r.fairFromData = String(fv).replace(/[^\d]/g, "").slice(0, 3);
+    return r;
+  }).filter(function(r){ return r.buyer || r.email || r.mobile; });
+  return rows;
+}
+function prepare(rows){
+  /* 去重检测 */
+  var byName = {}, byMail = {}, dup = {};
+  rows.forEach(function(r){
+    var k = r.buyer.toLowerCase().replace(/[^a-z0-9\u4e00-\u9fa5]/g,"");
+    if(k){ byName[k] = (byName[k]||0)+1; }
+    r.emailList.forEach(function(e){
+      var d = e.split("@")[1].toLowerCase();
+      byMail[d] = (byMail[d]||0)+1;
+    });
+  });
+  rows.forEach(function(r){
+    var k = r.buyer.toLowerCase().replace(/[^a-z0-9\u4e00-\u9fa5]/g,"");
+    var n = byName[k]||0;
+    var m = 0;
+    r.emailList.forEach(function(e){ var d = e.split("@")[1].toLowerCase(); if(byMail[d]>1) m = byMail[d]; });
+    if(n > 1 || m > 1) dup[r.id] = Math.max(n,m);
+  });
+  rows.forEach(function(r){ r.dialOK = dialCheck(r); analyze(r, dup); applyDns(r); });
+  /* 名录若自带「参展届数」列，导入时自动写入记录 */
+  var gotFair = false;
+  rows.forEach(function(r){
+    if(r.fairFromData){
+      if(!NOTES[r.id]) NOTES[r.id] = {status:"未联系", tags:[], note:"", last:0};
+      if(!NOTES[r.id].fair){ NOTES[r.id].fair = r.fairFromData; gotFair = true; }
+    }
+  });
+  if(gotFair) saveStore();
+  ROWS = rows;
+  ROWS.dupMap = dup;
+  pruneIds();
+}
+function pruneIds(){
+  /* 删除已不存在记录的跟进数据 */
+  var live = {};
+  ROWS.forEach(function(r){ live[r.id] = 1; });
+  var changed = false;
+  Object.keys(NOTES).forEach(function(k){ if(!live[k]){ delete NOTES[k]; changed = true; } });
+  if(changed) saveStore();
+}
+/* 联网核查结果并入评分（幂等：每次都从基础分重算） */
+function applyDns(r){
+  var d = r.mail.corp[0] || "";   /* 仅核查企业自有域名，公共邮箱域名无核查意义 */
+  r.dnsDomain = d;
+  r.dns = d ? (DNS[d] || null) : null;
+  r.score = r.baseScore;
+  r.pros = r.basePros.slice();
+  r.cons = r.baseCons.slice();
+  var delta = 0, why = "无可核查的企业邮箱域名";
+  if(r.dns){
+    var st = r.dns.status;
+    if(st === "ok"){
+      delta = 4;
+      why = "MX 生效，邮箱可正常收信" + (r.dns.spf ? "，且已配置 SPF" : "");
+      r.pros.push("邮箱域名 " + d + " 已配置邮件服务（MX 生效），可正常收信");
+      if(r.dns.spf) r.pros.push("域名配置了 SPF 发件策略，属正规运营企业");
+    } else if(st === "nxdomain"){
+      delta = -18;
+      why = "域名不存在（NXDOMAIN），邮箱必然退信";
+      r.cons.push("邮箱域名 " + d + " 不存在（NXDOMAIN），该邮箱一定无法收信");
+    } else if(st === "nomail"){
+      delta = -8;
+      why = "域名存在但未配置 MX 邮件记录";
+      r.cons.push("域名 " + d + " 存在但未配置 MX 邮件记录，邮箱可能无法收信");
+    } else {
+      why = "查询失败（网络受限，可重试）";
+    }
+  }
+  r.score = Math.max(0, Math.min(100, r.score + delta));
+  r.dnsDelta = delta;
+  if(r.dims && r.dims.length >= 6){ r.dims[5] = {k:"联网核查", got:delta, max:4, why:why}; }
+  r.grade = r.score >= 75 ? "A" : (r.score >= 60 ? "B" : "C");
+  r.gradeReason = "评为 " + r.grade + " 级（" + r.score + " 分）：得分主要来自 " +
+    (r.pros.slice(0,2).join("；") || "无明显加分项") +
+    "；失分点 " + (r.cons.slice(0,2).join("；") || "无明显失分项");
+}
+function loadEmbedded(){
+  var raw = document.getElementById("embedded-csv").textContent.trim();
+  if(!raw) return [];
+  var txt = licDecrypt(raw);   /* 内置名录是密文，激活后才在内存里解密 */
+  if(!txt) return [];
+  var d = sniffDelim(txt.split(/\r?\n/)[0]);
+  var t = d === "\t" ? txt.replace(/\t/g,",") : txt;
+  var matrix = parseCsv(t);
+  if(!matrix.length) return [];
+  var head = matrix[0].map(function(h){ return String(h).trim(); });
+  var map = {Buyer:"buyer",Country:"country",Contact:"contact",Mobile:"mobile",Tel:"tel",Email:"email",Products:"products",Addr:"addr"};
+  var objs = [];
+  for(var i=1;i<matrix.length;i++){
+    var o = {}, any = false;
+    head.forEach(function(h, j){
+      var key = map[h] || h;
+      var v = matrix[i][j] != null ? String(matrix[i][j]).trim() : "";
+      o[key] = v;
+      if(v) any = true;
+    });
+    if(any) objs.push(o);
+  }
+  return normalizeRows(objs);
+}
+function currentRows(){
+  var imp = null;
+  try{ imp = JSON.parse(localStorage.getItem(STORE_IMPORT)||"null"); }catch(e){}
+  if(imp && imp.length){ return normalizeRows(imp); }
+  return loadEmbedded();
+}
+
+/* ---------------- 7. 筛选 ---------------- */
+function pass(r){
+  var f = FILTERS;
+  if(f.quick){
+    var q = f.quick.toLowerCase();
+    if((r.buyer+" "+r.contact+" "+r.email+" "+r.mobile+" "+r.products).toLowerCase().indexOf(q) < 0) return false;
+  }
+  if(f.kw){
+    var k = f.kw.toLowerCase();
+    if((r.buyer+" "+r.contact+" "+r.email+" "+r.products+" "+r.country).toLowerCase().indexOf(k) < 0) return false;
+  }
+  if(count(f.grades) && !f.grades[r.grade]) return false;
+  if(count(f.countries) && !f.countries[r.country || "(空)"]) return false;
+  if(count(f.cats)){
+    var okCat = r.cats.some(function(c){ return f.cats[c]; });
+    if(!okCat) return false;
+  }
+  if(count(f.mails)){
+    var ok = false, mi = r.mail;
+    if(f.mails.corp && mi.corp.length) ok = true;
+    if(f.mails.free && mi.free.length) ok = true;
+    if(f.mails.none && !mi.valid.length) ok = true;
+    if(f.mails.bad && mi.invalid.length) ok = true;
+    if(!ok) return false;
+  }
+  if(count(f.roles) && !f.roles[r.role.key]) return false;
+  if(count(f.verify)){
+    var st = r.dns ? r.dns.status : "unchecked";
+    if(!f.verify[st]) return false;
+  }
+  if(count(f.contacts)){
+    if(f.contacts.hasMail && !r.mail.valid.length) return false;
+    if(f.contacts.hasMobile && digits(r.mobile).length < 8) return false;
+    if(f.contacts.hasTel && digits(r.tel).length < 7) return false;
+    if(f.contacts.hasWeb && !r.web) return false;
+    if(f.contacts.risk && !(r.cons.length >= 3)) return false;
+  }
+  var n = NOTES[r.id];
+  if(f.status && (!n || n.status !== f.status)) return false;
+  if(f.tag && (!n || n.tags.indexOf(f.tag) < 0)) return false;
+  if(f.fair){
+    var fv = (n && n.fair) ? parseInt(n.fair, 10) : 0;
+    if(!fv) fv = 0;
+    if(f.fair === "none" && fv) return false;
+    if(f.fair === "has" && !fv) return false;
+    if(f.fair === "ge2" && fv < 2) return false;
+    if(f.fair === "ge3" && fv < 3) return false;
+  }
+  if(count(f.social)){
+    var hasLi = !!(n && n.li), hasFb = !!(n && n.fb), hasIg = !!(n && n.ig);
+    var anySoc = hasLi || hasFb || hasIg;
+    if(f.social.any && !anySoc) return false;
+    if(f.social.none && anySoc) return false;
+    if(f.social.li && !hasLi) return false;
+    if(f.social.fb && !hasFb) return false;
+    if(f.social.ig && !hasIg) return false;
+  }
+  return true;
+}
+function count(o){ return Object.keys(o).length; }
+function applyFilters(){
+  VIEW = ROWS.filter(pass);
+  sortView();
+  FILTERS.page = 1;
+  render();
+}
+function sortView(){
+  var k = FILTERS.sort;
+  var by = {
+    score:function(a,b){ return b.score - a.score || a.buyer.localeCompare(b.buyer); },
+    country:function(a,b){ return (a.country||"~").localeCompare(b.country||"~","zh") || b.score-a.score; },
+    role:function(a,b){ return a.role.key.localeCompare(b.role.key) || b.score-a.score; },
+    fair:function(a,b){
+      var av = NOTES[a.id] && NOTES[a.id].fair ? parseInt(NOTES[a.id].fair,10)||0 : 0;
+      var bv = NOTES[b.id] && NOTES[b.id].fair ? parseInt(NOTES[b.id].fair,10)||0 : 0;
+      return bv - av || b.score - a.score;
+    },
+    status:function(a,b){
+      var x = NOTES[a.id] ? NOTES[a.id].status : "未联系", y = NOTES[b.id] ? NOTES[b.id].status : "未联系";
+      return x.localeCompare(y,"zh") || b.score-a.score;
+    },
+    seq:function(a,b){ return a.seq - b.seq; }
+  }[k] || function(a,b){ return b.score - a.score; };
+  VIEW.sort(by);
+}
+
+/* ---------------- 8. 渲染 ---------------- */
+function gradeBadge(g, score){
+  return '<span class="badge g'+g+'">'+score+'</span> <span class="badge g'+g+'" style="min-width:auto">'+g+'</span>';
+}
+function rowTags(r){
+  var out = [];
+  var n = NOTES[r.id];
+  if(n && n.status && n.status !== "未联系") out.push('<span class="tag i">'+esc(n.status)+'</span>');
+  if(n && n.tags.length) n.tags.slice(0,2).forEach(function(t){ out.push('<span class="tag y">'+esc(t)+'</span>'); });
+  if(r.mail.invalid.length) out.push('<span class="tag r">邮箱无效</span>');
+  if(r.mail.valid.length && !r.mail.corp.length) out.push('<span class="tag">个人邮箱</span>');
+  if(r.dns){
+    if(r.dns.status === "nxdomain") out.push('<span class="tag r">域名不存在</span>');
+    else if(r.dns.status === "nomail") out.push('<span class="tag r">无邮件服务</span>');
+    else if(r.dns.status === "ok") out.push('<span class="tag g">邮箱可收信</span>');
+  }
+  if(r.role.key === "factory") out.push('<span class="tag y">疑似同行</span>');
+  if(ROWS.dupMap && ROWS.dupMap[r.id]) out.push('<span class="tag y">重复记录</span>');
+  if(r.cons.length >= 4) out.push('<span class="tag r">高核实需求</span>');
+  if(n && n.fair) out.push('<span class="tag i">已参加 '+esc(n.fair)+' 届</span>');
+  var soc = [];
+  if(n && n.li) soc.push("领英");
+  if(n && n.fb) soc.push("脸书");
+  if(n && n.ig) soc.push("IG");
+  if(soc.length) out.push('<span class="tag g">'+soc.join("·")+'</span>');
+  return out.join("");
+}
+function render(){
+  /* 看板 chips */
+  var a=0,b=0,c=0, corp=0;
+  ROWS.forEach(function(r){
+    if(r.grade==="A") a++; else if(r.grade==="B") b++; else c++;
+    if(r.mail.corp.length) corp++;
+  });
+  $("#chips").innerHTML =
+    '<div class="chip">客户总数 <b>'+ROWS.length+'</b></div>'+
+    '<div class="chip a">A 级优先 <b>'+a+'</b></div>'+
+    '<div class="chip b">B 级可开发 <b>'+b+'</b></div>'+
+    '<div class="chip">C 级低优先 <b>'+c+'</b></div>'+
+    '<div class="chip">企业邮箱 <b>'+corp+'</b></div>'+
+    '<div class="chip">当前筛选 <b>'+VIEW.length+'</b></div>'+
+    '<div class="chip">已授权 <b>'+esc(licInfoText()||"—")+'</b></div>';
+
+  /* 表格 */
+  var total = VIEW.length;
+  var size = FILTERS.size;
+  var pages = Math.max(1, Math.ceil(total/size));
+  if(FILTERS.page > pages) FILTERS.page = pages;
+  var start = (FILTERS.page-1)*size;
+  var list = VIEW.slice(start, start+size);
+  var tb = $("#tbody");
+  if(!list.length){
+    tb.innerHTML = '<tr><td colspan="12"><div class="empty">没有符合条件的客户，请放宽筛选条件</div></td></tr>';
+  } else {
+    tb.innerHTML = list.map(function(r, i){
+      var n = start + i + 1;
+      var sel = SEL[r.id] ? " sel" : "";
+      var mob = r.mobile || '<span class="muted">—</span>';
+      var mail = r.email ? esc(r.email.split(/[;,\s]+/)[0]) : '<span class="muted">无邮箱</span>';
+      var nf = NOTES[r.id] && NOTES[r.id].fair ? NOTES[r.id].fair : "";
+      return '<tr class="'+sel.trim()+'" data-id="'+r.id+'">'+
+        '<td data-label=""><input type="checkbox" class="rowsel" data-id="'+r.id+'"'+(SEL[r.id]?" checked":"")+'></td>'+
+        '<td class="muted" data-label="序号">'+n+'</td>'+
+        '<td data-label="公司"><span class="bname">'+esc(r.buyer||"(无公司名)")+'</span>'+rowTags(r)+'</td>'+
+        '<td data-label="国家">'+(esc(r.country)||'<span class="muted">未填</span>')+'</td>'+
+        '<td class="contactline" data-label="联系人">'+esc(r.contact||"—")+'</td>'+
+        '<td class="mono contactline" data-label="手机">'+mob+'</td>'+
+        '<td data-label="邮箱"><span class="email">'+mail+'</span></td>'+
+        '<td data-label="采购产品"><span class="prod">'+esc(r.products||"—")+'</span></td>'+
+        '<td data-label="评级依据"><span class="gradeReason" title="'+esc(r.gradeReason)+'">'+esc(r.gradeReason)+'</span></td>'+
+        '<td data-label="背调">'+gradeBadge(r.grade, r.score)+'</td>'+
+        '<td data-label="参展届数">'+(nf ? '<span class="tag i">'+esc(nf)+' 届</span>' : '<span class="muted">未记录</span>')+'</td>'+
+        '<td class="muted" data-label="跟进">'+esc(NOTES[r.id] && NOTES[r.id].status!=='未联系' ? NOTES[r.id].status : "—")+'</td>'+
+        '<td data-label="操作"><div class="ops">'+
+          '<button class="iconbtn" data-act="detail" data-id="'+r.id+'" title="背调详情">☰</button>'+
+          '<button class="iconbtn" data-act="letter" data-id="'+r.id+'" title="生成开发信">✉</button>'+
+          '<button class="iconbtn" data-act="wa" data-id="'+r.id+'" title="WhatsApp">◉</button>'+
+          '<button class="iconbtn" data-act="mail" data-id="'+r.id+'" title="发邮件">@</button>'+
+          '<button class="iconbtn" data-act="verify" data-id="'+r.id+'" title="核查该邮箱域名">✓</button>'+
+        '</div></td>'+
+      '</tr>';
+    }).join("");
+  }
+  $("#countInfo").textContent = "共 " + total + " 条" + (total? "（第 "+FILTERS.page+"/"+pages+" 页）" : "");
+  /* 分页 */
+  var pg = ['<button class="pbtn" data-p="1" '+ (FILTERS.page<=1?"disabled":"") +'>«</button>'];
+  pg.push('<button class="pbtn" data-p="'+Math.max(1,FILTERS.page-1)+'" '+(FILTERS.page<=1?"disabled":"")+'>‹</button>');
+  var from = Math.max(1, FILTERS.page-2), to = Math.min(pages, from+4);
+  for(var p=from; p<=to; p++){
+    pg.push('<button class="pbtn '+(p===FILTERS.page?"on":"")+'" data-p="'+p+'">'+p+'</button>');
+  }
+  pg.push('<button class="pbtn" data-p="'+Math.min(pages,FILTERS.page+1)+'" '+(FILTERS.page>=pages?"disabled":"")+'>›</button>');
+  pg.push('<button class="pbtn" data-p="'+pages+'" '+(FILTERS.page>=pages?"disabled":"")+'>»</button>');
+  pg.push('<span class="spacer"></span>');
+  pg.push('<span class="muted">每页</span><select class="sel" id="sizeSel" style="width:74px">');
+  $("#pager").innerHTML = pg.join("") + [30,50,100,200].map(function(s){
+    return '<option value="'+s+'"'+(s===FILTERS.size?" selected":"")+'>'+s+'</option>';
+  }).join("") + '</select>';
+  var ss = $("#sizeSel");
+  if(ss) ss.onchange = function(){ FILTERS.size = +this.value; FILTERS.page = 1; render(); };
+  /* 批量条 */
+  var selN = Object.keys(SEL).length;
+  $("#selCount").textContent = selN;
+  $("#batchbar").classList.toggle("on", selN > 0);
+  $("#selAll").checked = list.length > 0 && list.every(function(r){ return SEL[r.id]; });
+  updateStats();
+}
+
+/* ---------------- 9. 看板与统计 ---------------- */
+function bar(label, val, max, colorCls){
+  var pct = max ? Math.round(val/max*100) : 0;
+  return '<div style="margin-bottom:9px"><div style="display:flex;justify-content:space-between;font-size:12px">'+
+    '<span>'+esc(label)+'</span><b>'+val+'</b></div>'+
+    '<div class="bar"><i style="width:'+pct+'%;background:'+(colorCls||"linear-gradient(90deg,#1a6fe0,#4a9bff)")+'"></i></div></div>';
+}
+function updateStats(){
+  var a=0,b=0,c=0;
+  ROWS.forEach(function(r){ if(r.grade==="A")a++; else if(r.grade==="B")b++; else c++; });
+  var maxG = Math.max(a,b,c,1);
+  $("#gradeChart").innerHTML =
+    bar("A 级 · 优先开发（≥75 分）", a, maxG, "linear-gradient(90deg,#0f9d58,#3dbf7a)") +
+    bar("B 级 · 可开发（60-74 分）", b, maxG, "linear-gradient(90deg,#d98300,#f0a930)") +
+    bar("C 级 · 低优先（<60 分）", c, maxG, "linear-gradient(90deg,#8c97a8,#b3bdc9)");
+
+  var roles = {};
+  ROWS.forEach(function(r){ roles[r.role.label] = (roles[r.role.label]||0)+1; });
+  var rk = Object.keys(roles).sort(function(x,y){ return roles[y]-roles[x]; });
+  var rmax = rk.length ? roles[rk[0]] : 1;
+  $("#roleChart").innerHTML = rk.map(function(k){
+    return bar(k, roles[k], rmax, k.indexOf("同行")>=0 ? "linear-gradient(90deg,#d98300,#f0a930)" : "");
+  }).join("") || '<div class="muted">暂无数据</div>';
+
+  var mCorp=0, mFree=0, mNone=0, mBad=0;
+  ROWS.forEach(function(r){
+    if(r.mail.invalid.length) mBad++;
+    if(r.mail.corp.length) mCorp++;
+    else if(r.mail.free.length) mFree++;
+    else if(!r.mail.valid.length) mNone++;
+  });
+  var mmax = Math.max(mCorp,mFree,mNone,mBad,1);
+  $("#mailChart").innerHTML =
+    bar("企业域名邮箱（公司化程度高）", mCorp, mmax, "linear-gradient(90deg,#0f9d58,#3dbf7a)") +
+    bar("个人免费邮箱（多为小客户）", mFree, mmax, "linear-gradient(90deg,#d98300,#f0a930)") +
+    bar("无邮箱（仅电话/WhatsApp）", mNone, mmax, "linear-gradient(90deg,#8c97a8,#b3bdc9)") +
+    bar("邮箱格式无效", mBad, mmax, "linear-gradient(90deg,#d93838,#ef6b6b)");
+
+  var ct = {};
+  ROWS.forEach(function(r){ var k = r.country || "(未填)"; ct[k] = (ct[k]||0)+1; });
+  var ck = Object.keys(ct).sort(function(x,y){ return ct[y]-ct[x]; }).slice(0,20);
+  var cmax = ck.length ? ct[ck[0]] : 1;
+  $("#countryChart").innerHTML = ck.map(function(k){ return bar(k, ct[k], cmax); }).join("");
+
+  /* 风险与质量问题 */
+  var noCty = 0, dupN = 0, noMail = 0, badMail = 0, noDial = 0, checked = 0, nx = 0;
+  ROWS.forEach(function(r){
+    if(!CTRY_MAP[r.country]) noCty++;
+    if(ROWS.dupMap && ROWS.dupMap[r.id]) dupN++;
+    if(r.mail.invalid.length) badMail++;
+    if(!r.mail.valid.length) noMail++;
+    if(r.dialOK === false) noDial++;
+    if(r.dns){ checked++; if(r.dns.status === "nxdomain") nx++; }
+  });
+  $("#riskPanel").innerHTML =
+    '<div class="stat">'+
+    '<div class="s"><b>'+noCty+'</b><span>国家无法识别，需人工核对</span></div>'+
+    '<div class="s"><b>'+dupN+'</b><span>疑似重复记录，勿重复开发</span></div>'+
+    '<div class="s"><b>'+badMail+'</b><span>邮箱格式无效，必退信</span></div>'+
+    '<div class="s"><b>'+noMail+'</b><span>无邮箱，只能电话/WhatsApp</span></div>'+
+    '<div class="s"><b>'+noDial+'</b><span>号码区号与国别不符</span></div>'+
+    '<div class="s"><b>'+checked+'</b><span>已联网核查（其中域名不存在 '+nx+'）</span></div>'+
+    '</div>'+
+    '<div class="note" style="margin-top:11px">评分构成：联系通道 30 分 · 客户角色 25 分 · 产品匹配 20 分 · 信息完整 15 分 · 数据可信 10 分。'+
+    '联网核查结果会追加/扣减分数并实时反映到等级。</div>';
+
+  /* 跟进统计 */
+  var fs = {};
+  STATUSES.forEach(function(s){ fs[s] = 0; });
+  var tagged = 0, withNote = 0;
+  Object.keys(NOTES).forEach(function(k){
+    var n = NOTES[k];
+    if(fs[n.status] == null) fs[n.status] = 0;
+    fs[n.status]++;
+    if(n.tags.length) tagged++;
+    if(n.note) withNote++;
+  });
+  $("#followStats").innerHTML = STATUSES.map(function(s){
+    return '<div class="s"><b>'+fs[s]+'</b><span>'+s+'</span></div>';
+  }).join("") + '<div class="s"><b>'+tagged+'</b><span>已打标签客户</span></div>';
+  renderFollowList();
+}
+function renderFollowList(){
+  var items = ROWS.filter(function(r){ return NOTES[r.id]; }).sort(function(a,b){
+    return (NOTES[b.id].last||0) - (NOTES[a.id].last||0);
+  });
+  if(!items.length){
+    $("#followList").innerHTML = '<div class="empty">还没有跟进记录。在「客户名录与筛选」中点击客户行的 ☰ 打开详情，即可设置状态、标签与备注。</div>';
+    return;
+  }
+  $("#followList").innerHTML = items.map(function(r){
+    var n = NOTES[r.id];
+    return '<div class="setitem">'+
+      '<div class="t"><span class="badge g'+r.grade+'">'+r.score+'</span>'+esc(r.buyer)+
+        '<span class="tag i">'+esc(n.status)+'</span>'+
+        n.tags.map(function(t){ return '<span class="tag y">'+esc(t)+'</span>'; }).join("")+
+        '<span style="flex:1"></span><span class="muted">'+fmtDate(n.last)+'</span>'+
+        '<button class="btn sm" data-followopen="'+r.id+'">编辑</button></div>'+
+      '<div class="m">'+esc(r.country||"—")+' · '+esc(r.mobile||"无手机")+' · '+esc(r.emailList[0]||"无邮箱")+'</div>'+
+      (n.note ? '<div class="m">备注：'+esc(n.note)+'</div>' : '')+
+    '</div>';
+  }).join("");
+}
+
+/* ---------------- 10. 详情抽屉 ---------------- */
+var CUR = null;
+function openDetail(id){
+  var r = ROWS.filter(function(x){ return x.id === id; })[0];
+  if(!r) return;
+  CUR = r;
+  var n = noteOf(r.id);
+  var link = function(t,u){ return '<a href="'+u+'" target="_blank" rel="noopener">'+t+'</a>'; };
+  var q = encodeURIComponent(r.buyer + " " + (r.country||""));
+  $("#dTitle").innerHTML = esc(r.buyer) + ' <span class="badge g'+r.grade+'">'+r.score+' '+r.grade+'</span>';
+  $("#dBody").innerHTML =
+    '<div class="sec"><h4>为什么是 '+r.grade+' 级（评分依据）</h4>'+
+      '<div class="reasonbox" style="margin-bottom:10px">'+esc(r.gradeReason)+'</div>'+
+      '<div class="dimgrid">'+
+        (r.dims||[]).map(function(d){
+          var pct = d.got < 0 ? 100 : Math.max(0, Math.min(100, Math.round(d.got / d.max * 100)));
+          var val = d.got < 0 ? ('扣 '+Math.abs(d.got)+' 分') : (d.got + ' / ' + d.max);
+          return '<div class="dimrow">'+
+            '<span class="k">'+esc(d.k)+'</span>'+
+            '<span class="dimbar"><i class="'+(d.got<0?"neg":"")+'" style="width:'+pct+'%"></i></span>'+
+            '<span class="v">'+val+'</span>'+
+          '</div><div class="dimwhy">'+esc(d.why)+'</div>';
+        }).join("")+
+      '</div>'+
+      '<div class="legalnote">评分上限：联系通道 30 · 客户类型 25 · 产品匹配 20 · 信息完整 15 · 数据可信 10，联网核查单独加减分。总分 ≥75 为 A 级，60-74 为 B 级，其余为 C 级。</div>'+
+    '</div>'+
+    '<div class="sec"><h4>背调结论明细</h4>'+
+      '<div class="dl"><ul>'+
+        r.pros.map(function(p){ return '<li>＋ '+esc(p)+'</li>'; }).join("")+
+        r.cons.map(function(p){ return '<li class="bad">－ '+esc(p)+'</li>'; }).join("")+
+      '</ul></div>'+
+      '<div class="muted" style="font-size:12px;margin-top:6px">评分 '+r.score+' 分 · 客户类型：'+esc(r.role.label)+
+      ' · 采购类目：'+esc(r.cats.join("、")||"未识别")+' · 与我方主营重叠：'+esc((r.myHit||[]).join("、")||"—")+'</div>'+
+    '</div>'+
+    '<div class="sec"><h4>名录原始信息</h4><dl class="kv">'+
+      '<dt>采购商</dt><dd>'+esc(r.buyer)+'</dd>'+
+      '<dt>国家/地区</dt><dd>'+esc(r.country||"未填")+(CTRY_MAP[r.country]?' （区号 +'+CTRY_MAP[r.country].dial+'，'+CTRY_MAP[r.country].iso+'）':'')+'</dd>'+
+      '<dt>联系人</dt><dd>'+esc(r.contact||"未填")+'</dd>'+
+      '<dt>手机/WhatsApp</dt><dd class="mono">'+esc(r.mobile||"未填")+'</dd>'+
+      '<dt>公司电话</dt><dd class="mono">'+esc(r.tel||"未填")+'</dd>'+
+      '<dt>邮箱</dt><dd>'+esc(r.email||"未填")+'</dd>'+
+      '<dt>采购产品</dt><dd>'+esc(r.products||"未填")+'</dd>'+
+      '<dt>官网/域名</dt><dd>'+(r.web? esc(r.web) : '<span class="muted">未发现</span>')+'</dd>'+
+      (r.countryNote ? '<dt>数据问题</dt><dd class="muted">'+esc(r.countryNote)+'</dd>' : '')+
+    '</dl></div>'+
+    '<div class="sec"><h4>参展届数（第几次参加广交会）</h4>'+
+      '<div style="display:flex;align-items:center;gap:9px;flex-wrap:wrap">'+
+        '<input class="inp" id="dFair" style="max-width:110px" placeholder="如 3" value="'+esc(n.fair||'')+'">'+
+        '<span class="muted" style="font-size:12px">届（原始名录不含此字段，需人工核验后填入）</span>'+
+      '</div>'+
+      '<div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:9px">'+
+        [1,2,3,4,5,6,8,10,15].map(function(x){ return '<button class="btn sm" data-fairset="'+x+'">'+x+' 届</button>'; }).join("")+
+        '<button class="btn sm danger" data-fairset="">清空</button>'+
+      '</div>'+
+      '<div style="display:flex;gap:7px;flex-wrap:wrap;margin-top:9px">'+
+        '<a class="btn sm" href="https://cn.bing.com/search?q='+encodeURIComponent(r.buyer+' 广交会 参展')+'" target="_blank" rel="noopener">必应查历届参展记录</a>'+
+        '<a class="btn sm" href="https://cn.bing.com/search?q='+encodeURIComponent(r.buyer+' canton fair exhibitor')+'" target="_blank" rel="noopener">英文查参展历史</a>'+
+        '<a class="btn sm" href="https://www.cantonfair.org.cn/zh-CN/search?keyword='+encodeURIComponent(r.buyer)+'" target="_blank" rel="noopener">广交会官网查询</a>'+
+      '</div>'+
+      '<div class="legalnote">内置名录为只读数据，不支持导入或修改；你可以在每位客户下补充参展届数、海外社媒与跟进记录。</div>'+
+    '</div>'+
+    '<div class="sec"><h4>海外社媒账号</h4>'+
+      '<div class="socgrid">'+
+        '<div class="socrow"><span class="pfx"><i class="socdot li"></i>领英</span>'+
+          '<input class="inp" id="dLi" placeholder="公司主页链接或账号名" value="'+esc(n.li||'')+'">'+
+          '<a class="btn sm" href="https://cn.bing.com/search?q='+encodeURIComponent(r.buyer+' site:linkedin.com')+'" target="_blank" rel="noopener">搜</a></div>'+
+        '<div class="socrow"><span class="pfx"><i class="socdot fb"></i>脸书</span>'+
+          '<input class="inp" id="dFb" placeholder="主页链接或账号名" value="'+esc(n.fb||'')+'">'+
+          '<a class="btn sm" href="https://cn.bing.com/search?q='+encodeURIComponent(r.buyer+' site:facebook.com')+'" target="_blank" rel="noopener">搜</a></div>'+
+        '<div class="socrow"><span class="pfx"><i class="socdot ig"></i>Instagram</span>'+
+          '<input class="inp" id="dIg" placeholder="账号或链接" value="'+esc(n.ig||'')+'">'+
+          '<a class="btn sm" href="https://cn.bing.com/search?q='+encodeURIComponent(r.buyer+' site:instagram.com')+'" target="_blank" rel="noopener">搜</a></div>'+
+      '</div>'+
+      '<div style="display:flex;gap:7px;flex-wrap:wrap;margin-top:9px">'+
+        '<button class="btn sm p" id="dSocSave">保存社媒记录</button>'+
+        '<a class="btn sm" href="https://www.linkedin.com/search/results/companies/?keywords='+q+'" target="_blank" rel="noopener">LinkedIn 站内搜（需外网）</a>'+
+        '<a class="btn sm" href="https://www.facebook.com/search/top?q='+q+'" target="_blank" rel="noopener">Facebook 站内搜（需外网）</a>'+
+      '</div>'+
+      '<div class="legalnote">名录不含社媒字段，上面「搜」按钮用公司名去必应检索对应平台页面；查到后填入并保存，会显示在客户行标签和导出表中。</div>'+
+    '</div>'+
+    '<div class="sec"><h4>联网核查结果</h4>'+
+      (r.dnsDomain ? '' : '<div class="note">该客户没有可核查的企业邮箱域名。</div>')+
+      (r.dns ? '<dl class="kv">'+
+        '<dt>域名</dt><dd class="mono">'+esc(r.dns.domain)+'</dd>'+
+        '<dt>状态</dt><dd>'+dnsLabel(r.dns)+'</dd>'+
+        '<dt>MX 记录</dt><dd class="mono">'+esc((r.dns.mx||[]).join(" | ")||"—")+'</dd>'+
+        '<dt>SPF</dt><dd>'+(r.dns.spf?'已配置':'未配置')+'</dd>'+
+        '<dt>DMARC</dt><dd>'+(r.dns.dmarc?'已配置':'未配置')+'</dd>'+
+        '<dt>A 记录</dt><dd>'+(r.dns.hasA?'有（客户有网站）':'无')+'</dd>'+
+        '<dt>核查时间</dt><dd>'+fmtDate(r.dns.at)+'</dd></dl>'
+        : (r.dnsDomain ? '<div class="note">尚未核查。<button class="btn sm" data-doverify="'+r.id+'" style="margin-left:6px">立即核查该域名</button></div>' : ''))+
+    '</div>'+
+    '<div class="sec"><h4>核验与联系入口</h4>'+
+      '<div style="display:flex;gap:7px;flex-wrap:wrap">'+
+        (waNumber(r) ? '<a class="btn sm" href="https://wa.me/'+waNumber(r)+'" target="_blank" rel="noopener">WhatsApp 直聊（'+waNumber(r)+'）</a>' : '')+
+        (r.mail.valid.length ?
+          '<button class="btn sm p" data-mailgo="1" data-mailto="'+esc(r.mail.valid[0])+'">写邮件</button>'+
+          '<button class="btn sm" data-mailcopy="1" data-mailto="'+esc(r.mail.valid[0])+'">复制邮件内容</button>'+
+          '<button class="btn sm" data-mailcp="1" data-mailto="'+esc(r.mail.valid[0])+'">复制对方邮箱</button>'
+          : '')+
+        (r.web ? '<a class="btn sm" href="'+(/^https?:\/\//.test(r.web)?r.web:"http://"+r.web)+'" target="_blank" rel="noopener">访问官网</a>' : '')+
+        '<a class="btn sm" href="https://cn.bing.com/search?q='+q+'" target="_blank" rel="noopener">必应背调（国内可开）</a>'+
+        '<a class="btn sm" href="https://www.baidu.com/s?wd='+q+'" target="_blank" rel="noopener">百度背调</a>'+
+        '<a class="btn sm" href="https://www.google.com/search?q='+q+'" target="_blank" rel="noopener">Google（需外网）</a>'+
+        '<a class="btn sm" href="https://www.linkedin.com/search/results/companies/?keywords='+q+'" target="_blank" rel="noopener">LinkedIn（需外网）</a>'+
+        '<a class="btn sm" href="https://www.tradesns.com/search?kw='+q+'" target="_blank" rel="noopener">海关数据查采购记录</a>'+
+      '</div>'+
+      '<div class="hintline">背调建议顺序：先看上面的「背调结论」与联网核查结果 → 必应搜公司名看有无官网/地址/规模 → 查海关数据确认其是否真的进口过建材 → 再决定是否投入开发。</div>'+
+    '</div>'+
+    '<div class="sec"><h4>跟进记录（自动保存到本机）</h4>'+
+      '<div class="grid2" style="margin-bottom:9px">'+
+        '<div><label class="lab">跟进状态</label><select class="sel" id="dStatus">'+
+          STATUSES.map(function(s){ return '<option'+(n.status===s?" selected":"")+'>'+s+'</option>'; }).join("")+
+        '</select></div>'+
+        '<div><label class="lab">最后跟进：'+esc(fmtDate(n.last)||"未跟进")+'</label>'+
+          '<button class="btn sm" id="dTouch">标记为今天已跟进</button></div>'+
+      '</div>'+
+      '<label class="lab">客户标签（点击切换）</label><div class="pills" id="dTags" style="margin-bottom:9px">'+
+        TAG_PRESET.map(function(t){
+          return '<button class="pill'+(n.tags.indexOf(t)>=0?" on":"")+'" data-tag="'+esc(t)+'">'+esc(t)+'</button>';
+        }).join("")+
+      '</div>'+
+      '<label class="lab">备注</label><textarea class="inp" id="dNote" rows="3" placeholder="如：已发目录，等待其确认规格">'+esc(n.note)+'</textarea>'+
+      '<div style="margin-top:9px;display:flex;gap:8px">'+
+        '<button class="btn sm p" id="dSave">保存跟进</button>'+
+        '<button class="btn sm" id="dLetter">用此模板生成开发信</button>'+
+      '</div>'+
+    '</div>';
+  $("#mask").classList.add("on");
+  $("#drawer").classList.add("on");
+  bindDetail(r);
+}
+function dnsLabel(d){
+  var m = {
+    ok:'<span class="tag g">域名可收信（MX 正常）</span>',
+    nomail:'<span class="tag r">域名存在但无邮件服务</span>',
+    nxdomain:'<span class="tag r">域名不存在（邮箱必然无效）</span>',
+    fail:'<span class="tag y">查询失败（网络受限，可重试）</span>'
+  };
+  return m[d.status] || esc(d.status);
+}
+function bindDetail(r){
+  var n = noteOf(r.id);
+  $("#dStatus").onchange = function(){ n.status = this.value; n.last = n.last || Date.now(); saveStore(); render(); };
+  $("#dTouch").onclick = function(){ n.last = Date.now(); saveStore(); openDetail(r.id); toast("已标记今天已跟进"); };
+  $("#dNote").onchange = function(){ n.note = this.value; saveStore(); render(); };
+  $("#dSave").onclick = function(){ saveStore(); render(); toast("跟进记录已保存"); };
+  $("#dTags").onclick = function(e){
+    var b = e.target.closest("[data-tag]"); if(!b) return;
+    var t = b.getAttribute("data-tag");
+    var i = n.tags.indexOf(t);
+    if(i >= 0) n.tags.splice(i,1); else n.tags.push(t);
+    if(!n.last) n.last = Date.now();
+    saveStore(); openDetail(r.id); render();
+  };
+  $("#dLetter").onclick = function(){ closeDrawer(); gotoTab("letter"); buildLetter([r]); };
+  var fair = $("#dFair");
+  if(fair) fair.onchange = function(){
+    n.fair = String(this.value||"").replace(/[^\d]/g, "").slice(0, 3);
+    saveStore(); render();
+  };
+  var socSave = $("#dSocSave");
+  if(socSave) socSave.onclick = function(){
+    n.li = ($("#dLi").value || "").trim();
+    n.fb = ($("#dFb").value || "").trim();
+    n.ig = ($("#dIg").value || "").trim();
+    saveStore(); render();
+    toast("社媒记录已保存" + ((n.li||n.fb||n.ig) ? "" : "（三项均为空）"));
+  };
+  var dv = document.querySelector("[data-doverify]");
+  if(dv) dv.onclick = function(){ verifyOne(r); };
+}
+function closeDrawer(){
+  $("#drawer").classList.remove("on"); $("#mask").classList.remove("on");
+}
+
+/* ---------------- 11. 联网核查（DNS over HTTPS，国内节点优先） ---------------- */
+/* 默认走国内公共 DNS（阿里 / 腾讯 / 360），无需翻墙即可核查；
+   若在海外网络环境，会自动回退到 Cloudflare / Google。 */
+const DOH_NODES = [
+  "https://dns.alidns.com/resolve?name={n}&type={t}",
+  "https://doh.pub/dns-query?name={n}&type={t}",
+  "https://doh.360.cn/resolve?name={n}&type={t}",
+  "https://cloudflare-dns.com/dns-query?name={n}&type={t}",
+  "https://dns.google/resolve?name={n}&type={t}"
+];
+var DOH_OK = null;
+async function doh(name, type){
+  var nodes = DOH_OK ? [DOH_OK].concat(DOH_NODES) : DOH_NODES;
+  for(var i=0;i<nodes.length;i++){
+    var u = nodes[i].replace("{n}", encodeURIComponent(name)).replace("{t}", type);
+    try{
+      var ctl = new AbortController();
+      var to = setTimeout(function(){ ctl.abort(); }, 6000);
+      var res = await fetch(u, {headers:{accept:"application/dns-json"}, signal:ctl.signal, cache:"no-store"});
+      clearTimeout(to);
+      if(!res.ok) continue;
+      var j = await res.json();
+      if(j && typeof j.Status === "number"){
+        if(DOH_OK !== nodes[i]){ DOH_OK = nodes[i]; }
+        return j;
+      }
+    }catch(e){ /* 该节点不可用，换下一个 */ }
+  }
+  return null;
+}
+async function checkDomain(domain){
+  if(!domain) return null;
+  if(DNS[domain] && Date.now() - (DNS[domain].at||0) < 1000*60*60*24*7) return DNS[domain];
+  var mx = await doh(domain, "MX");
+  var a  = await doh(domain, "A");
+  var txt = await doh(domain, "TXT");
+  var dm = await doh("_dmarc."+domain, "TXT");
+  var out = {domain:domain, at:Date.now(), mx:[], spf:false, dmarc:false, hasA:false, status:"fail"};
+  if(!mx && !a){ out.status = "fail"; DNS[domain] = out; return out; }
+  if(mx && mx.Status === 3 && a && a.Status === 3){ out.status = "nxdomain"; DNS[domain] = out; return out; }
+  if(mx && mx.Answer){
+    mx.Answer.filter(function(x){ return x.type === 15; }).forEach(function(x){
+      out.mx.push(String(x.data).replace(/\.$/,"").replace(/^\d+\s+/,""));
+    });
+  }
+  if(a && a.Answer) out.hasA = a.Answer.some(function(x){ return x.type === 1; });
+  if(txt && txt.Answer) out.spf = txt.Answer.some(function(x){ return /v=spf1/i.test(String(x.data)); });
+  if(dm && dm.Answer) out.dmarc = dm.Answer.some(function(x){ return /v=DMARC1/i.test(String(x.data)); });
+  out.status = out.mx.length ? "ok" : (out.hasA ? "nomail" : "nxdomain");
+  DNS[domain] = out;
+  return out;
+}
+async function verifyOne(r){
+  if(!r.dnsDomain){ toast("该客户没有可核查的企业邮箱域名"); return; }
+  toast("正在核查 " + r.dnsDomain + " …");
+  await checkDomain(r.dnsDomain);
+  applyDns(r); saveStore(); render();
+  if(CUR && CUR.id === r.id) openDetail(r.id);
+  toast("核查完成：" + dnsLabel(r.dns).replace(/<[^>]+>/g,""));
+}
+var VSTOP = false;
+async function runVerify(){
+  var scope = $("#vScope").value;
+  var limit = parseInt($("#vLimit").value, 10) || 200;
+  var pool;
+  if(scope === "selected") pool = ROWS.filter(function(r){ return SEL[r.id]; });
+  else if(scope === "unchecked") pool = ROWS.filter(function(r){ return !r.dns; });
+  else pool = VIEW.slice();
+  pool = pool.slice(0, limit).filter(function(r){ return r.dnsDomain && !r.dns; });
+  if(!pool.length){ $("#vText").textContent = "无需核查（所选范围均已核查过或无可核查域名）"; return; }
+  VSTOP = false;
+  $("#vStart").disabled = true;
+  var done = 0, okN = 0, badN = 0;
+  var conc = 6;
+  var idx = 0;
+  async function worker(){
+    while(idx < pool.length && !VSTOP){
+      var r = pool[idx++];
+      try{
+        await checkDomain(r.dnsDomain);
+        applyDns(r);
+        if(r.dns && r.dns.status === "ok") okN++;
+        if(r.dns && (r.dns.status === "nomail" || r.dns.status === "nxdomain")) badN++;
+      }catch(e){}
+      done++;
+      $("#vBar").style.width = Math.round(done/pool.length*100)+"%";
+      $("#vText").textContent = "已核查 "+done+" / "+pool.length+" 条 · 可收信 "+okN+" · 异常 "+badN;
+      if(done % 20 === 0){ render(); saveStore(); }
+    }
+  }
+  var ws = [];
+  for(var i=0;i<conc;i++) ws.push(worker());
+  await Promise.all(ws);
+  saveStore(); sortView(); render();
+  $("#vStart").disabled = false;
+  $("#vText").textContent = (VSTOP ? "已停止，" : "核查完成，") + "共 "+done+" 条：域名可收信 "+okN+" 条，异常 "+badN+" 条（结果已保存）";
+  toast("核查完成，共处理 " + done + " 条");
+}
+
+/* ---------------- 12. 开发信 ---------------- */
+function fillTmpl(body, r){
+  return body
+    .replace(/\{contact\}/g, r.contact || "Sir/Madam")
+    .replace(/\{company\}/g, r.buyer || "your company")
+    .replace(/\{country\}/g, r.country || "your market")
+    .replace(/\{products\}/g, r.products ? r.products.slice(0,60) : "building materials")
+    .replace(/\{myCompany\}/g, S.myCompany || "[我方公司名]")
+    .replace(/\{myProducts\}/g, S.myProducts || "[我方主营产品]")
+    .replace(/\{myName\}/g, S.myName || "[业务员]")
+    .replace(/\{myPhone\}/g, S.myPhone || "[电话/WhatsApp]")
+    .replace(/\{myEmail\}/g, S.myEmail || "[邮箱]")
+    .replace(/\{website\}/g, S.website || "")
+    .replace(/\{city\}/g, S.city || "China")
+    .replace(/\{years\}/g, S.years || "10");
+}
+/* ---------------- 邮件跳转：适配任意邮箱服务商，不依赖本机 mailto 设置 ---------------- */
+/* 支持预填的服务商 → 直接打开写好的邮件窗口；
+   不支持预填的（163/QQ/企业邮等）→ 自动把「收件人+主题+正文」复制到剪贴板并打开邮箱，粘贴即用。*/
+var PROVIDERS = [
+  {id:"auto",    name:"自动识别（按我填的邮箱）", prefill:false},
+  {id:"gmail",   name:"Gmail 网页版", prefill:true,
+   compose:"https://mail.google.com/mail/?view=cm&fs=1&to={to}&su={su}&body={bd}",
+   home:"https://mail.google.com/mail/u/0/#inbox"},
+  {id:"outlook", name:"Outlook 网页版（个人）", prefill:true,
+   compose:"https://outlook.live.com/mail/0/deeplink/compose?to={to}&subject={su}&body={bd}",
+   home:"https://outlook.live.com/mail/0/"},
+  {id:"office",  name:"Outlook 365（公司邮箱）", prefill:true,
+   compose:"https://outlook.office.com/mail/deeplink/compose?to={to}&subject={su}&body={bd}",
+   home:"https://outlook.office.com/mail/"},
+  {id:"exmail",  name:"腾讯企业邮 / 企业微信邮箱", prefill:false, home:"https://exmail.qq.com/login"},
+  {id:"ali",     name:"阿里企业邮 / 阿里云邮",     prefill:false, home:"https://mail.mxhichina.com/"},
+  {id:"qq",      name:"QQ 邮箱",     prefill:false, home:"https://mail.qq.com/"},
+  {id:"mail163", name:"网易 163 邮箱", prefill:false, home:"https://mail.163.com/"},
+  {id:"mail126", name:"网易 126 邮箱", prefill:false, home:"https://mail.126.com/"},
+  {id:"sina",    name:"新浪邮箱",     prefill:false, home:"https://mail.sina.com.cn/"},
+  {id:"mailto",  name:"系统默认邮件客户端（Outlook / Foxmail）", prefill:true, compose:"mailto:{to}?subject={su}&body={bd}"}
+];
+function providerById(id){
+  for(var i=0;i<PROVIDERS.length;i++){ if(PROVIDERS[i].id === id) return PROVIDERS[i]; }
+  return PROVIDERS[PROVIDERS.length - 1];
+}
+/* 按我方邮箱域名自动判断服务商 */
+function detectProvider(email){
+  var d = String(email || "").split("@")[1];
+  if(!d) return null;
+  d = d.toLowerCase().replace(/^\s+|\s+$/g, "");
+  if(/(^|\.)gmail\.com$/.test(d)) return "gmail";
+  if(/(^|\.)(outlook|hotmail|live|msn)\.(com|cn)$/.test(d)) return "outlook";
+  if(/(^|\.)office365\.com$/.test(d)) return "office";
+  if(/(^|\.)exmail\.qq\.com$/.test(d)) return "exmail";
+  if(/(^|\.)qq\.com$/.test(d)) return "qq";
+  if(/(^|\.)(163|yeah)\.(com|net)$/.test(d)) return "mail163";
+  if(/(^|\.)126\.com$/.test(d)) return "mail126";
+  if(/(^|\.)sina\.(com|cn)$/.test(d)) return "sina";
+  if(/(^|\.)aliyun\.com$/.test(d)) return "ali";
+  return null;   /* 公司自有域名判断不出来，由使用者手选 */
+}
+function resolveProvider(){
+  var m = S.mailMode || "auto";
+  if(m === "auto"){
+    var p = detectProvider(S.myEmail);
+    return providerById(p || "mailto");
+  }
+  return providerById(m);
+}
+function fillUrl(tpl, to, subject, body){
+  return String(tpl)
+    .replace(/\{to\}/g, encodeURIComponent(to || ""))
+    .replace(/\{su\}/g, encodeURIComponent(subject || ""))
+    .replace(/\{bd\}/g, encodeURIComponent(body || ""));
+}
+function copyMailBlock(to, subject, body){
+  copyText("收件人：" + (to || "") + "\n主题：" + (subject || "") + "\n\n" + (body || ""));
+}
+function updateMailHint(){
+  var el = document.getElementById("qMailHint");
+  if(!el) return;
+  var mode = S.mailMode || "auto";
+  var em = String(S.myEmail || "").trim();
+  if(mode === "auto" && !em){
+    el.innerHTML = "先在上面填入你的收发邮箱（例如 sales@yourcompany.com），程序会自动识别用哪个网页邮箱发信；也可以直接在下面手动选。";
+    return;
+  }
+  var pv = resolveProvider();
+  var warn = "";
+  if(mode === "auto" && !detectProvider(em)){
+    warn = '<br>⚠ 没能从「' + esc(em) + '」的域名自动识别服务商（公司自有域名很常见）。建议手动选一个，或者直接点详情里的「复制邮件内容」，粘到任何邮箱里都能用。';
+  }
+  if(pv.prefill){
+    el.innerHTML = "当前打开方式：<b>" + esc(pv.name) + "</b> —— 点「写邮件」会直接打开已填好的邮件窗口。" + warn;
+  } else {
+    el.innerHTML = "当前打开方式：<b>" + esc(pv.name) + "</b> —— 该邮箱不支持网址预填，程序会把「收件人+主题+正文」复制到剪贴板并打开邮箱，点「写信」粘贴即可。" + warn;
+  }
+}
+/* 统一入口：写邮件 */
+function openMail(to, subject, body, forceMode){
+  var pv = forceMode ? providerById(forceMode) : resolveProvider();
+  if(pv.prefill && pv.compose){
+    var url = fillUrl(pv.compose, to, subject, body);
+    if(url.indexOf("mailto:") === 0){ window.location.href = url; return; }
+    var w = window.open(url, "_blank");
+    if(!w){ copyMailBlock(to, subject, body); toast("浏览器拦截了弹窗，内容已复制，手动粘贴即可"); }
+    return;
+  }
+  copyMailBlock(to, subject, body);
+  var w2 = window.open(pv.home || "https://mail.google.com/", "_blank");
+  if(!w2) toast("弹窗被拦截，内容已复制，请手动打开你的邮箱粘贴");
+  else toast("已复制「收件人+主题+正文」，在打开的邮箱里点「写信」粘贴即可");
+}
+var LETTERS = [];
+function letterPool(){
+  var scope = $("#letterScope").value;
+  if(scope === "selected") return ROWS.filter(function(r){ return SEL[r.id]; });
+  if(scope === "topA") return VIEW.filter(function(r){ return r.grade === "A"; });
+  return VIEW.slice();
+}
+function buildLetter(rows){
+  $("#letterScope").value = "selected";
+  if(!rows) rows = letterPool();
+  var body = S.tmpls[S.tmplIdx] ? S.tmpls[S.tmplIdx].body : TMPL_DEFAULT[0].body;
+  LETTERS = rows.map(function(r){ return {r:r, text:fillTmpl(body, r)}; });
+  renderLetters();
+}
+function renderLetters(){
+  if(!LETTERS.length){ $("#letterPreview").textContent = "当前范围内没有客户。请先在「客户名录与筛选」中筛选或勾选客户。"; $("#letterMeta").textContent = ""; return; }
+  var i = Math.min(Math.max(1, parseInt($("#letterIdx").value,10)||1), LETTERS.length);
+  $("#letterIdx").value = i;
+  var cur = LETTERS[i-1];
+  $("#letterPreview").textContent = cur.text;
+  var sendable = cur.r.mail.valid.length;
+  $("#letterMeta").innerHTML = "第 "+i+" / "+LETTERS.length+" 封 · 客户："+esc(cur.r.buyer)+
+    " · "+(sendable? "可发邮箱 "+esc(cur.r.mail.valid[0]) : '<span style="color:#d93838">该客户无有效邮箱，建议走 WhatsApp</span>')+
+    (cur.r.grade? " · 背调 "+cur.r.score+" 分（"+cur.r.grade+" 级）" : "");
+}
+function gotoTab(name){
+  $$(".tab, .bottomnav button").forEach(function(t){ t.classList.toggle("on", t.dataset.page === name); });
+  $$(".page").forEach(function(p){ p.classList.toggle("on", p.id === "page-"+name); });
+  if(name === "letter") renderLetters();
+  if(name === "follow") renderFollowList();
+  if(name === "outreach") renderQueue();
+  try{ window.scrollTo({top:0, behavior:"smooth"}); }catch(e){ window.scrollTo(0,0); }
+}
+function showLettersModal(){
+  $("#mlCount").textContent = LETTERS.length;
+  $("#mlList").innerHTML = LETTERS.slice(0,300).map(function(x, i){
+    return '<div class="setitem"><div class="t">'+(i+1)+'. '+esc(x.r.buyer)+
+      '<span class="tag">'+esc(x.r.country||"—")+'</span><span class="tag i">'+x.r.score+' 分 '+x.r.grade+'</span>'+
+      (x.r.mail.valid.length? '<span class="tag g">'+esc(x.r.mail.valid[0])+'</span>' : '<span class="tag r">无邮箱</span>')+
+      '</div><div class="copybox" style="margin-top:7px;max-height:150px">'+esc(x.text)+'</div></div>';
+  }).join("");
+  if(LETTERS.length > 300) $("#mlList").insertAdjacentHTML("beforeend", '<div class="muted">仅预览前 300 封，导出 CSV 可获取全部。</div>');
+  $("#modalLetters").classList.add("on");
+}
+
+/* ---------------- 13. 导入 / 导出 ---------------- */
+const HEAD_CN = ["序号","采购商","国家/地区","联系人","手机/WhatsApp","公司电话","邮箱","采购产品",
+  "背调评分","客户等级","评级依据","客户类型","采购类目","参展届数","领英","脸书","Instagram",
+  "优势与风险提示","邮箱域名核查","WhatsApp发送时间","邮件发送时间","跟进状态","标签","备注","最后跟进"];
+function exportRows(headers, rows, name){
+  if(demoBlock("导出")) return;
+  download(name + "_" + new Date().toISOString().slice(0,10) + ".csv", toCsv(headers, rows));
+}
+function socOf(r, k){
+  var n = NOTES[r.id];
+  return (n && n[k]) ? n[k] : "";
+}
+function rowToArray(r){
+  var n = NOTES[r.id] || {status:"未联系", tags:[], note:"", last:0};
+  var dnsTxt = r.dns ? ({ok:"域名可收信", nomail:"域名存在但无邮件服务", nxdomain:"域名不存在", fail:"查询失败"}[r.dns.status] || "") : "未核查";
+  return [
+    r.seq, r.buyer, r.country, r.contact, r.mobile, r.tel, r.email, r.products,
+    r.score, r.grade, r.gradeReason, r.role.label, r.cats.join("、"),
+    (n.fair ? n.fair + " 届" : "未记录"), socOf(r,"li"), socOf(r,"fb"), socOf(r,"ig"),
+    "优势：" + (r.pros.join(" | ")||"无") + " ；风险：" + (r.cons.join(" | ")||"无"),
+    dnsTxt + (r.dns && r.dns.mx.length ? "（" + r.dns.mx.join(" | ") + "）" : ""),
+    n.waAt ? fmtDate(n.waAt) : "", n.mailAt ? fmtDate(n.mailAt) : "",
+    n.status, (n.tags||[]).join("、"), n.note, n.last ? fmtDate(n.last) : ""
+  ];
+}
+function exportCurrent(){
+  if(!VIEW.length){ toast("当前没有可导出的记录"); return; }
+  exportRows(HEAD_CN, VIEW.map(rowToArray), "广交会建材客户_筛选结果");
+  toast("已导出 " + VIEW.length + " 条");
+}
+function exportAll(){
+  exportRows(HEAD_CN, ROWS.map(rowToArray), "广交会建材客户_全量");
+}
+function exportSelected(){
+  var rs = ROWS.filter(function(r){ return SEL[r.id]; });
+  if(!rs.length){ toast("请先勾选客户"); return; }
+  exportRows(HEAD_CN, rs.map(rowToArray), "广交会建材客户_已选");
+}
+function exportFollow(){
+  var rs = ROWS.filter(function(r){ return NOTES[r.id]; });
+  if(!rs.length){ toast("还没有跟进记录"); return; }
+  exportRows(["序号","采购商","国家/地区","联系人","手机/WhatsApp","邮箱","背调评分","客户等级",
+    "跟进状态","标签","备注","最后跟进"], rs.map(function(r){
+    var n = NOTES[r.id];
+    return [r.seq, r.buyer, r.country, r.contact, r.mobile, r.email, r.score, r.grade,
+      n.status, n.tags.join("、"), n.note, n.last ? fmtDate(n.last) : ""];
+  }), "客户跟进记录");
+  toast("已导出 " + rs.length + " 条跟进记录");
+}
+function exportLetters(){
+  if(!LETTERS.length){ toast("没有可导出的开发信"); return; }
+  exportRows(["序号","采购商","国家/地区","联系人","邮箱","手机/WhatsApp","背调评分","开发信内容"],
+    LETTERS.map(function(x, i){
+      return [i+1, x.r.buyer, x.r.country, x.r.contact, x.r.mail.valid[0]||"", x.r.mobile, x.r.score, x.text];
+    }), "开发信批量导出");
+  toast("已导出 " + LETTERS.length + " 封开发信");
+}
+function importFile(file){
+  var reader = new FileReader();
+  reader.onload = function(ev){
+    var buf = ev.target.result;
+    var txt = new TextDecoder("utf-8").decode(buf);
+    /* 简单判断乱码，尝试 GBK */
+    if(/\ufffd/.test(txt.slice(0, 2000))){
+      try{ txt = new TextDecoder("gbk").decode(buf); }catch(e){}
+    }
+    if(txt.charCodeAt(0) === 0xFEFF) txt = txt.slice(1);
+    var line0 = txt.split(/\r?\n/)[0];
+    if(sniffDelim(line0) === "\t"){ txt = txt.replace(/\t/g, ","); }
+    var matrix = parseCsv(txt);
+    if(matrix.length < 2){ toast("文件内容为空或格式不正确"); return; }
+    var head = matrix[0].map(function(h){ return String(h).trim(); });
+    var keyMap = {
+      "采购商":"Buyer","buyer":"Buyer","company":"Buyer","公司":"Buyer","公司名称":"Buyer","采购商名称":"Buyer",
+      "国家/地区":"Country","国家":"Country","country":"Country","地区":"Country",
+      "联系人":"Contact","contact":"Contact","姓名":"Contact","contact person":"Contact",
+      "手机/WhatsApp":"Mobile","手机":"Mobile","mobile":"Mobile","whatsapp":"Mobile","直线电话":"Mobile","电话1":"Mobile",
+      "公司电话":"Tel","电话":"Tel","tel":"Tel","telephone":"Tel",
+      "邮箱":"Email","email":"Email","e-mail":"Email","邮件":"Email",
+      "采购产品":"Products","产品":"Products","products":"Products","进口产品":"Products","经营产品":"Products",
+      "地址":"Addr","address":"Addr",
+      "参展届数":"Fair","届数":"Fair","参加届数":"Fair","参展次数":"Fair","fair":"Fair","faircount":"Fair"
+    };
+    var objs = [];
+    for(var i=1;i<matrix.length;i++){
+      var o = {}, any = false;
+      head.forEach(function(h, j){
+        var k = keyMap[h.toLowerCase()] || keyMap[h] || h;
+        var v = matrix[i][j] != null ? String(matrix[i][j]).trim() : "";
+        o[k] = v; if(v) any = true;
+      });
+      if(any && (o.Buyer || o.Email || o.Mobile)) objs.push(o);
+    }
+    if(!objs.length){ toast("未识别到有效客户行，请确认表头列名"); return; }
+    localStorage.setItem(STORE_IMPORT, JSON.stringify(objs));
+    prepare(normalizeRows(objs));
+    buildFilterOptions();
+    applyFilters();
+    toast("已导入 " + objs.length + " 条客户数据（覆盖内置名录，可点「恢复内置名录」还原）");
+  };
+  reader.readAsArrayBuffer(file);
+}
+function loadXlsx(file){
+  /* 逐级尝试国内 CDN，最后回退官方源；全部失败则提示转存 CSV */
+  var cdns = [
+    "https://cdn.staticfile.org/xlsx/0.18.5/xlsx.full.min.js",
+    "https://cdn.bootcdn.net/ajax/libs/xlsx/0.18.5/xlsx.full.min.js",
+    "https://lib.baomitu.com/xlsx/0.18.5/xlsx.full.min.js",
+    "https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js"
+  ];
+  function tryLoad(i){
+    if(i >= cdns.length){
+      toast("无法加载 Excel 解析库，请在 Excel/WPS 中「另存为 CSV（UTF-8）」后导入");
+      return;
+    }
+    var s = document.createElement("script");
+    s.src = cdns[i];
+    s.onload = function(){ parseXlsx(file); };
+    s.onerror = function(){ tryLoad(i+1); };
+    document.head.appendChild(s);
+  }
+  function parseXlsx(f){
+    var fr = new FileReader();
+    fr.onload = function(e){
+      try{
+        var wb = XLSX.read(new Uint8Array(e.target.result), {type:"array"});
+        var csv = XLSX.utils.sheet_to_csv(wb.Sheets[wb.SheetNames[0]]);
+        importFile(new File([csv], "converted.csv", {type:"text/csv"}));
+      }catch(err){ toast("Excel 解析失败，请另存为 CSV 后导入"); }
+    };
+    fr.readAsArrayBuffer(f);
+  }
+  tryLoad(0);
+}
+
+/* ---------------- 14. 筛选面板渲染 ---------------- */
+function buildFilterOptions(){
+  /* 国家 */
+  var ct = {};
+  ROWS.forEach(function(r){ var k = r.country || "(空)"; ct[k] = (ct[k]||0)+1; });
+  var keys = Object.keys(ct).sort(function(a,b){
+    var am = CTRY_MAP[a.replace(/^\s+/,"")] || CTRY_MAP[a] ? 0 : 1;
+    var bm = CTRY_MAP[b] ? 0 : 1;
+    if(am !== bm) return am - bm;
+    return ct[b] - ct[a];
+  });
+  var box = $("#fCountry");
+  box.dataset.expand = box.dataset.expand || "0";
+  function drawCountries(){
+    var q = ($("#fCountrySearch").value||"").trim().toLowerCase();
+    var exp = box.dataset.expand === "1";
+    box.innerHTML = keys.filter(function(k){
+      return !q || k.toLowerCase().indexOf(q) >= 0;
+    }).slice(0, exp ? 400 : 12).map(function(k){
+      var warn = CTRY_MAP[k] ? "" : ' <span class="tag y" style="margin:0">待核对</span>';
+      return '<label><input type="checkbox" data-cty="'+esc(k)+'"'+(FILTERS.countries[k]?" checked":"")+'>'+
+        esc(k) + warn + '<span class="n">'+ct[k]+'</span></label>';
+    }).join("") || '<div class="muted" style="padding:6px">无匹配国家</div>';
+  }
+  box._draw = drawCountries;
+  drawCountries();
+  $("#fCountrySearch").oninput = drawCountries;
+  $("#ctyToggle").onclick = function(){
+    box.dataset.expand = box.dataset.expand === "1" ? "0" : "1";
+    this.textContent = box.dataset.expand === "1" ? "收起" : "展开";
+    drawCountries();
+  };
+  /* 类目 */
+  var use = {};
+  ROWS.forEach(function(r){ r.cats.forEach(function(c){ use[c] = (use[c]||0)+1; }); });
+  $("#fCat").innerHTML = CATS.map(function(c){
+    return '<label><input type="checkbox" data-cat="'+c.k+'"'+(FILTERS.cats[c.k]?" checked":"")+'>'+c.k+
+      '<span class="n">'+(use[c.k]||0)+'</span></label>';
+  }).join("");
+  /* 跟进下拉 */
+  $("#fStatus").innerHTML = '<option value="">全部跟进状态</option>' +
+    STATUSES.map(function(s){ return '<option'+(FILTERS.status===s?" selected":"")+'>'+s+'</option>'; }).join("");
+  var tags = TAG_PRESET.slice();
+  Object.keys(NOTES).forEach(function(k){
+    NOTES[k].tags.forEach(function(t){ if(tags.indexOf(t) < 0) tags.push(t); });
+  });
+  var allTags = tags;
+  $("#fTag").innerHTML = '<option value="">全部标签</option>' +
+    allTags.map(function(t){ return '<option'+(FILTERS.tag===t?" selected":"")+'>'+t+'</option>'; }).join("");
+  $("#batchStatus").innerHTML = STATUSES.map(function(s){ return '<option>'+s+'</option>'; }).join("");
+  $("#batchTag").innerHTML = allTags.map(function(t){ return '<option>'+t+'</option>'; }).join("");
+  $("#tmplSel").innerHTML = S.tmpls.map(function(t,i){
+    return '<option value="'+i+'"'+(i===S.tmplIdx?" selected":"")+'>'+esc(t.name)+'</option>';
+  }).join("");
+}
+
+/* ---------------- 15. 批量触达：提取 / 差异化话术 / 半自动发送队列 ---------------- */
+/* WhatsApp 短消息模板：{cat} 为客户主要采购类目，其余变量同开发信 */
+var WA_TMPL = [
+  {n:"简洁问询", t:"Hello {contact}, this is {myName} from {myCompany}, a building materials factory in {city}, China. I see your company buys {cat}. We produce {myProducts} and supply importers in {country}. May I send you our catalogue and FOB price list?"},
+  {n:"展会跟进", t:"Hi {contact}, {myName} here from {myCompany}. We met at the Canton Fair (building materials). You are sourcing {cat} - we are a direct factory and can quote with CE / ISO certificates. Shall I share our price list here?"},
+  {n:"卖点切入", t:"Hello {contact}. {myCompany} manufactures {myProducts}. For {country} importers we focus on two things: stable quality and on-time loading. As you purchase {products}, may I send a short catalogue with prices?"},
+  {n:"问题式开场", t:"Hi {contact}, quick question - are you currently sourcing {cat} for the {country} market? I am {myName} from {myCompany}, a China factory making {myProducts}. If useful I can send our catalogue and best FOB prices."},
+  {n:"专业顾问式", t:"Dear {contact}, {myName} from {myCompany} ({city}, China). We supply {myProducts} to importers, contractors and distributors. Since your company works with {products}, I would like to send our specification sheet and price list for review. Would that be helpful?"},
+  {n:"短句低打扰", t:"Hello {contact}, {myName} from {myCompany} in China. We make {myProducts}. You buy {cat} - we can offer factory price with certificates. May I send the catalogue? Thank you."}
+];
+/* 邮件主题轮换（正文复用「开发信」页里的模板，实现同一批客户不同措辞） */
+var MAIL_SUBJ = [
+  "{myProducts} supply for {company} - direct factory from China",
+  "Regarding {cat} supply for the {country} market - {myCompany}",
+  "{company}: factory-direct {cat} with CE / ISO, catalogue & price list",
+  "Cooperation on {cat} - manufacturer in {city}, China"
+];
+
+var Q = {channel:"wa", items:[], idx:0, agreed:false, nextAt:0};
+var QTimer = null;
+
+function segFill(t, r){
+  return fillTmpl(String(t).replace(/\{cat\}/g, r.cats[0] || "building materials"), r);
+}
+/* 按种子稳定地取数组中的一项（数字哈希，不能直接用 hash()，它返回的是 36 进制字符串） */
+function pickBy(arr, seed){
+  var s = String(seed == null ? "" : seed), h = 7, i;
+  for(i=0;i<s.length;i++){ h = (h * 31 + s.charCodeAt(i)) % 2147483647; }
+  return arr[h % arr.length];
+}
+function buildOutMsg(r, channel){
+  if(channel === "wa"){
+    var t = pickBy(WA_TMPL, r.id);
+    return {tname:t.n, text:segFill(t.t, r), subject:""};
+  }
+  var tm = pickBy(S.tmpls, r.id + "|mail");
+  return {tname:tm.name, text:segFill(tm.body, r), subject:segFill(pickBy(MAIL_SUBJ, r.id + "|subj"), r)};
+}
+/* 我方资料改动后，重算队列里所有话术（带防抖，避免输入时卡顿） */
+var BQS_T = null;
+function buildQueueSilent(){
+  if(!Q.items.length) return;
+  clearTimeout(BQS_T);
+  BQS_T = setTimeout(function(){
+    var idx = {};
+    ROWS.forEach(function(r){ idx[r.id] = r; });
+    Q.items.forEach(function(it){
+      var r = idx[it.id];
+      if(!r) return;
+      it.r = r;
+      var m = buildOutMsg(r, Q.channel);
+      it.msg = m.text; it.subject = m.subject; it.tname = m.tname;
+    });
+    renderQueue();
+  }, 500);
+}
+function outPool(){
+  var sc = $("#qScope").value;
+  if(sc === "selected") return ROWS.filter(function(r){ return SEL[r.id]; });
+  if(sc === "gradeA") return VIEW.filter(function(r){ return r.grade === "A"; });
+  if(sc === "gradeAB") return VIEW.filter(function(r){ return r.grade !== "C"; });
+  if(sc === "checked") return VIEW.filter(function(r){ return r.dns && r.dns.status === "ok"; });
+  return VIEW.slice();
+}
+function nextPending(from){
+  for(var i=from;i<Q.items.length;i++){
+    if(Q.items[i].state !== "done" && Q.items[i].state !== "skip") return i;
+  }
+  for(var j=0;j<Q.items.length;j++){
+    if(Q.items[j].state !== "done" && Q.items[j].state !== "skip") return j;
+  }
+  return -1;
+}
+function buildQueue(){
+  var ch = Q.channel, pool = outPool();
+  var items = [], skipped = 0, seen = {};
+  pool.forEach(function(r){
+    var target = ch === "wa" ? waNumber(r) : (r.mail.valid[0] || "");
+    if(!target){ skipped++; return; }
+    if(seen[target]){ skipped++; return; }
+    seen[target] = 1;
+    var m = buildOutMsg(r, ch);
+    var n = NOTES[r.id] || {};
+    var already = ch === "wa" ? !!n.waAt : !!n.mailAt;
+    items.push({id:r.id, r:r, target:target, msg:m.text, subject:m.subject,
+      tname:m.tname, state: already ? "done" : "pending"});
+  });
+  items.sort(function(a,b){ return (a.state === "done" ? 1 : 0) - (b.state === "done" ? 1 : 0); });
+  Q.items = items;
+  Q.idx = nextPending(0);
+  if(Q.idx < 0) Q.idx = 0;
+  renderQueue();
+  $("#qBuildHint").innerHTML = "从 " + pool.length + " 条记录中提取出 <b>" + items.length + "</b> 条可触达目标" +
+    (skipped ? ("，跳过 " + skipped + " 条（无号码/无有效邮箱，或号码重复）") : "") +
+    "。不同客户按采购类目与等级使用了不同话术，措辞也随机变化。";
+  if(!items.length) toast("该范围内没有可触达的目标");
+}
+function renderGroups(){
+  var g = {}, names = {};
+  Q.items.forEach(function(it){
+    var key = (it.r.cats[0] || "未分类") + " · " + it.r.grade + " 级";
+    g[key] = (g[key] || 0) + 1;
+    names[key] = names[key] || {};
+    names[key][it.tname] = 1;
+  });
+  var keys = Object.keys(g).sort(function(a,b){ return g[b] - g[a]; });
+  if(!keys.length){ $("#qGroups").innerHTML = ""; return; }
+  $("#qGroups").innerHTML = '<label class="lab">话术分组（共 '+keys.length+' 组，自动差异化）</label>' +
+    keys.slice(0,10).map(function(k){
+      var tn = Object.keys(names[k]);
+      return '<div class="segcard"><div class="t">'+esc(k)+
+        '<span class="tag i">'+g[k]+' 条</span><span class="tag y">'+tn.length+' 种话术</span></div>'+
+        '<div class="muted" style="font-size:11.5px">'+esc(tn.join(" / "))+'</div></div>';
+    }).join("") +
+    (keys.length > 10 ? '<div class="muted" style="font-size:11.5px">还有 '+(keys.length-10)+' 组未显示，导出清单可看全部</div>' : "");
+}
+function renderQueue(){
+  var ch = Q.channel;
+  var limit = parseInt($("#qDayLimit").value, 10) || 30;
+  var doneN = 0, pendN = 0;
+  Q.items.forEach(function(i){ if(i.state === "done") doneN++; else pendN++; });
+  $("#qDayDone").value = todayCount(ch) + " 条";
+  $("#qInfo").textContent = Q.items.length ? ("共 " + Q.items.length + " 条 · 待处理 " + pendN + " · 已完成 " + doneN) : "";
+  if(!Q.items.length){
+    $("#qTop").innerHTML = '<div class="note">还没有提取目标。请在右侧选择范围后点击「一键提取并生成差异化话术」。<br>' +
+      'WhatsApp 渠道只提取手机号完整的客户；邮件渠道只提取邮箱格式有效的客户。</div>';
+    $("#qList").innerHTML = "";
+    renderGroups();
+    return;
+  }
+  var left = Math.max(0, limit - todayCount(ch));
+  var it = Q.items[Q.idx];
+  var top = '<div class="stat" style="grid-template-columns:repeat(4,1fr)">' +
+    '<div class="s"><b>'+Q.items.length+'</b><span>可触达客户</span></div>' +
+    '<div class="s"><b>'+pendN+'</b><span>待处理</span></div>' +
+    '<div class="s"><b>'+doneN+'</b><span>已发送</span></div>' +
+    '<div class="s"><b>'+left+'</b><span>今日剩余额度</span></div>' +
+  '</div>';
+  if(left <= 0){
+    top += '<div class="note" style="margin-top:10px;color:#a55a00;background:#fff9f2;border-color:#f6ddbc">' +
+      '今日发送量已达上限（'+limit+' 条）。继续发送会显著提高被风控的概率，建议明天再继续。</div>';
+  }
+  if(it){
+    top += '<div class="qitem now" style="margin-top:10px">' +
+      '<div class="qhd"><b>当前第 '+(Q.idx+1)+' 位：'+esc(it.r.buyer)+'</b>' +
+        '<span class="badge g'+it.r.grade+'">'+it.r.score+'</span>' +
+        '<span class="tag">'+esc(it.r.country || "—")+'</span>' +
+        '<span class="tag i">'+esc(it.r.cats[0] || "未分类")+'</span>' +
+        '<span class="tag y">话术：'+esc(it.tname)+'</span>' +
+      '</div>' +
+      '<div class="muted mono" style="font-size:12px;margin-top:6px">' +
+        (ch === "wa" ? ("WhatsApp: +" + it.target) : ("Email: " + it.target)) +
+        (ch === "wa" && digits(it.r.mobile) !== it.target ? '　（原始号码 '+esc(it.r.mobile)+'，已自动补齐国际区号）' : '') +
+      '</div>' +
+      (it.subject ? '<div style="font-size:12.5px;margin-top:6px"><b>主题：</b>'+esc(it.subject)+'</div>' : '') +
+      '<div class="qmsg" id="qCurMsg">'+esc(it.msg)+'</div>' +
+      '<div class="hintline" id="qGap">点右上角「打开当前这条」，会打开预填好内容的'+(ch === "wa" ? "WhatsApp" : "邮件客户端")+'，你确认后发送</div>' +
+    '</div>';
+  } else {
+    top += '<div class="note" style="margin-top:10px">队列已全部处理完，没有待发送的目标了。</div>';
+  }
+  $("#qTop").innerHTML = top;
+
+  var show = Q.items.slice(0, 300);
+  $("#qList").innerHTML = '<label class="lab">队列明细（' + Q.items.length + ' 条' + (Q.items.length > 300 ? '，仅显示前 300 条' : '') + '）</label>' +
+    show.map(function(x, i){
+      var st = x.state === "done" ? '<span class="tag g">已发送</span>'
+             : x.state === "opened" ? '<span class="tag y">已打开</span>'
+             : x.state === "skip" ? '<span class="tag">已跳过</span>'
+             : '<span class="tag i">待处理</span>';
+      return '<div class="qitem '+(x.state === "done" ? "done" : "")+' '+(i === Q.idx ? "now" : "")+'" data-qgo="'+i+'" style="cursor:pointer">' +
+        '<div class="qhd"><b>'+(i+1)+'. '+esc(x.r.buyer)+'</b>'+
+          '<span class="badge g'+x.r.grade+'">'+x.r.score+'</span>'+
+          '<span class="tag">'+esc(x.r.country||"—")+'</span>'+
+          '<span class="tag i">'+esc(x.r.cats[0]||"未分类")+'</span>'+
+          st+'<span style="flex:1"></span>'+
+          '<span class="muted mono" style="font-size:11.5px">'+(ch === "wa" ? "+" : "")+esc(x.target)+'</span>'+
+        '</div>'+
+      '</div>';
+    }).join("");
+  renderGroups();
+}
+function startGap(){
+  var gMin = parseInt($("#qGapMin").value, 10) || 25;
+  var gMax = parseInt($("#qGapMax").value, 10) || 70;
+  if(gMax < gMin) gMax = gMin;
+  var sec = gMin + Math.floor(Math.random() * (gMax - gMin + 1));
+  Q.nextAt = Date.now() + sec * 1000;
+  if(QTimer) clearInterval(QTimer);
+  QTimer = setInterval(function(){
+    var el = document.getElementById("qGap");
+    if(!el){ clearInterval(QTimer); QTimer = null; return; }
+    var left = Math.ceil((Q.nextAt - Date.now()) / 1000);
+    if(left > 0){
+      el.textContent = "本次随机间隔 " + sec + " 秒，还剩 " + left + " 秒可联系下一位（避免固定频率触发风控）";
+    } else {
+      el.textContent = "间隔已到，可以联系下一位了";
+      clearInterval(QTimer); QTimer = null;
+    }
+  }, 1000);
+}
+function needConsent(fn){
+  if(Q.agreed){ fn(); return; }
+  Q._after = fn;
+  $("#riskAgree").checked = false;
+  $("#riskOk").disabled = true;
+  $("#modalRisk").classList.add("on");
+}
+function openCurrent(){
+  var it = Q.items[Q.idx];
+  if(!it){ toast("队列里没有待处理的客户"); return; }
+  if(it.state === "done"){ toast("这一条已标记为发送过了"); }
+  if(Q.channel === "wa"){
+    window.open("https://wa.me/" + it.target + (it.msg ? ("?text=" + encodeURIComponent(it.msg)) : ""), "_blank");
+  } else {
+    openMail(it.target, it.subject, it.msg);
+  }
+  if(it.state !== "done") it.state = "opened";
+  renderQueue();
+  startGap();
+  toast("已打开预填内容，请在" + (Q.channel === "wa" ? "WhatsApp" : "邮件窗口") + "里确认发送");
+}
+function markDone(){
+  var it = Q.items[Q.idx];
+  if(!it){ toast("队列里没有待处理的客户"); return; }
+  var limit = parseInt($("#qDayLimit").value, 10) || 30;
+  if(todayCount(Q.channel) >= limit){
+    toast("已达今日上限 " + limit + " 条，请明天继续以降低风控风险");
+    return;
+  }
+  var n = noteOf(it.id);
+  var stamp = Date.now();
+  if(Q.channel === "wa") n.waAt = stamp; else n.mailAt = stamp;
+  n.last = stamp;
+  if(!n.status || n.status === "未联系") n.status = "已发信";
+  it.state = "done";
+  bumpCount(Q.channel);
+  saveStore();
+  var nx = nextPending(Q.idx + 1);
+  if(nx >= 0 && nx !== Q.idx) Q.idx = nx;
+  renderQueue(); render();
+  toast("已记录发送成功，队列表格里同步更新");
+}
+function skipCurrent(){
+  var it = Q.items[Q.idx];
+  if(!it) return;
+  it.state = "skip";
+  var nx = nextPending(Q.idx + 1);
+  if(nx >= 0) Q.idx = nx;
+  renderQueue();
+}
+function exportQueue(){
+  var ch = Q.channel;
+  if(!Q.items.length){ toast("请先提取目标客户"); return; }
+  if(ch === "wa"){
+    exportRows(["序号","采购商","国家/地区","联系人","WhatsApp号码（已规范化）","原始手机号","背调等级","评分","采购类目","话术模板","发送状态","消息内容"],
+      Q.items.map(function(it, i){
+        return [i+1, it.r.buyer, it.r.country, it.r.contact, "+"+it.target, it.r.mobile, it.r.grade, it.r.score,
+          it.r.cats.join("、"), it.tname,
+          it.state === "done" ? "已发送" : (it.state === "opened" ? "已打开" : (it.state === "skip" ? "已跳过" : "待处理")),
+          it.msg];
+      }), "WhatsApp触达清单");
+  } else {
+    exportRows(["序号","采购商","国家/地区","联系人","邮箱","背调等级","评分","采购类目","话术模板","发送状态","邮件主题","邮件正文"],
+      Q.items.map(function(it, i){
+        return [i+1, it.r.buyer, it.r.country, it.r.contact, it.target, it.r.grade, it.r.score,
+          it.r.cats.join("、"), it.tname,
+          it.state === "done" ? "已发送" : (it.state === "opened" ? "已打开" : (it.state === "skip" ? "已跳过" : "待处理")),
+          it.subject, it.msg];
+      }), "邮件触达清单");
+  }
+  toast("已导出 " + Q.items.length + " 条");
+}
+
+/* ---------------- 16. 事件绑定 ---------------- */
+function bindUI(){
+  /* 手机端：筛选面板展开 / 收起 */
+  $("#btnMobFilter").onclick = function(){ $(".filters").classList.toggle("open"); };
+  /* 标签页（顶部标签栏 + 手机底部导航共用） */
+  $$(".tab, .bottomnav button").forEach(function(t){
+    t.onclick = function(){ gotoTab(this.dataset.page); };
+  });
+  /* 清空筛选 */
+  $("#btnClearFilter").onclick = function(){
+    FILTERS.kw = ""; FILTERS.quick = ""; FILTERS.grades = {}; FILTERS.countries = {};
+    FILTERS.cats = {}; FILTERS.mails = {}; FILTERS.verify = {}; FILTERS.roles = {};
+    FILTERS.contacts = {}; FILTERS.status = ""; FILTERS.tag = "";
+    FILTERS.fair = ""; FILTERS.social = {};
+    $("#fKeyword").value = ""; $("#fQuick").value = ""; $("#fFair").value = "";
+    $$(".fgroup .pill").forEach(function(p){ p.classList.remove("on"); });
+    buildFilterOptions(); applyFilters();
+  };
+  var kwT;
+  $("#fKeyword").oninput = function(){
+    var v = this.value;
+    clearTimeout(kwT); kwT = setTimeout(function(){ FILTERS.kw = v.trim(); applyFilters(); }, 220);
+  };
+  var qT;
+  $("#fQuick").oninput = function(){
+    var v = this.value;
+    clearTimeout(qT); qT = setTimeout(function(){ FILTERS.quick = v.trim(); applyFilters(); }, 220);
+  };
+  $("#sortSel").onchange = function(){ FILTERS.sort = this.value; sortView(); render(); };
+  /* pills 多选组 */
+  $$(".fgroup").forEach(function(g){
+    var wrap = g.querySelector(".pills"); if(!wrap) return;
+    var key = wrap.id.replace(/^f/,"");
+    var map = {Grade:"grades", Mail:"mails", Verify:"verify", Role:"roles", Contact:"contacts"};
+    var target = map[key]; if(!target) return;
+    wrap.onclick = function(e){
+      var b = e.target.closest(".pill"); if(!b) return;
+      var v = b.dataset.v;
+      if(FILTERS[target][v]) delete FILTERS[target][v]; else FILTERS[target][v] = 1;
+      b.classList.toggle("on");
+      applyFilters();
+    };
+  });
+  $("#fCountry").onchange = function(e){
+    var cb = e.target.closest("[data-cty]"); if(!cb) return;
+    var v = cb.getAttribute("data-cty");
+    if(cb.checked) FILTERS.countries[v] = 1; else delete FILTERS.countries[v];
+    applyFilters();
+  };
+  $("#fCat").onchange = function(e){
+    var cb = e.target.closest("[data-cat]"); if(!cb) return;
+    var v = cb.getAttribute("data-cat");
+    if(cb.checked) FILTERS.cats[v] = 1; else delete FILTERS.cats[v];
+    applyFilters();
+  };
+  $("#fStatus").onchange = function(){ FILTERS.status = this.value; applyFilters(); };
+  $("#fTag").onchange = function(){ FILTERS.tag = this.value; applyFilters(); };
+  /* 表格交互 */
+  $("#tbody").onclick = function(e){
+    var btn = e.target.closest("[data-act]");
+    if(btn){
+      var id = btn.dataset.id, r = ROWS.filter(function(x){ return x.id === id; })[0];
+      if(!r) return;
+      var act = btn.dataset.act;
+      if(act === "detail") openDetail(id);
+      else if(act === "letter"){ gotoTab("letter"); buildLetter([r]); }
+      else if(act === "wa"){
+        var num = digits(r.mobile).replace(/^0+/,"");
+        if(num.length < 8){ toast("该客户手机号不完整，无法打开 WhatsApp"); return; }
+        window.open("https://wa.me/"+num, "_blank");
+      }
+      else if(act === "mail"){
+        if(!r.mail.valid.length){ toast("该客户没有有效邮箱"); return; }
+        var body = fillTmpl(S.tmpls[S.tmplIdx].body, r);
+        openMail(r.mail.valid[0], "Building materials supply from " + (S.myCompany || "China factory"), body);
+      }
+      else if(act === "verify") verifyOne(r);
+      return;
+    }
+    var cb = e.target.closest(".rowsel");
+    if(cb){
+      var rid = cb.dataset.id;
+      if(cb.checked) SEL[rid] = 1; else delete SEL[rid];
+      render(); return;
+    }
+    var tr = e.target.closest("tr[data-id]");
+    if(tr && !e.target.closest("a")) openDetail(tr.dataset.id);
+  };
+  $("#selAll").onchange = function(){
+    var on = this.checked;
+    VIEW.slice((FILTERS.page-1)*FILTERS.size, FILTERS.page*FILTERS.size).forEach(function(r){
+      if(on) SEL[r.id] = 1; else delete SEL[r.id];
+    });
+    render();
+  };
+  $("#pager").onclick = function(e){
+    var b = e.target.closest("[data-p]"); if(!b) return;
+    FILTERS.page = +b.dataset.p; render();
+    document.querySelector(".tablewrap").scrollTop = 0;
+  };
+  /* 批量 */
+  $("#btnBatchStatus").onclick = function(){
+    var st = $("#batchStatus").value;
+    Object.keys(SEL).forEach(function(id){
+      var n = noteOf(id); n.status = st; n.last = Date.now();
+    });
+    saveStore(); render(); buildFilterOptions(); toast("已设置 " + Object.keys(SEL).length + " 条为「"+st+"」");
+  };
+  $("#btnBatchTag").onclick = function(){
+    var t = $("#batchTag").value;
+    Object.keys(SEL).forEach(function(id){
+      var n = noteOf(id);
+      if(n.tags.indexOf(t) < 0) n.tags.push(t);
+      if(!n.last) n.last = Date.now();
+    });
+    saveStore(); buildFilterOptions(); render(); toast("已为选中客户加上「"+t+"」标签");
+  };
+  $("#btnBatchClear").onclick = function(){
+    Object.keys(SEL).forEach(function(id){ noteOf(id).tags = []; });
+    saveStore(); buildFilterOptions(); render(); toast("已清除选中客户的全部标签");
+  };
+  $("#btnBatchLetter").onclick = function(){
+    var rs = ROWS.filter(function(r){ return SEL[r.id]; });
+    if(!rs.length){ toast("请先勾选客户"); return; }
+    gotoTab("letter"); buildLetter(rs); showLettersModal();
+  };
+  $("#btnBatchExport").onclick = exportSelected;
+  $("#btnSelNone").onclick = function(){ SEL = {}; render(); };
+  /* 联网核查 */
+  $("#btnVerify").onclick = function(){ $("#modalVerify").classList.add("on"); };
+  $("#vClose").onclick = function(){ $("#modalVerify").classList.remove("on"); VSTOP = true; };
+  $("#vStart").onclick = runVerify;
+  /* 抽屉 */
+  $("#dClose").onclick = closeDrawer;
+  $("#mask").onclick = closeDrawer;
+  document.addEventListener("keydown", function(e){
+    if(e.key === "Escape"){ closeDrawer(); $$(".modal").forEach(function(m){ m.classList.remove("on"); }); }
+  });
+  /* 导出 / 导入 */
+  $("#btnExport").onclick = exportCurrent;
+  var bImp = $("#btnImport");
+  if(bImp) bImp.onclick = function(){ $("#fileInput").click(); };
+  $("#fileInput").onchange = function(){
+    var f = this.files[0]; if(!f) return;
+    if(/\.(xlsx|xls)$/i.test(f.name)) loadXlsx(f);
+    else importFile(f);
+    this.value = "";
+  };
+  var bRst = $("#btnReset");
+  if(bRst) bRst.onclick = function(){
+    if(!confirm("确定放弃导入的名录，恢复内置的 2026 春季广交会建材采购商名录？\n（跟进记录与标签会保留）")) return;
+    localStorage.removeItem(STORE_IMPORT);
+    prepare(loadEmbedded());
+    buildFilterOptions(); applyFilters(); toast("已恢复内置名录");
+  };
+  $("#btnBackup").onclick = function(){
+    $("#bkInfo").innerHTML = "本机授权：" + esc(licInfoText()||"未激活") +
+      (getLic() && getLic().seq ? "（授权号 " + esc(getLic().seq) + "）" : "") +
+      (getLic() && getLic().at ? "，激活于 " + esc(fmtDate(getLic().at)) : "") +
+      "<br>当前已保存 " + Object.keys(NOTES).length + " 条跟进记录，" +
+      Object.keys(DNS).length + " 个域名核查结果。" + (localStorage.getItem(STORE_IMPORT) ? "当前使用导入名录。" : "当前使用内置名录。");
+    $("#modalBackup").classList.add("on");
+  };
+  $("#bkClose").onclick = function(){ $("#modalBackup").classList.remove("on"); };
+  $("#bkExport").onclick = function(){
+    downloadRaw("客户背调系统备份_" + new Date().toISOString().slice(0,10) + ".json",
+      JSON.stringify({v:1, notes:NOTES, dns:DNS, settings:S,
+        imported:JSON.parse(localStorage.getItem(STORE_IMPORT)||"null")}), "application/json");
+    toast("备份已导出");
+  };
+  $("#bkExportCsv").onclick = exportAll;
+  $("#bkImport").onclick = function(){
+    var inp = document.createElement("input");
+    inp.type = "file"; inp.accept = ".json";
+    inp.onchange = function(){
+      var f = this.files[0]; if(!f) return;
+      var fr = new FileReader();
+      fr.onload = function(ev){
+        try{
+          var j = JSON.parse(ev.target.result);
+          if(j.notes) NOTES = j.notes;
+          if(j.dns) DNS = j.dns;
+          if(j.settings) S = Object.assign(S, j.settings);
+          if(j.imported && j.imported.length){
+            localStorage.setItem(STORE_IMPORT, JSON.stringify(j.imported));
+            prepare(normalizeRows(j.imported));
+          }
+          saveStore(); syncSettingsUI(); buildFilterOptions(); applyFilters();
+          $("#modalBackup").classList.remove("on");
+          toast("备份已恢复");
+        }catch(e){ toast("备份文件解析失败"); }
+      };
+      fr.readAsText(f);
+    };
+    inp.click();
+  };
+  /* 开发信 */
+  $("#letterScope").onchange = function(){ buildLetter(letterPool()); };
+  $("#letterIdx").onchange = renderLetters;
+  $("#letterIdx").oninput = renderLetters;
+  $("#btnLetterRefresh").onclick = function(){ buildLetter(letterPool()); };
+  $("#btnLetterCopy").onclick = function(){
+    var i = Math.min(Math.max(1, parseInt($("#letterIdx").value,10)||1), LETTERS.length);
+    if(!LETTERS.length) return;
+    copyText(LETTERS[i-1].text);
+  };
+  $("#btnLetterExport").onclick = exportLetters;
+  $("#tmplSel").onchange = function(){
+    S.tmplIdx = +this.value; saveStore();
+    $("#tmplBody").value = S.tmpls[S.tmplIdx].body;
+    buildLetter(LETTERS.map(function(x){ return x.r; }));
+  };
+  $("#tmplBody").oninput = function(){ S.tmpls[S.tmplIdx].body = this.value; };
+  $("#btnTmplSave").onclick = function(){
+    S.tmpls[S.tmplIdx].body = $("#tmplBody").value;
+    saveStore(); buildLetter(LETTERS.map(function(x){ return x.r; })); toast("模板已保存");
+  };
+  $("#btnTmplReset").onclick = function(){
+    S.tmpls = JSON.parse(JSON.stringify(TMPL_DEFAULT)); S.tmplIdx = 0; saveStore();
+    syncSettingsUI(); buildLetter(LETTERS.map(function(x){ return x.r; })); toast("已恢复默认模板");
+  };
+  $("#mlClose").onclick = function(){ $("#modalLetters").classList.remove("on"); };
+  $("#mlExport").onclick = exportLetters;
+  $("#mlCopyAll").onclick = function(){ copyText(LETTERS.map(function(x){ return "【"+x.r.buyer+"】\n"+x.text; }).join("\n\n———\n\n")); };
+  /* 跟进 */
+  $("#btnFollowExport").onclick = exportFollow;
+  $("#followList").onclick = function(e){
+    var b = e.target.closest("[data-followopen]"); if(!b) return;
+    openDetail(b.dataset.followopen);
+  };
+  /* 我方资料输入 */
+  [["sCompany","myCompany"],["sName","myName"],["sProducts","myProducts"],["sPhone","myPhone"],
+   ["sEmail","myEmail"],["sWebsite","website"],["sCity","city"],["sYears","years"]].forEach(function(p){
+    var el = document.getElementById(p[0]);
+    el.onchange = el.oninput = function(){
+      S[p[1]] = this.value; saveStore();
+      if(LETTERS.length) buildLetter(LETTERS.map(function(x){ return x.r; }));
+      if(Q.items.length) buildQueueSilent();
+      if(p[0] === "sEmail"){
+        var q2 = document.getElementById("qMyMail");
+        if(q2) q2.value = this.value;
+        updateMailHint();
+      }
+    };
+  });
+
+  /* ---------- 参展届数：详情里的快捷按钮（事件委托，只绑一次） ---------- */
+  $("#dBody").addEventListener("click", function(e){
+    /* 详情里的写邮件 / 复制邮件内容 / 复制对方邮箱 */
+    var ma = e.target.closest("[data-mailgo],[data-mailcopy],[data-mailcp]");
+    if(ma && CUR){
+      var mto = ma.getAttribute("data-mailto");
+      var msu = "Building materials supply from " + (S.myCompany || "China factory");
+      var mbd = fillTmpl(S.tmpls[S.tmplIdx].body, CUR);
+      if(ma.hasAttribute("data-mailgo")) openMail(mto, msu, mbd);
+      else if(ma.hasAttribute("data-mailcopy")) copyMailBlock(mto, msu, mbd);
+      else { copyText(mto); toast("已复制对方邮箱：" + mto); }
+      return;
+    }
+    var b = e.target.closest("[data-fairset]");
+    if(!b || !CUR) return;
+    var n = noteOf(CUR.id);
+    n.fair = b.getAttribute("data-fairset");
+    saveStore(); openDetail(CUR.id); render();
+    toast(n.fair ? ("已记录为第 " + n.fair + " 次参加广交会") : "已清空参展届数");
+  });
+  $("#btnBatchFair").onclick = function(){
+    var v = String($("#batchFair").value || "").replace(/[^\d]/g, "").slice(0, 3);
+    var ids = Object.keys(SEL);
+    if(!ids.length){ toast("请先勾选客户"); return; }
+    ids.forEach(function(id){ noteOf(id).fair = v; });
+    saveStore(); render();
+    toast(v ? ("已将 " + ids.length + " 个客户标记为第 " + v + " 届") : ("已清空 " + ids.length + " 个客户的届数"));
+  };
+  /* ---------- 参展届数 / 社媒 筛选 ---------- */
+  $("#fFair").onchange = function(){ FILTERS.fair = this.value; applyFilters(); };
+  $("#fSocial").onclick = function(e){
+    var b = e.target.closest(".pill"); if(!b) return;
+    var v = b.dataset.v;
+    if(FILTERS.social[v]) delete FILTERS.social[v]; else FILTERS.social[v] = 1;
+    b.classList.toggle("on");
+    applyFilters();
+  };
+  /* ---------- 批量触达 ---------- */
+  $$("#page-outreach .pill").forEach(function(p){
+    p.onclick = function(){
+      $$("#page-outreach .pill").forEach(function(x){ x.classList.remove("on"); });
+      this.classList.add("on");
+      Q.channel = this.dataset.channel;
+      Q.items = [];
+      renderQueue();
+    };
+  });
+  $("#qBuild").onclick = function(){ needConsent(buildQueue); };
+  $("#qOpen").onclick = function(){ needConsent(openCurrent); };
+  $("#qDone").onclick = function(){ needConsent(markDone); };
+  $("#qSkip").onclick = skipCurrent;
+  $("#qExport").onclick = exportQueue;
+  $("#qScope").onchange = function(){ Q.items = []; renderQueue(); };
+  $("#qDayLimit").onchange = renderQueue;
+  $("#qMailMode").onchange = function(){
+    S.mailMode = this.value; saveStore(); updateMailHint();
+    toast("写邮件将打开：" + this.options[this.selectedIndex].text);
+  };
+  var qMy = document.getElementById("qMyMail");
+  if(qMy){
+    qMy.onchange = qMy.oninput = function(){
+      S.myEmail = this.value.trim(); saveStore();
+      var e2 = document.getElementById("sEmail");
+      if(e2) e2.value = S.myEmail;
+      updateMailHint();
+    };
+  }
+  $("#qList").onclick = function(e){
+    var el = e.target.closest("[data-qgo]");
+    if(!el) return;
+    Q.idx = parseInt(el.getAttribute("data-qgo"), 10) || 0;
+    renderQueue();
+  };
+  $("#riskAgree").onchange = function(){ $("#riskOk").disabled = !this.checked; };
+  $("#riskOk").onclick = function(){
+    if(this.disabled) return;
+    Q.agreed = true;
+    $("#modalRisk").classList.remove("on");
+    var fn = Q._after; Q._after = null;
+    if(fn) fn();
+  };
+  $("#riskCancel").onclick = function(){ $("#modalRisk").classList.remove("on"); Q._after = null; };
+  $("#btnBatchOutreach").onclick = function(){
+    var ids = Object.keys(SEL);
+    if(!ids.length){ toast("请先在客户名录里勾选客户"); return; }
+    gotoTab("outreach");
+    $("#qScope").value = "selected";
+    needConsent(buildQueue);
+  };
+}
+function syncSettingsUI(){
+  $("#sCompany").value = S.myCompany||""; $("#sName").value = S.myName||"";
+  $("#sProducts").value = S.myProducts||""; $("#sPhone").value = S.myPhone||"";
+  $("#sEmail").value = S.myEmail||""; $("#sWebsite").value = S.website||"";
+  $("#sCity").value = S.city||""; $("#sYears").value = S.years||"";
+  $("#tmplSel").innerHTML = S.tmpls.map(function(t,i){
+    return '<option value="'+i+'"'+(i===S.tmplIdx?" selected":"")+'>'+esc(t.name)+'</option>';
+  }).join("");
+  $("#tmplBody").value = S.tmpls[S.tmplIdx] ? S.tmpls[S.tmplIdx].body : "";
+  var qm = document.getElementById("qMailMode");
+  if(qm){
+    if(!qm.options.length){
+      qm.innerHTML = PROVIDERS.map(function(p){
+        return '<option value="' + p.id + '">' + esc(p.name) + '</option>';
+      }).join("");
+    }
+    qm.value = S.mailMode || "auto";
+  }
+  var qmm = document.getElementById("qMyMail");
+  if(qmm) qmm.value = S.myEmail || "";
+  updateMailHint();
+}
+function copyText(t){
+  if(navigator.clipboard && navigator.clipboard.writeText){
+    navigator.clipboard.writeText(t).then(function(){ toast("已复制到剪贴板"); },
+      function(){ fallbackCopy(t); });
+  } else fallbackCopy(t);
+}
+function fallbackCopy(t){
+  var ta = document.createElement("textarea");
+  ta.value = t; ta.style.position = "fixed"; ta.style.left = "-9999px";
+  document.body.appendChild(ta); ta.select();
+  try{ document.execCommand("copy"); toast("已复制到剪贴板"); }
+  catch(e){ toast("复制失败，请手动选择文本"); }
+  ta.remove();
+}
+
+/* ---------------- 16. 启动 ---------------- */
+function boot(){
+  loadStore();
+  /* 只读演示版：跳过激活门禁、不写入本地数据、不真正发送 */
+  if(DEMO){
+    try{ localStorage.setItem = function(){}; }catch(e){}
+    var _wo = window.open;
+    window.open = function(u){
+      if(typeof u === "string" && (u.indexOf("wa.me") >= 0 || u.indexOf("mail") >= 0)){
+        toast("只读演示版不会真的发送。正式版会逐个打开并自动填好收件人与正文，你点发送即可");
+        return null;
+      }
+      return _wo.apply(window, arguments);
+    };
+  }
+  /* 授权门禁：未激活直接显示激活页，不加载任何客户数据 */
+  if(!DEMO && !isActivated()){ showGate(); return; }
+  try{
+    prepare(currentRows());
+  }catch(e){
+    document.getElementById("tbody").innerHTML =
+      '<tr><td colspan="12"><div class="empty">名录数据读取失败：'+esc(e.message)+'</div></td></tr>';
+    return;
+  }
+  bindUI();
+  buildFilterOptions();
+  syncSettingsUI();
+  applyFilters();
+  buildLetter([]);
+  $("#letterScope").value = "filtered";
+  if(DEMO) showDemoBar();
+}
+boot();
+</script>
+</body>
+</html>

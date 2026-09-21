@@ -3263,10 +3263,16 @@ function copyMailBlock(to, subject, body){
 function updateMailHint(){
   var el = document.getElementById("qMailHint");
   if(!el) return;
+  var mode = S.mailMode || "auto";
+  var em = String(S.myEmail || "").trim();
+  if(mode === "auto" && !em){
+    el.innerHTML = "先在上面填入你的收发邮箱（例如 sales@yourcompany.com），程序会自动识别用哪个网页邮箱发信；也可以直接在下面手动选。";
+    return;
+  }
   var pv = resolveProvider();
   var warn = "";
-  if((S.mailMode || "auto") === "auto" && !detectProvider(S.myEmail)){
-    warn = '<br>⚠ 没能从你的邮箱域名自动识别服务商（公司自有域名很常见）。建议手动选一个，或者直接点详情里的「复制邮件内容」，粘到任何邮箱里都能用。';
+  if(mode === "auto" && !detectProvider(em)){
+    warn = '<br>⚠ 没能从「' + esc(em) + '」的域名自动识别服务商（公司自有域名很常见）。建议手动选一个，或者直接点详情里的「复制邮件内容」，粘到任何邮箱里都能用。';
   }
   if(pv.prefill){
     el.innerHTML = "当前打开方式：<b>" + esc(pv.name) + "</b> —— 点「写邮件」会直接打开已填好的邮件窗口。" + warn;

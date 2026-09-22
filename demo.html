@@ -142,10 +142,12 @@ a:hover{text-decoration:underline}
   vertical-align:middle;white-space:nowrap;font-family:"Microsoft YaHei",sans-serif}
 .wab.wok{background:var(--ok-l);color:var(--ok);border:1px solid #bfe6cf}
 .wab.wwarn{background:var(--warn-l);color:var(--warn);border:1px solid #f3dcb6}
+.wab.wnone{background:#eef1f6;color:#8894a8;border:1px solid #dfe5ee}
 .wab.wbad{background:var(--bad-l);color:var(--bad);border:1px solid #f3c4c4}
 .wadetail{margin-top:6px;font-size:12px;line-height:1.75;border-radius:8px;padding:7px 10px;font-family:"Microsoft YaHei",sans-serif}
 .wadetail.wok{background:var(--ok-l);color:#0a6b3d;border:1px solid #bfe6cf}
 .wadetail.wwarn{background:var(--warn-l);color:#8a5700;border:1px solid #f3dcb6}
+.wadetail.wnone{background:#f4f6f9;color:#5b6879;border:1px solid #dfe5ee}
 .wadetail.wbad{background:var(--bad-l);color:#8f2020;border:1px solid #f3c4c4}
 .wadetail b{color:inherit}
 
@@ -620,9 +622,10 @@ tbody tr.sel td{background:var(--brand-l)}
         <div class="pills" id="fWa">
           <button class="pill" data-v="ok">✓ 可直发</button>
           <button class="pill" data-v="warn">⚠ 待核对</button>
+          <button class="pill" data-v="none">— 无手机号</button>
           <button class="pill" data-v="bad">✕ 不可用</button>
         </div>
-        <div class="hintline" style="margin-top:7px">系统已按各国手机号规则自动校验：✓ 格式正确可直接发；⚠ 疑似固话、位数异常或号码归属国不符；✕ 号码无法解析</div>
+        <div class="hintline" style="margin-top:7px">按各国手机号规则自动校验：✓ 格式正确可直接发；⚠ 疑似固话、位数异常或号码归属国不符；— 名录里没给手机号（只能发邮件/打电话）；✕ 号码无法解析</div>
       </div>
     </div>
 
@@ -1281,6 +1284,9 @@ function waGrade(country, cn, nat, full){
 }
 /* 校验一条记录的 WhatsApp 可用性；返回 {level, e164, raw, note, count} */
 function waCheck(r){
+  if(!String(r.mobile || "").trim())
+    return {level:"none", e164:"", raw:"", count:0,
+      note:"未收录手机号（名录里这家只给了座机/邮箱，建议用邮件或电话联系）"};
   var cands = waSplit(r.mobile);
   if(!cands.length) return {level:"bad", e164:"", raw:"", note:"手机字段里没有可解析的号码（可能只写了邮箱或说明文字）", count:0};
   var country = waCountryOf(r);
@@ -1337,7 +1343,8 @@ function waBadge(r){
   var wa = waOf(r);
   if(!wa) return "";
   var m = wa.level === "ok" ? ["wok","✓ WhatsApp"]
-        : (wa.level === "warn" ? ["wwarn","⚠ 待核"] : ["wbad","✕ 不可用"]);
+        : (wa.level === "warn" ? ["wwarn","⚠ 待核"]
+        : (wa.level === "none" ? ["wnone","— 无手机"] : ["wbad","✕ 不可用"]));
   var tip = wa.note + (wa.e164 ? "｜规范号码 " + wa.e164 : "");
   return ' <span class="wab ' + m[0] + '" title="' + esc(tip) + '">' + m[1] + '</span>';
 }
@@ -1345,8 +1352,8 @@ function waBadge(r){
 function waDetail(r){
   var wa = waOf(r);
   if(!wa) return "";
-  var cls = wa.level === "ok" ? "wok" : (wa.level === "warn" ? "wwarn" : "wbad");
-  var txt = wa.level === "ok" ? "可直发" : (wa.level === "warn" ? "待核对" : "不可用");
+  var cls = wa.level === "ok" ? "wok" : (wa.level === "warn" ? "wwarn" : (wa.level === "none" ? "wnone" : "wbad"));
+  var txt = wa.level === "ok" ? "可直发" : (wa.level === "warn" ? "待核对" : (wa.level === "none" ? "无手机号" : "不可用"));
   return '<div class="wadetail ' + cls + '"><b>WhatsApp 校验：' + txt + '</b>' +
     (wa.e164 ? '<br>规范号码：<span class="mono">' + esc(wa.e164) + '</span>' : '') +
     '<br>' + esc(wa.note) + '</div>';
@@ -1354,7 +1361,7 @@ function waDetail(r){
 /* 导出用的一列文字 */
 function waExport(r){
   var wa = waOf(r);
-  var t = wa.level === "ok" ? "可直发" : (wa.level === "warn" ? "待核对" : "不可用");
+  var t = wa.level === "ok" ? "可直发" : (wa.level === "warn" ? "待核对" : (wa.level === "none" ? "无手机号" : "不可用"));
   return t + (wa.e164 ? "（" + wa.e164 + "）" : "") + "：" + wa.note;
 }
 

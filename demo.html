@@ -513,6 +513,8 @@ tbody tr.sel td{background:var(--brand-l)}
 
 <nav class="tabs">
   <button class="tab on" data-page="list"><span class="ic">▤</span>客户名录</button>
+  <button class="tab" data-page="wa"><span class="ic">✓</span>WhatsApp 可直发</button>
+  <button class="tab" data-page="mail"><span class="ic">@</span>邮件可触达</button>
   <button class="tab" data-page="board"><span class="ic">◔</span>背调看板</button>
   <button class="tab" data-page="outreach"><span class="ic">✈</span>批量触达</button>
   <button class="tab" data-page="letter"><span class="ic">✉</span>开发信</button>
@@ -521,7 +523,8 @@ tbody tr.sel td{background:var(--brand-l)}
 
 <nav class="bottomnav" id="bottomnav">
   <button class="on" data-page="list"><span class="ic">▤</span>名录</button>
-  <button data-page="board"><span class="ic">◔</span>看板</button>
+  <button data-page="wa"><span class="ic">✓</span>可发WA</button>
+  <button data-page="mail"><span class="ic">@</span>可发邮件</button>
   <button data-page="outreach"><span class="ic">✈</span>触达</button>
   <button data-page="letter"><span class="ic">✉</span>开发信</button>
   <button data-page="follow"><span class="ic">☑</span>跟进</button>
@@ -686,7 +689,85 @@ tbody tr.sel td{background:var(--brand-l)}
   </div>
 </div>
 
-<!-- ============ 背调看板 ============ -->
+<!-- ============ WhatsApp 可直发 ============ -->
+<div class="page" id="page-wa">
+  <div class="card" style="margin-bottom:14px">
+    <div class="bd" style="padding:13px 18px">
+      <div style="font-size:13px;color:var(--txt2);line-height:1.9">
+        <b style="color:var(--ink)">这里只放「号码校验通过、可直接用 WhatsApp 发送」的客户。</b>
+        号码已按各国手机号规则补齐国际区号（例如泰国 <code>0844157383</code> → <code>+66844157383</code>），
+        点「发」会打开 WhatsApp 并自动填好内容。<b>发完记得点「标记已联系」</b>，方便下次不重复发。
+      </div>
+    </div>
+  </div>
+  <div class="card">
+    <div class="hd">
+      <span>✓ WhatsApp 可直发 <span class="muted" id="waPageInfo"></span></span>
+      <div style="display:flex;gap:8px;flex-wrap:wrap">
+        <select class="sel" id="waPageGrade" style="width:132px">
+          <option value="">全部等级</option>
+          <option value="A">仅 A 级优先</option>
+          <option value="AB">A + B 级</option>
+          <option value="todo">仅未联系过的</option>
+        </select>
+        <button class="btn sm" id="waPageExport">导出清单（CSV）</button>
+      </div>
+    </div>
+    <div class="bd">
+      <div class="tablewrap" style="max-height:none">
+        <table>
+          <thead><tr>
+            <th>采购商</th><th>国家</th><th>联系人</th><th>WhatsApp 号码</th>
+            <th>等级</th><th>跟进状态</th><th>操作</th>
+          </tr></thead>
+          <tbody id="waPageBody"></tbody>
+        </table>
+      </div>
+      <div id="waPageMore" style="text-align:center;margin-top:14px"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ============ 邮件可触达 ============ -->
+<div class="page" id="page-mail">
+  <div class="card" style="margin-bottom:14px">
+    <div class="bd" style="padding:13px 18px">
+      <div style="font-size:13px;color:var(--txt2);line-height:1.9">
+        <b style="color:var(--ink)">这里只放「邮箱格式校验通过、可发开发信」的客户。</b>
+        点「写邮件」会用你设定的邮箱打开写邮件窗口并预填收件人、主题、正文。
+        <span style="color:var(--warn)">邮件群发的封禁风险比 WhatsApp 高，请先看使用指南里「邮件触达的安全节奏」那一节。</span>
+      </div>
+    </div>
+  </div>
+  <div class="card">
+    <div class="hd">
+      <span>@ 邮件可触达 <span class="muted" id="mailPageInfo"></span></span>
+      <div style="display:flex;gap:8px;flex-wrap:wrap">
+        <select class="sel" id="mailPageGrade" style="width:132px">
+          <option value="">全部等级</option>
+          <option value="A">仅 A 级优先</option>
+          <option value="AB">A + B 级</option>
+          <option value="corp">仅企业邮箱</option>
+          <option value="todo">仅未联系过的</option>
+        </select>
+        <button class="btn sm" id="mailPageExport">导出清单（CSV）</button>
+      </div>
+    </div>
+    <div class="bd">
+      <div class="tablewrap" style="max-height:none">
+        <table>
+          <thead><tr>
+            <th>采购商</th><th>国家</th><th>联系人</th><th>邮箱</th>
+            <th>邮箱类型</th><th>等级</th><th>跟进状态</th><th>操作</th>
+          </tr></thead>
+          <tbody id="mailPageBody"></tbody>
+        </table>
+      </div>
+      <div id="mailPageMore" style="text-align:center;margin-top:14px"></div>
+    </div>
+  </div>
+</div>
+
 <div class="page" id="page-board">
   <div class="grid3" style="margin-bottom:14px">
     <div class="card"><div class="bd">
@@ -2767,12 +2848,163 @@ function renderLetters(){
     " · "+(sendable? "可发邮箱 "+esc(cur.r.mail.valid[0]) : '<span style="color:#d93838">该客户无有效邮箱，建议走 WhatsApp</span>')+
     (cur.r.grade? " · 背调 "+cur.r.score+" 分（"+cur.r.grade+" 级）" : "");
 }
+/* ---------------- 17. 两个工作台：WhatsApp 可直发 / 邮件可触达 ---------------- */
+var WP_LIMIT = {wa:50, mail:50};
+var ROW_IDX = null, ROW_IDX_N = -1;
+function rowById(id){
+  if(!ROW_IDX || ROW_IDX_N !== ROWS.length){
+    ROW_IDX = {}; ROW_IDX_N = ROWS.length;
+    for(var i=0;i<ROWS.length;i++) ROW_IDX[ROWS[i].id] = ROWS[i];
+  }
+  return ROW_IDX[id];
+}
+function waPagePool(){
+  var el = $("#waPageGrade"), mode = el ? el.value : "", out = [];
+  for(var i=0;i<ROWS.length;i++){
+    var r = ROWS[i];
+    if(waOf(r).level !== "ok") continue;
+    if(mode === "A" && r.grade !== "A") continue;
+    if(mode === "AB" && r.grade === "C") continue;
+    if(mode === "todo"){ var n0 = NOTES[r.id]; if(n0 && n0.status && n0.status !== "未联系") continue; }
+    out.push(r);
+  }
+  out.sort(function(a,b){ return b.score - a.score; });
+  return out;
+}
+function mailPagePool(){
+  var el = $("#mailPageGrade"), mode = el ? el.value : "", out = [];
+  for(var i=0;i<ROWS.length;i++){
+    var r = ROWS[i];
+    if(!r.mail.valid.length) continue;
+    if(mode === "A" && r.grade !== "A") continue;
+    if(mode === "AB" && r.grade === "C") continue;
+    if(mode === "corp" && !r.mail.corp.length) continue;
+    if(mode === "todo"){ var n0 = NOTES[r.id]; if(n0 && n0.status && n0.status !== "未联系") continue; }
+    out.push(r);
+  }
+  out.sort(function(a,b){ return b.score - a.score; });
+  return out;
+}
+function statusChip(r){
+  var n = NOTES[r.id], st = (n && n.status) ? n.status : "未联系";
+  if(st === "未联系") return '<span class="muted">未联系</span>';
+  return '<span class="tag i">' + esc(st) + '</span>';
+}
+function renderWaPage(){
+  var body = $("#waPageBody"); if(!body) return;
+  var rows = waPagePool(), lim = WP_LIMIT.wa, list = rows.slice(0, lim);
+  $("#waPageInfo").textContent = "共 " + rows.length + " 条";
+  body.innerHTML = list.length ? list.map(function(r){
+    return '<tr data-id="'+r.id+'">'+
+      '<td data-label="采购商"><span class="bname">'+esc(r.buyer||"(无公司名)")+'</span>'+rowTags(r)+'</td>'+
+      '<td data-label="国家">'+(esc(r.country)||'<span class="muted">未填</span>')+'</td>'+
+      '<td data-label="联系人">'+esc(r.contact||"—")+'</td>'+
+      '<td class="mono" data-label="WhatsApp 号码">'+esc(waOf(r).e164)+'</td>'+
+      '<td data-label="等级">'+gradeBadge(r.grade, r.score)+'</td>'+
+      '<td data-label="跟进状态">'+statusChip(r)+'</td>'+
+      '<td data-label="操作" style="white-space:nowrap">'+
+        '<button class="btn sm p" data-act="wa">发</button> '+
+        '<button class="btn sm" data-act="copy">复制号</button> '+
+        '<button class="btn sm" data-act="mark">标记已联系</button>'+
+      '</td></tr>';
+  }).join("") : '<tr><td colspan="7"><div class="empty">没有符合条件的客户</div></td></tr>';
+  $("#waPageMore").innerHTML = rows.length > lim
+    ? '<button class="btn" id="waMore">显示更多（还剩 '+(rows.length-lim)+' 条）</button>' : '';
+  var mb = $("#waMore");
+  if(mb) mb.onclick = function(){ WP_LIMIT.wa += 200; renderWaPage(); };
+}
+function renderMailPage(){
+  var body = $("#mailPageBody"); if(!body) return;
+  var rows = mailPagePool(), lim = WP_LIMIT.mail, list = rows.slice(0, lim);
+  $("#mailPageInfo").textContent = "共 " + rows.length + " 条";
+  body.innerHTML = list.length ? list.map(function(r){
+    var isCorp = r.mail.corp.length > 0;
+    return '<tr data-id="'+r.id+'">'+
+      '<td data-label="采购商"><span class="bname">'+esc(r.buyer||"(无公司名)")+'</span>'+rowTags(r)+'</td>'+
+      '<td data-label="国家">'+(esc(r.country)||'<span class="muted">未填</span>')+'</td>'+
+      '<td data-label="联系人">'+esc(r.contact||"—")+'</td>'+
+      '<td data-label="邮箱"><span class="email" title="'+esc(r.mail.valid.join("；"))+'">'+esc(r.mail.valid[0])+'</span>'+
+        (r.mail.valid.length>1 ? '<span class="muted"> +'+(r.mail.valid.length-1)+'</span>' : '')+'</td>'+
+      '<td data-label="邮箱类型">'+(isCorp ? '<span class="pill a">企业邮箱</span>' : '<span class="pill b">个人邮箱</span>')+'</td>'+
+      '<td data-label="等级">'+gradeBadge(r.grade, r.score)+'</td>'+
+      '<td data-label="跟进状态">'+statusChip(r)+'</td>'+
+      '<td data-label="操作" style="white-space:nowrap">'+
+        '<button class="btn sm p" data-act="mail">写邮件</button> '+
+        '<button class="btn sm" data-act="copy">复制邮箱</button> '+
+        '<button class="btn sm" data-act="mark">标记已联系</button>'+
+      '</td></tr>';
+  }).join("") : '<tr><td colspan="8"><div class="empty">没有符合条件的客户</div></td></tr>';
+  $("#mailPageMore").innerHTML = rows.length > lim
+    ? '<button class="btn" id="mailMore">显示更多（还剩 '+(rows.length-lim)+' 条）</button>' : '';
+  var mb = $("#mailMore");
+  if(mb) mb.onclick = function(){ WP_LIMIT.mail += 200; renderMailPage(); };
+}
+function openWaFor(r){
+  var num = waNumber(r);
+  if(!num){ toast("这条没有可用的 WhatsApp 号码"); return; }
+  var m = buildOutMsg(r, "wa");
+  window.open("https://wa.me/" + num + (m.text ? ("?text=" + encodeURIComponent(m.text)) : ""), "_blank");
+  toast("已打开 WhatsApp（内容已预填），发完记得点「标记已联系」");
+}
+function openMailFor(r){
+  var to = r.mail.valid[0] || "";
+  if(!to){ toast("这条没有可用邮箱"); return; }
+  var m = buildOutMsg(r, "mail");
+  openMail(to, m.subject, m.text);
+}
+function quickMark(r){
+  var n = noteOf(r.id);
+  n.status = "已发信"; n.last = Date.now();
+  saveStore();
+  toast("已标记「已发信」");
+  renderWaPage(); renderMailPage();
+}
+function bindWorkbench(){
+  ["#waPageBody", "#mailPageBody"].forEach(function(sel){
+    var tb = $(sel); if(!tb) return;
+    tb.onclick = function(e){
+      var b = e.target.closest("[data-act]"); if(!b) return;
+      var tr = b.closest("tr"); if(!tr) return;
+      var r = rowById(tr.getAttribute("data-id")); if(!r) return;
+      var act = b.getAttribute("data-act");
+      if(act === "wa") openWaFor(r);
+      else if(act === "mail") openMailFor(r);
+      else if(act === "mark") quickMark(r);
+      else if(act === "copy") copyText(sel === "#waPageBody" ? waOf(r).e164 : (r.mail.valid[0] || ""));
+    };
+  });
+  var a = $("#waPageGrade"); if(a) a.onchange = function(){ WP_LIMIT.wa = 50; renderWaPage(); };
+  var b2 = $("#mailPageGrade"); if(b2) b2.onchange = function(){ WP_LIMIT.mail = 50; renderMailPage(); };
+  var e1 = $("#waPageExport");
+  if(e1) e1.onclick = function(){
+    var rows = waPagePool();
+    if(!rows.length){ toast("当前没有可导出的记录"); return; }
+    if(exportRows(["序号","采购商","国家/地区","联系人","原始手机号","规范 WhatsApp 号码","背调评分","客户等级","采购类目","跟进状态"],
+      rows.map(function(r){
+        var n = NOTES[r.id] || {status:"未联系"};
+        return [r.seq, r.buyer, r.country, r.contact, r.mobile, waOf(r).e164, r.score, r.grade, r.cats.join("、"), n.status];
+      }), "WhatsApp可直发清单")) toast("已导出 " + rows.length + " 条");
+  };
+  var e2 = $("#mailPageExport");
+  if(e2) e2.onclick = function(){
+    var rows = mailPagePool();
+    if(!rows.length){ toast("当前没有可导出的记录"); return; }
+    if(exportRows(["序号","采购商","国家/地区","联系人","邮箱","邮箱类型","背调评分","客户等级","采购类目","跟进状态"],
+      rows.map(function(r){
+        var n = NOTES[r.id] || {status:"未联系"};
+        return [r.seq, r.buyer, r.country, r.contact, r.mail.valid[0]||"", (r.mail.corp.length?"企业邮箱":"个人邮箱"), r.score, r.grade, r.cats.join("、"), n.status];
+      }), "邮件可触达清单")) toast("已导出 " + rows.length + " 条");
+  };
+}
+
 function gotoTab(name){
   $$(".tab, .bottomnav button").forEach(function(t){ t.classList.toggle("on", t.dataset.page === name); });
   $$(".page").forEach(function(p){ p.classList.toggle("on", p.id === "page-"+name); });
   if(name === "letter") renderLetters();
   if(name === "follow") renderFollowList();
   if(name === "outreach") renderQueue();
+  if(name === "wa") renderWaPage();
+  if(name === "mail") renderMailPage();
   try{ window.scrollTo({top:0, behavior:"smooth"}); }catch(e){ window.scrollTo(0,0); }
 }
 function showLettersModal(){
@@ -3655,6 +3887,7 @@ function boot(){
     return;
   }
   bindUI();
+  bindWorkbench();
   buildFilterOptions();
   syncSettingsUI();
   applyFilters();

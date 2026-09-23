@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="zh-CN">
 <head>
 <meta charset="UTF-8">
@@ -1542,9 +1542,12 @@ function showDemoBar(){
     '<a href="' + LIC_CONTACT_URL + '" target="_blank" rel="noopener">' + esc(LIC_CONTACT_BTN) + '</a>';
   document.body.insertBefore(b, document.body.firstChild);
 }
-/* 激活码签名：由「序号 + 手机号后四位」派生 10 位校验串 */
-function licSig(seq, tail){
-  var s = licSec() + "|" + seq + "|" + tail, out = "";
+/* 产品代号：一个激活码只对一个产品有效（建材版 BM / 鞋类版 SH） */
+var LIC_PROD = "BM";
+var LIC_PROD_NAME = { BM:"建材版", SH:"鞋类版" };
+/* 激活码签名：由「产品 + 序号 + 手机号后四位」派生 10 位校验串 */
+function licSig(seq, tail, prod){
+  var s = licSec() + "|" + (prod ? prod + "|" : "") + seq + "|" + tail, out = "";
   for (var r = 0; r < 10; r++){
     var h = (2166136261 ^ Math.imul(r + 1, 2654435761)) >>> 0;
     for (var i = 0; i < s.length; i++){
@@ -1561,15 +1564,24 @@ function licClean(code){
 function licCheck(code, tail4){
   var c = licClean(code);
   if(c.indexOf("JAT") === 0) c = c.slice(3);
-  if(c.length !== 13) return {ok:false, msg:"激活码长度不对，请对照卖家发给你的完整激活码" };
-  var seq = c.slice(0,3), sig = c.slice(3,13), bad = false, i;
+  var prod, seq, sig, sigProd;
+  if(c.length === 13){                    /* 旧版激活码：早期发出的建材版码，不带产品代号，继续有效 */
+    prod = "BM"; seq = c.slice(0,3); sig = c.slice(3,13); sigProd = "";   /* 旧码签名不含产品代号 */
+  } else if(c.length === 15){
+    prod = c.slice(0,2); seq = c.slice(2,5); sig = c.slice(5,15); sigProd = prod;
+  } else {
+    return {ok:false, msg:"激活码长度不对，请对照卖家发给你的完整激活码" };
+  }
+  if(prod !== LIC_PROD)
+    return {ok:false, msg:"这个激活码是「" + (LIC_PROD_NAME[prod] || prod) + "」的，不能在当前产品上使用，请向卖家索取对应产品的激活码" };
+  var bad = false, i;
   for (i = 0; i < seq.length; i++){ if(LIC_ALPH.indexOf(seq.charAt(i)) < 0) bad = true; }
   for (i = 0; i < sig.length; i++){ if(LIC_ALPH.indexOf(sig.charAt(i)) < 0) bad = true; }
   if(bad) return {ok:false, msg:"激活码含无效字符，请再核对一次（字母不含 I / L / O / U）" };
   if(!/^\d{4}$/.test(String(tail4 || ""))) return {ok:false, msg:"请先填写正确的 11 位手机号" };
-  if(licSig(seq, String(tail4)) !== sig)
+  if(licSig(seq, String(tail4), sigProd) !== sig)
     return {ok:false, msg:"激活码与手机号不匹配。激活码只绑定一个手机号，请确认两处都填对了" };
-  return {ok:true, seq:seq};
+  return {ok:true, seq:seq, prod:prod};
 }
 function getLic(){ try{ return JSON.parse(localStorage.getItem(LIC_STORE) || "null"); }catch(e){ return null; } }
 function saveLic(o){ try{ localStorage.setItem(LIC_STORE, JSON.stringify(o)); }catch(e){} }
@@ -1636,7 +1648,7 @@ function showGate(){
           '<label class="glab">手机号</label>' +
           '<input class="ginp" id="gPhone" maxlength="11" inputmode="numeric" placeholder="11 位手机号" autocomplete="off">' +
           '<label class="glab">激活码</label>' +
-          '<input class="ginp gcode" id="gCode" placeholder="JAT-XXX-XXXXX-XXXXX" autocomplete="off">' +
+          '<input class="ginp gcode" id="gCode" placeholder="JAT-BM-001-XXXXX-XXXXX" autocomplete="off">' +
           '<button class="gbtn" id="gGo">立即激活</button>' +
           '<div class="gmsg" id="gMsg"></div>' +
           '<div class="gfoot">还没有激活码？<br>' +

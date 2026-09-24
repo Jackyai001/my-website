@@ -1940,7 +1940,7 @@ var FILTERS = {
 var TMPL_DEFAULT = [
   {name:"初次开发信（标准）", body:
 "Dear {contact},\n\n"+
-"Greetings from {myCompany}, a manufacturer of {myProducts} based in {city}, China. We have been exporting building materials for {years} years and are now expanding our buyer network in {country}.\n\n"+
+"Greetings from {myCompany}, a manufacturer of {myProducts} based in {city}, China. We have been exporting footwear for {years} years and are now expanding our buyer network in {country}.\n\n"+
 "I noticed your company ({company}) purchases {products}. Our products are a direct fit, and we can offer:\n"+
 "  - Factory-direct pricing with full export documentation\n"+
 "  - CE / ISO certified production, OEM and ODM available\n"+
@@ -2733,7 +2733,7 @@ function fillTmpl(body, r){
     .replace(/\{contact\}/g, r.contact || "Sir/Madam")
     .replace(/\{company\}/g, r.buyer || "your company")
     .replace(/\{country\}/g, r.country || "your market")
-    .replace(/\{products\}/g, r.products ? r.products.slice(0,60) : "building materials")
+    .replace(/\{products\}/g, r.products ? r.products.slice(0,60) : "footwear")
     .replace(/\{myCompany\}/g, S.myCompany || "[我方公司名]")
     .replace(/\{myProducts\}/g, S.myProducts || "[我方主营产品]")
     .replace(/\{myName\}/g, S.myName || "[业务员]")
@@ -2827,7 +2827,13 @@ function openMail(to, subject, body, forceMode){
   var pv = forceMode ? providerById(forceMode) : resolveProvider();
   if(pv.prefill && pv.compose){
     var url = fillUrl(pv.compose, to, subject, body);
-    if(url.indexOf("mailto:") === 0){ window.location.href = url; return; }
+    if(url.indexOf("mailto:") === 0){
+      /* 有些电脑没装/没设默认邮件客户端，mailto 点了会毫无反应：先把内容复制好并明确提示 */
+      copyMailBlock(to, subject, body);
+      window.location.href = url;
+      toast("已调起系统邮件客户端，并把「收件人+主题+正文」复制到了剪贴板。若没有弹出邮件窗口（电脑未装邮件客户端），请到「设置」把发信方式改成你的网页邮箱，或打开网页邮箱点「写信」粘贴");
+      return;
+    }
     var w = window.open(url, "_blank");
     if(!w){ copyMailBlock(to, subject, body); toast("浏览器拦截了弹窗，内容已复制，手动粘贴即可"); }
     return;
@@ -3227,8 +3233,8 @@ function buildFilterOptions(){
 /* ---------------- 15. 批量触达：提取 / 差异化话术 / 半自动发送队列 ---------------- */
 /* WhatsApp 短消息模板：{cat} 为客户主要采购类目，其余变量同开发信 */
 var WA_TMPL = [
-  {n:"简洁问询", t:"Hello {contact}, this is {myName} from {myCompany}, a building materials factory in {city}, China. I see your company buys {cat}. We produce {myProducts} and supply importers in {country}. May I send you our catalogue and FOB price list?"},
-  {n:"展会跟进", t:"Hi {contact}, {myName} here from {myCompany}. We met at the Canton Fair (building materials). You are sourcing {cat} - we are a direct factory and can quote with CE / ISO certificates. Shall I share our price list here?"},
+  {n:"简洁问询", t:"Hello {contact}, this is {myName} from {myCompany}, a footwear factory in {city}, China. I see your company buys {cat}. We produce {myProducts} and supply importers in {country}. May I send you our catalogue and FOB price list?"},
+  {n:"展会跟进", t:"Hi {contact}, {myName} here from {myCompany}. We met at the Canton Fair (footwear). You are sourcing {cat} - we are a direct factory and can quote with CE / ISO certificates. Shall I share our price list here?"},
   {n:"卖点切入", t:"Hello {contact}. {myCompany} manufactures {myProducts}. For {country} importers we focus on two things: stable quality and on-time loading. As you purchase {products}, may I send a short catalogue with prices?"},
   {n:"问题式开场", t:"Hi {contact}, quick question - are you currently sourcing {cat} for the {country} market? I am {myName} from {myCompany}, a China factory making {myProducts}. If useful I can send our catalogue and best FOB prices."},
   {n:"专业顾问式", t:"Dear {contact}, {myName} from {myCompany} ({city}, China). We supply {myProducts} to importers, contractors and distributors. Since your company works with {products}, I would like to send our specification sheet and price list for review. Would that be helpful?"},
@@ -3246,7 +3252,7 @@ var Q = {channel:"wa", items:[], idx:0, agreed:false, nextAt:0};
 var QTimer = null;
 
 function segFill(t, r){
-  return fillTmpl(String(t).replace(/\{cat\}/g, r.cats[0] || "building materials"), r);
+  return fillTmpl(String(t).replace(/\{cat\}/g, r.cats[0] || "footwear"), r);
 }
 /* 按种子稳定地取数组中的一项（数字哈希，不能直接用 hash()，它返回的是 36 进制字符串） */
 function pickBy(arr, seed){
@@ -3565,14 +3571,14 @@ function bindUI(){
       if(act === "detail") openDetail(id);
       else if(act === "letter"){ gotoTab("letter"); buildLetter([r]); }
       else if(act === "wa"){
-        var num = digits(r.mobile).replace(/^0+/,"");
-        if(num.length < 8){ toast("该客户手机号不完整，无法打开 WhatsApp"); return; }
+        var num = waNumber(r);   /* 与「可直发」栏目同一套号码规范化：多号码自动取最优的一个 */
+        if(!num){ toast("该客户没有可用的 WhatsApp 号码，点 ☰ 可查看原始号码"); return; }
         window.open("https://wa.me/"+num, "_blank");
       }
       else if(act === "mail"){
         if(!r.mail.valid.length){ toast("该客户没有有效邮箱"); return; }
         var body = fillTmpl(S.tmpls[S.tmplIdx].body, r);
-        openMail(r.mail.valid[0], "Building materials supply from " + (S.myCompany || "China factory"), body);
+        openMail(r.mail.valid[0], "Footwear supply from " + (S.myCompany || "China factory"), body);
       }
       else if(act === "verify") verifyOne(r);
       return;
@@ -3755,7 +3761,7 @@ function bindUI(){
     var ma = e.target.closest("[data-mailgo],[data-mailcopy],[data-mailcp]");
     if(ma && CUR){
       var mto = ma.getAttribute("data-mailto");
-      var msu = "Building materials supply from " + (S.myCompany || "China factory");
+      var msu = "Footwear supply from " + (S.myCompany || "China factory");
       var mbd = fillTmpl(S.tmpls[S.tmplIdx].body, CUR);
       if(ma.hasAttribute("data-mailgo")) openMail(mto, msu, mbd);
       else if(ma.hasAttribute("data-mailcopy")) copyMailBlock(mto, msu, mbd);

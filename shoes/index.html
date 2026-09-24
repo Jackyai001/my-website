@@ -1415,10 +1415,17 @@ function waOf(r){
   if(!WA_CACHE[k]) WA_CACHE[k] = waCheck(r);
   return WA_CACHE[k];
 }
-/* 手机号规范化成 WhatsApp 可用的国际号码（去 +，供 wa.me 链接使用） */
+/* 手机号规范化成 WhatsApp 可用的国际号码（去 +，供下方 waUrl 拼接使用） */
 function waNumber(r){
   var c = waOf(r);
   return c && c.e164 ? c.e164.replace(/^\+/, "") : "";
+}
+/* WhatsApp 打开地址：国内网络普遍连不上 wa.me 短链，统一改用 web.whatsapp.com
+   （已登录 WhatsApp 网页版时会直接定位到该联系人的对话框，未登录则先扫码登录） */
+function waUrl(num, text){
+  var u = "https://web.whatsapp.com/send?phone=" + encodeURIComponent(num || "");
+  if(text) u += "&text=" + encodeURIComponent(text);
+  return u;
 }
 /* 列表里的 WhatsApp 可用性小标记 */
 function waBadge(r){
@@ -2545,7 +2552,7 @@ function openDetail(id){
     '</div>'+
     '<div class="sec"><h4>核验与联系入口</h4>'+
       '<div style="display:flex;gap:7px;flex-wrap:wrap">'+
-        (waNumber(r) ? '<a class="btn sm" href="https://wa.me/'+waNumber(r)+'" target="_blank" rel="noopener">WhatsApp 直聊（'+waNumber(r)+'）</a>' : '')+
+        (waNumber(r) ? '<a class="btn sm" href="'+waUrl(waNumber(r))+'" target="_blank" rel="noopener">WhatsApp 直聊（'+waNumber(r)+'）</a>' : '')+
         (r.mail.valid.length ?
           '<button class="btn sm p" data-mailgo="1" data-mailto="'+esc(r.mail.valid[0])+'">写邮件</button>'+
           '<button class="btn sm" data-mailcopy="1" data-mailto="'+esc(r.mail.valid[0])+'">复制邮件内容</button>'+
@@ -2962,7 +2969,7 @@ function openWaFor(r){
   var num = waNumber(r);
   if(!num){ toast("这条没有可用的 WhatsApp 号码"); return; }
   var m = buildOutMsg(r, "wa");
-  window.open("https://wa.me/" + num + (m.text ? ("?text=" + encodeURIComponent(m.text)) : ""), "_blank");
+  window.open(waUrl(num, m.text), "_blank");
   toast("已打开 WhatsApp（内容已预填），发完记得点「标记已联系」");
 }
 function openMailFor(r){
@@ -3442,7 +3449,7 @@ function openCurrent(){
   if(!it){ toast("队列里没有待处理的客户"); return; }
   if(it.state === "done"){ toast("这一条已标记为发送过了"); }
   if(Q.channel === "wa"){
-    window.open("https://wa.me/" + it.target + (it.msg ? ("?text=" + encodeURIComponent(it.msg)) : ""), "_blank");
+    window.open(waUrl(it.target, it.msg), "_blank");
   } else {
     openMail(it.target, it.subject, it.msg);
   }
@@ -3572,7 +3579,7 @@ function bindUI(){
       else if(act === "wa"){
         var num = waNumber(r);   /* 与「可直发」栏目同一套号码规范化：多号码自动取最优的一个 */
         if(!num){ toast("该客户没有可用的 WhatsApp 号码，点 ☰ 可查看原始号码"); return; }
-        window.open("https://wa.me/"+num, "_blank");
+        window.open(waUrl(num), "_blank");
       }
       else if(act === "mail"){
         if(!r.mail.valid.length){ toast("该客户没有有效邮箱"); return; }
@@ -3889,7 +3896,7 @@ function boot(){
     try{ localStorage.setItem = function(){}; }catch(e){}
     var _wo = window.open;
     window.open = function(u){
-      if(typeof u === "string" && (u.indexOf("wa.me") >= 0 || u.indexOf("mail") >= 0)){
+      if(typeof u === "string" && (u.indexOf("whatsapp.com") >= 0 || u.indexOf("mail") >= 0)){
         toast("只读演示版不会真的发送。正式版会逐个打开并自动填好收件人与正文，你点发送即可");
         return null;
       }

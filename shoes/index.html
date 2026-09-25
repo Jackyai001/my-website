@@ -1442,9 +1442,13 @@ function waTargetUrl(num, text){
   if(waModeId() === "wame") return "https://wa.me/" + encodeURIComponent(num || "") + (text ? ("?text=" + encodeURIComponent(text)) : "");
   return waUrl(num, text);
 }
-/* 统一入口：打开 WhatsApp。复用同一个窗口，避免每次点击都新开标签 ——
-   WhatsApp 网页版同一浏览器只允许一个活动窗口，多开会显示「已在另一窗口中打开」而定位不到客户 */
+/* 统一入口：打开 WhatsApp。复用上次打开的那个窗口（直接改它的地址），
+   避免每点一次都新开窗口 —— WhatsApp 网页版同一浏览器只允许一个活动窗口，
+   多开会显示「已在另一窗口中打开」而定位不到客户，看起来就像点了没反应。
+   注意：不能只靠 window.open(url, name) 复用，WhatsApp 网页版会把 window.name 清掉，
+   所以这里自己持有窗口引用。 */
 var WA_WIN = "jat_whatsapp";
+var WA_WIN_REF = null;
 function waClipboard(num, text){ return "+" + (num || "") + "\n\n" + (text || ""); }
 function openWaSend(num, text){
   if(waModeId() === "copy"){
@@ -1452,9 +1456,19 @@ function openWaSend(num, text){
     toast("已复制号码和内容：" + num + "。打开你的 WhatsApp，粘贴号码找到这个客户即可");
     return;
   }
-  var w = null;
-  try{ w = window.open(waTargetUrl(num, text), WA_WIN); }catch(e){}
-  if(!w){
+  var url = waTargetUrl(num, text);
+  if(WA_WIN_REF){
+    try{
+      if(!WA_WIN_REF.closed){
+        WA_WIN_REF.location.href = url;
+        WA_WIN_REF.focus();
+        return;
+      }
+    }catch(e){}
+    WA_WIN_REF = null;
+  }
+  try{ WA_WIN_REF = window.open(url, WA_WIN); }catch(e){ WA_WIN_REF = null; }
+  if(!WA_WIN_REF){
     copyText(waClipboard(num, text), true);
     toast("浏览器没有打开新窗口（可能被拦截），已把号码和内容复制到剪贴板，手动粘贴即可");
   }
@@ -1468,7 +1482,7 @@ function updateWaHint(){
   } else if(m === "wame"){
     el.innerHTML = "点「发」打开 <code>wa.me</code> 短链，手机上会直接跳进 WhatsApp App。注意：<b>国内电脑网络一般访问不了 wa.me</b>，电脑上建议用网页版。";
   } else {
-    el.innerHTML = "点「发」打开 <code>web.whatsapp.com</code> 并定位到该客户的对话框（第一次需要扫码登录一次）。<b>请只保留一个 WhatsApp 网页版窗口</b>，否则新窗口会提示「已在另一窗口中打开」、定位不到客户。";
+    el.innerHTML = "点「发」打开 <code>web.whatsapp.com</code> 并定位到该客户的对话框（第一次需要扫码登录一次）。程序会复用同一个 WhatsApp 窗口，<b>请不要在别处再手动开一个</b>；若窗口里出现「已在另一窗口中打开」，关掉多余的 WhatsApp 窗口，或把上面改成「只复制号码和内容」。";
   }
 }
 /* 列表里的 WhatsApp 可用性小标记 */

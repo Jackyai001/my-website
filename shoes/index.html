@@ -1510,7 +1510,7 @@ function updateWaHint(){
   } else if(m === "wame"){
     el.innerHTML = "点「发」打开 <code>wa.me</code> 短链，手机上会直接跳进 WhatsApp App。注意：<b>国内电脑网络一般访问不了 wa.me</b>，电脑上建议用网页版。";
   } else {
-    el.innerHTML = "点「发」打开 <code>web.whatsapp.com</code> 并定位到该客户的对话框（第一次需要扫码登录一次）。程序会复用同一个 WhatsApp 窗口，<b>请不要在别处再手动开一个</b>；若窗口里出现「已在另一窗口中打开」，关掉多余的 WhatsApp 窗口，或把上面改成「只复制号码和内容」。";
+    el.innerHTML = "点「发」会打开 <code>web.whatsapp.com</code> 并定位到该客户的对话框（第一次需要扫码登录一次）。<b>每点一次会新开一个 WhatsApp 窗口</b>：旧的那些会显示「已在另一窗口中打开」，忽略或关掉即可，<b>用最新打开的那个发送</b>。想彻底避免窗口叠加，把上面改成「只复制号码和内容」。";
   }
 }
 /* 列表里的 WhatsApp 可用性小标记 */
@@ -2836,6 +2836,9 @@ function fillTmpl(body, r){
     .replace(/\{myPhone\}/g, S.myPhone || "[电话/WhatsApp]")
     .replace(/\{myEmail\}/g, S.myEmail || "[邮箱]")
     .replace(/\{website\}/g, S.website || "")
+    /* 老版本模板里写的是 "{city}, China"，而 {city} 缺省就填 China，会拼出 "China, China"。
+       这里先吃掉那个多余的 ", China"，新旧模板都能正确渲染（用户浏览器里可能存着旧模板）。 */
+    .replace(/\{city\}, China/g, S.city ? (S.city + ", China") : "China")
     .replace(/\{city\}/g, S.city ? (S.city + ", China") : "China")
     .replace(/\{years\}/g, S.years || "10");
 }

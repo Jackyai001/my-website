@@ -512,7 +512,7 @@ tbody tr.sel td{background:var(--brand-l)}
 
 <nav class="tabs">
   <button class="tab on" data-page="list"><span class="ic">▤</span>客户名录</button>
-  <button class="tab" data-page="wa"><span class="ic">✓</span>WhatsApp 可直发</button>
+  <button class="tab" data-page="wa"><span class="ic">✓</span>WhatsApp 号码合规</button>
   <button class="tab" data-page="mail"><span class="ic">@</span>邮件可触达</button>
   <button class="tab" data-page="board"><span class="ic">◔</span>背调看板</button>
   <button class="tab" data-page="outreach"><span class="ic">✈</span>批量触达</button>
@@ -622,7 +622,7 @@ tbody tr.sel td{background:var(--brand-l)}
       <div class="fgroup">
         <h4>WhatsApp 号码校验</h4>
         <div class="pills" id="fWa">
-          <button class="pill" data-v="ok">✓ 可直发</button>
+          <button class="pill" data-v="ok">✓ 格式合规</button>
           <button class="pill" data-v="warn">⚠ 待核对</button>
           <button class="pill" data-v="none">— 无手机号</button>
           <button class="pill" data-v="bad">✕ 不可用</button>
@@ -693,15 +693,17 @@ tbody tr.sel td{background:var(--brand-l)}
   <div class="card" style="margin-bottom:14px">
     <div class="bd" style="padding:13px 18px">
       <div style="font-size:13px;color:var(--txt2);line-height:1.9">
-        <b style="color:var(--ink)">这里只放「号码校验通过、可直接用 WhatsApp 发送」的客户。</b>
+        <b style="color:var(--ink)">这里只放「手机号段明确、号码格式合规」的客户 —— 宁缺毋滥，无法保证的一律不放进来。</b>
         号码已按各国手机号规则补齐国际区号（例如泰国 <code>0844157383</code> → <code>+66844157383</code>），
-        点「发」会打开 WhatsApp 并自动填好内容。<b>发完记得点「标记已联系」</b>，方便下次不重复发。
+        并已剔除按号段判断的固话/公司总机。<br>
+        <span style="color:var(--warn)">已剔除的市场：<b>美国、加拿大、墨西哥、柬埔寨</b> —— 这些国家的手机与固话无法用号段区分，号码格式再对也可能只是公司总机，所以不放进合规名单（它们仍在「客户名录」里，标为"待核"）。<br>
+        <b>另外要说清楚：格式合规 ≠ 已注册 WhatsApp。</b>名录来自展会登记信息，可能包含已停用号码、员工离职后的号码、登记时填错的号码。任何本地软件都无法离线确认对方是否注册 —— 只有 WhatsApp 自己知道。遇到提示未注册的，点「跳过」换下一位即可。</span>
       </div>
     </div>
   </div>
   <div class="card">
     <div class="hd">
-      <span>✓ WhatsApp 可直发 <span class="muted" id="waPageInfo"></span></span>
+      <span>✓ WhatsApp 号码合规 <span class="muted" id="waPageInfo"></span></span>
       <div style="display:flex;gap:8px;flex-wrap:wrap">
         <select class="sel" id="waPageGrade" style="width:132px">
           <option value="">全部等级</option>
@@ -912,6 +914,9 @@ tbody tr.sel td{background:var(--brand-l)}
           <div><label class="lab">间隔下限（秒）</label><input class="inp" id="qGapMin" value="25"></div>
           <div><label class="lab">间隔上限（秒）</label><input class="inp" id="qGapMax" value="70"></div>
         </div>
+        <label class="lab">点「发」时如何打开 WhatsApp</label>
+        <select class="sel" id="qWaMode" style="margin-bottom:6px"></select>
+        <div class="hintline" id="qWaHint" style="margin-bottom:11px"></div>
         <label class="lab">我的收发邮箱（用来自动识别跳转哪个邮箱）</label>
         <input class="inp" id="qMyMail" placeholder="如 sales@yourcompany.com" style="margin-bottom:9px">
         <label class="lab">点「写邮件」时打开</label>
@@ -1216,11 +1221,11 @@ const WA_RULES = {
   "孟加拉国":{m:/^1[3-9]\d{8}$/,len:[10,10]},
   "斯里兰卡":{m:/^7\d{8}$/,len:[9,9]},
   "越南":{m:/^[35789]\d{8}$/,len:[9,9]},
-  "美国":{m:/^[2-9]\d{9}$/,len:[10,10]},
-  "加拿大":{m:/^[2-9]\d{9}$/,len:[10,10]},
+  "美国":{m:/^[2-9]\d{9}$/,len:[10,10],low:true,note:"美国/加拿大手机与固话无法用号段区分，号码即便格式正确也常是公司总机，未纳入合规名单"},
+  "加拿大":{m:/^[2-9]\d{9}$/,len:[10,10],low:true,note:"美国/加拿大手机与固话无法用号段区分，号码即便格式正确也常是公司总机，未纳入合规名单"},
   "俄罗斯":{m:/^9\d{9}$/,len:[10,10]},
   "埃及":{m:/^1\d{9}$/,len:[10,10]},
-  "蒙古":{m:/^\d{8}$/,len:[8,8]},
+  "蒙古":{m:/^[89]\d{7}$/,len:[8,8]},
   "中国办事处":{m:/^1[3-9]\d{9}$/,len:[11,11]},
   "巴基斯坦":{m:/^3\d{9}$/,len:[10,10]},
   "台湾":{m:/^9\d{8}$/,len:[9,9]},
@@ -1229,7 +1234,7 @@ const WA_RULES = {
   "卡塔尔":{m:/^[3567]\d{7}$/,len:[8,8]},
   "尼日利亚":{m:/^[789]\d{9}$/,len:[10,10]},
   "新加坡":{m:/^[89]\d{7}$/,len:[8,8]},
-  "巴西":{m:/^\d{10,11}$/,len:[10,11]},
+  "巴西":{m:/^\d{2}9\d{8}$/,len:[11,11]},
   "肯尼亚":{m:/^[17]\d{8}$/,len:[9,9]},
   "阿曼":{m:/^[79]\d{7}$/,len:[8,8]},
   "南非":{m:/^[678]\d{8}$/,len:[9,9]},
@@ -1248,8 +1253,8 @@ const WA_RULES = {
   "希腊":{m:/^69\d{8}$/,len:[10,10]},
   "叙利亚":{m:/^9\d{8}$/,len:[9,9]},
   "智利":{m:/^9\d{8}$/,len:[9,9]},
-  "柬埔寨":{m:/^[1-9]\d{7,8}$/,len:[8,9]},
-  "波兰":{m:/^\d{9}$/,len:[9,9]},
+  "柬埔寨":{m:/^[1-9]\d{7,8}$/,len:[8,9],low:true,note:"柬埔寨手机与固话号段接近、无法可靠区分，未纳入合规名单"},
+  "波兰":{m:/^[45678]\d{8}$/,len:[9,9]},
   "日本":{m:/^[789]0\d{8}$/,len:[10,10]},
   "约旦":{m:/^7\d{8}$/,len:[9,9]},
   "土耳其":{m:/^5\d{9}$/,len:[10,10]},
@@ -1267,11 +1272,11 @@ const WA_RULES = {
   "澳门":{m:/^6\d{7}$/,len:[8,8]},
   "新西兰":{m:/^2\d{7,9}$/,len:[8,10]},
   "捷克":{m:/^[67]\d{8}$/,len:[9,9]},
-  "匈牙利":{m:/^[237]\d{8}$/,len:[9,9]},
+  "匈牙利":{m:/^(20|30|31|50|70)\d{7}$/,len:[9,9]},
   "加纳":{m:/^[235]\d{8}$/,len:[9,9]},
   "埃塞俄比亚":{m:/^9\d{8}$/,len:[9,9]},
   "秘鲁":{m:/^9\d{8}$/,len:[9,9]},
-  "墨西哥":{m:/^1?\d{10}$/,len:[10,11]},
+  "墨西哥":{m:/^1?\d{10}$/,len:[10,11],low:true,note:"墨西哥手机与固话无法用号段区分，号码即便格式正确也常是公司总机，未纳入合规名单"},
   "玻利维亚":{m:/^[67]\d{7}$/,len:[8,8]},
   "津巴布韦":{m:/^7\d{8}$/,len:[9,9]},
   "厄瓜多尔":{m:/^9\d{8}$/,len:[9,9]},
@@ -1377,7 +1382,11 @@ function waGrade(country, cn, nat, full){
   if(full.length < 8 || full.length > 15)
     return {level:"bad", note:"号码位数异常（共 " + full.length + " 位），无法用于 WhatsApp"};
   if(rule){
-    if(rule.m.test(nat)) return {level:"ok", note:"格式正确，可直接用 WhatsApp"};
+    if(rule.m.test(nat)){
+      /* low:true 的国家（手机与固话无法用号段区分）不进「合规」名单，宁缺毋滥 */
+      if(rule.low) return {level:"warn", note: rule.note || "格式正确，但该国手机与固话无法区分，无法确认是否注册 WhatsApp，未纳入合规名单"};
+      return {level:"ok", note: rule.note || "号码格式合规，可尝试用 WhatsApp 发送（是否注册需在 WhatsApp 内确认）"};
+    }
     if(nat.length >= rule.len[0] && nat.length <= rule.len[1])
       return {level:"warn", note:"位数正确但不是手机号段，疑似固话（固话无法用 WhatsApp）"};
     return {level:"warn", note:"位数与" + country + "手机号常见位数不符，建议人工核对"};
@@ -1435,16 +1444,78 @@ function waOf(r){
   if(!WA_CACHE[k]) WA_CACHE[k] = waCheck(r);
   return WA_CACHE[k];
 }
-/* 手机号规范化成 WhatsApp 可用的国际号码（去 +，供 wa.me 链接使用） */
+/* 手机号规范化成 WhatsApp 可用的国际号码（去 +，供下方 waUrl 拼接使用） */
 function waNumber(r){
   var c = waOf(r);
   return c && c.e164 ? c.e164.replace(/^\+/, "") : "";
+}
+/* WhatsApp 打开地址：国内网络普遍连不上 wa.me 短链，统一改用 web.whatsapp.com
+   （已登录 WhatsApp 网页版时会直接定位到该联系人的对话框，未登录则先扫码登录） */
+function waUrl(num, text){
+  var u = "https://web.whatsapp.com/send?phone=" + encodeURIComponent(num || "");
+  if(text) u += "&text=" + encodeURIComponent(text);
+  return u;
+}
+/* 三种打开方式，可在「批量触达」里切换（不同网络环境适用的不一样） */
+var WA_MODES = [
+  {id:"web",  name:"WhatsApp 网页版（推荐，国内网络用这个）"},
+  {id:"wame", name:"wa.me 短链（手机端 / 能直连时用）"},
+  {id:"copy", name:"只复制号码和内容（最稳，自己粘贴）"}
+];
+function waModeId(){ return S.waMode || "web"; }
+/* 实际要打开的地址（按当前打开方式） */
+function waTargetUrl(num, text){
+  if(waModeId() === "wame") return "https://wa.me/" + encodeURIComponent(num || "") + (text ? ("?text=" + encodeURIComponent(text)) : "");
+  return waUrl(num, text);
+}
+/* 统一入口：打开 WhatsApp。复用上次打开的那个窗口（直接改它的地址），
+   避免每点一次都新开窗口 —— WhatsApp 网页版同一浏览器只允许一个活动窗口，
+   多开会显示「已在另一窗口中打开」而定位不到客户，看起来就像点了没反应。
+   注意：不能只靠 window.open(url, name) 复用，WhatsApp 网页版会把 window.name 清掉，
+   所以这里自己持有窗口引用。 */
+var WA_WIN = "jat_whatsapp";
+var WA_WIN_REF = null;
+function waClipboard(num, text){ return "+" + (num || "") + "\n\n" + (text || ""); }
+function openWaSend(num, text){
+  if(waModeId() === "copy"){
+    copyText(waClipboard(num, text), true);
+    toast("已复制号码和内容：" + num + "。打开你的 WhatsApp，粘贴号码找到这个客户即可");
+    return;
+  }
+  var url = waTargetUrl(num, text);
+  if(WA_WIN_REF){
+    try{
+      if(!WA_WIN_REF.closed){
+        WA_WIN_REF.location.href = url;
+        WA_WIN_REF.focus();
+        return;
+      }
+    }catch(e){}
+    WA_WIN_REF = null;
+  }
+  try{ WA_WIN_REF = window.open(url, WA_WIN); }catch(e){ WA_WIN_REF = null; }
+  if(!WA_WIN_REF){
+    copyText(waClipboard(num, text), true);
+    toast("浏览器没有打开新窗口（可能被拦截），已把号码和内容复制到剪贴板，手动粘贴即可");
+  }
+}
+function updateWaHint(){
+  var el = document.getElementById("qWaHint");
+  if(!el) return;
+  var m = waModeId();
+  if(m === "copy"){
+    el.innerHTML = "点「发」不会打开任何网页，只把客户号码和要发的内容复制到剪贴板，你自己在 WhatsApp 里找这个人粘贴。";
+  } else if(m === "wame"){
+    el.innerHTML = "点「发」打开 <code>wa.me</code> 短链，手机上会直接跳进 WhatsApp App。注意：<b>国内电脑网络一般访问不了 wa.me</b>，电脑上建议用网页版。";
+  } else {
+    el.innerHTML = "点「发」打开 <code>web.whatsapp.com</code> 并定位到该客户的对话框（第一次需要扫码登录一次）。程序会复用同一个 WhatsApp 窗口，<b>请不要在别处再手动开一个</b>；若窗口里出现「已在另一窗口中打开」，关掉多余的 WhatsApp 窗口，或把上面改成「只复制号码和内容」。";
+  }
 }
 /* 列表里的 WhatsApp 可用性小标记 */
 function waBadge(r){
   var wa = waOf(r);
   if(!wa) return "";
-  var m = wa.level === "ok" ? ["wok","✓ WhatsApp"]
+  var m = wa.level === "ok" ? ["wok","✓ 格式合规"]
         : (wa.level === "warn" ? ["wwarn","⚠ 待核"]
         : (wa.level === "none" ? ["wnone","— 无手机"] : ["wbad","✕ 不可用"]));
   var tip = wa.note + (wa.e164 ? "｜规范号码 " + wa.e164 : "");
@@ -1455,7 +1526,7 @@ function waDetail(r){
   var wa = waOf(r);
   if(!wa) return "";
   var cls = wa.level === "ok" ? "wok" : (wa.level === "warn" ? "wwarn" : (wa.level === "none" ? "wnone" : "wbad"));
-  var txt = wa.level === "ok" ? "可直发" : (wa.level === "warn" ? "待核对" : (wa.level === "none" ? "无手机号" : "不可用"));
+  var txt = wa.level === "ok" ? "格式合规（是否注册需在 WhatsApp 内确认）" : (wa.level === "warn" ? "待核对" : (wa.level === "none" ? "无手机号" : "不可用"));
   return '<div class="wadetail ' + cls + '"><b>WhatsApp 校验：' + txt + '</b>' +
     (wa.e164 ? '<br>规范号码：<span class="mono">' + esc(wa.e164) + '</span>' : '') +
     '<br>' + esc(wa.note) + '</div>';
@@ -1463,7 +1534,7 @@ function waDetail(r){
 /* 导出用的一列文字 */
 function waExport(r){
   var wa = waOf(r);
-  var t = wa.level === "ok" ? "可直发" : (wa.level === "warn" ? "待核对" : (wa.level === "none" ? "无手机号" : "不可用"));
+  var t = wa.level === "ok" ? "格式合规（未验证是否注册）" : (wa.level === "warn" ? "待核对" : (wa.level === "none" ? "无手机号" : "不可用"));
   return t + (wa.e164 ? "（" + wa.e164 + "）" : "") + "：" + wa.note;
 }
 
@@ -1963,7 +2034,7 @@ var FILTERS = {
 var TMPL_DEFAULT = [
   {name:"初次开发信（标准）", body:
 "Dear {contact},\n\n"+
-"Greetings from {myCompany}, a manufacturer of {myProducts} based in {city}, China. We have been exporting building materials for {years} years and are now expanding our buyer network in {country}.\n\n"+
+"Greetings from {myCompany}, a manufacturer of {myProducts} based in {city}. We have been exporting building materials for {years} years and are now expanding our buyer network in {country}.\n\n"+
 "I noticed your company ({company}) purchases {products}. Our products are a direct fit, and we can offer:\n"+
 "  - Factory-direct pricing with full export documentation\n"+
 "  - CE / ISO certified production, OEM and ODM available\n"+
@@ -1997,7 +2068,7 @@ function loadStore(){
   refreshDay();
   var def = {
     myCompany:"", myProducts:"", myName:"", myPhone:"", myEmail:"", website:"", city:"", years:"10",
-    tmplIdx:0, tmpls:JSON.parse(JSON.stringify(TMPL_DEFAULT)), mailMode:"auto"
+    tmplIdx:0, tmpls:JSON.parse(JSON.stringify(TMPL_DEFAULT)), mailMode:"auto", waMode:"web"
   };
   try{
     var saved = JSON.parse(localStorage.getItem(STORE_SET)||"null");
@@ -2569,7 +2640,7 @@ function openDetail(id){
     '</div>'+
     '<div class="sec"><h4>核验与联系入口</h4>'+
       '<div style="display:flex;gap:7px;flex-wrap:wrap">'+
-        (waNumber(r) ? '<a class="btn sm" href="https://wa.me/'+waNumber(r)+'" target="_blank" rel="noopener">WhatsApp 直聊（'+waNumber(r)+'）</a>' : '')+
+        (waNumber(r) ? '<button class="btn sm" data-wago="1">WhatsApp 直聊（'+waNumber(r)+'）</button>' : '')+
         (r.mail.valid.length ?
           '<button class="btn sm p" data-mailgo="1" data-mailto="'+esc(r.mail.valid[0])+'">写邮件</button>'+
           '<button class="btn sm" data-mailcopy="1" data-mailto="'+esc(r.mail.valid[0])+'">复制邮件内容</button>'+
@@ -2763,7 +2834,7 @@ function fillTmpl(body, r){
     .replace(/\{myPhone\}/g, S.myPhone || "[电话/WhatsApp]")
     .replace(/\{myEmail\}/g, S.myEmail || "[邮箱]")
     .replace(/\{website\}/g, S.website || "")
-    .replace(/\{city\}/g, S.city || "China")
+    .replace(/\{city\}/g, S.city ? (S.city + ", China") : "China")
     .replace(/\{years\}/g, S.years || "10");
 }
 /* ---------------- 邮件跳转：适配任意邮箱服务商，不依赖本机 mailto 设置 ---------------- */
@@ -3075,8 +3146,8 @@ function openWaFor(r){
   var num = waNumber(r);
   if(!num){ toast("这条没有可用的 WhatsApp 号码"); return; }
   var m = buildOutMsg(r, "wa");
-  window.open("https://wa.me/" + num + (m.text ? ("?text=" + encodeURIComponent(m.text)) : ""), "_blank");
-  toast("已打开 WhatsApp（内容已预填），发完记得点「标记已联系」");
+  openWaSend(num, m.text);
+  if(waModeId() !== "copy") toast("已打开 WhatsApp（内容已预填），发完记得点「标记已联系」");
 }
 function openMailFor(r){
   var to = r.mail.valid[0] || "";
@@ -3130,7 +3201,7 @@ function bindWorkbench(){
       rows.map(function(r){
         var n = NOTES[r.id] || {status:"未联系"};
         return [r.seq, r.buyer, r.country, r.contact, r.mobile, waOf(r).e164, r.score, r.grade, r.cats.join("、"), n.status];
-      }), "WhatsApp可直发清单")) toast("已导出 " + rows.length + " 条");
+      }), "WhatsApp号码合规清单")) toast("已导出 " + rows.length + " 条");
   };
   var e2 = $("#mailPageExport");
   if(e2) e2.onclick = function(){
@@ -3360,11 +3431,11 @@ function buildFilterOptions(){
 /* ---------------- 15. 批量触达：提取 / 差异化话术 / 半自动发送队列 ---------------- */
 /* WhatsApp 短消息模板：{cat} 为客户主要采购类目，其余变量同开发信 */
 var WA_TMPL = [
-  {n:"简洁问询", t:"Hello {contact}, this is {myName} from {myCompany}, a building materials factory in {city}, China. I see your company buys {cat}. We produce {myProducts} and supply importers in {country}. May I send you our catalogue and FOB price list?"},
+  {n:"简洁问询", t:"Hello {contact}, this is {myName} from {myCompany}, a building materials factory in {city}. I see your company buys {cat}. We produce {myProducts} and supply importers in {country}. May I send you our catalogue and FOB price list?"},
   {n:"展会跟进", t:"Hi {contact}, {myName} here from {myCompany}. We met at the Canton Fair (building materials). You are sourcing {cat} - we are a direct factory and can quote with CE / ISO certificates. Shall I share our price list here?"},
   {n:"卖点切入", t:"Hello {contact}. {myCompany} manufactures {myProducts}. For {country} importers we focus on two things: stable quality and on-time loading. As you purchase {products}, may I send a short catalogue with prices?"},
   {n:"问题式开场", t:"Hi {contact}, quick question - are you currently sourcing {cat} for the {country} market? I am {myName} from {myCompany}, a China factory making {myProducts}. If useful I can send our catalogue and best FOB prices."},
-  {n:"专业顾问式", t:"Dear {contact}, {myName} from {myCompany} ({city}, China). We supply {myProducts} to importers, contractors and distributors. Since your company works with {products}, I would like to send our specification sheet and price list for review. Would that be helpful?"},
+  {n:"专业顾问式", t:"Dear {contact}, {myName} from {myCompany} ({city}). We supply {myProducts} to importers, contractors and distributors. Since your company works with {products}, I would like to send our specification sheet and price list for review. Would that be helpful?"},
   {n:"短句低打扰", t:"Hello {contact}, {myName} from {myCompany} in China. We make {myProducts}. You buy {cat} - we can offer factory price with certificates. May I send the catalogue? Thank you."}
 ];
 /* 邮件主题轮换（正文复用「开发信」页里的模板，实现同一批客户不同措辞） */
@@ -3372,7 +3443,7 @@ var MAIL_SUBJ = [
   "{myProducts} supply for {company} - direct factory from China",
   "Regarding {cat} supply for the {country} market - {myCompany}",
   "{company}: factory-direct {cat} with CE / ISO, catalogue & price list",
-  "Cooperation on {cat} - manufacturer in {city}, China"
+  "Cooperation on {cat} - manufacturer in {city}"
 ];
 
 var Q = {channel:"wa", items:[], idx:0, agreed:false, nextAt:0};
@@ -3570,7 +3641,7 @@ function openCurrent(){
   if(!it){ toast("队列里没有待处理的客户"); return; }
   if(it.state === "done"){ toast("这一条已标记为发送过了"); }
   if(Q.channel === "wa"){
-    window.open("https://wa.me/" + it.target + (it.msg ? ("?text=" + encodeURIComponent(it.msg)) : ""), "_blank");
+    openWaSend(it.target, it.msg);
   } else {
     openMail(it.target, it.subject, it.msg);
   }
@@ -3698,9 +3769,9 @@ function bindUI(){
       if(act === "detail") openDetail(id);
       else if(act === "letter"){ gotoTab("letter"); buildLetter([r]); }
       else if(act === "wa"){
-        var num = digits(r.mobile).replace(/^0+/,"");
-        if(num.length < 8){ toast("该客户手机号不完整，无法打开 WhatsApp"); return; }
-        window.open("https://wa.me/"+num, "_blank");
+        var num = waNumber(r);   /* 与「可直发」栏目同一套号码规范化：多号码自动取最优的一个 */
+        if(!num){ toast("该客户没有可用的 WhatsApp 号码，点 ☰ 可查看原始号码"); return; }
+        openWaSend(num, buildOutMsg(r, "wa").text);
       }
       else if(act === "mail"){
         if(!r.mail.valid.length){ toast("该客户没有有效邮箱"); return; }
@@ -3884,6 +3955,13 @@ function bindUI(){
 
   /* ---------- 参展届数：详情里的快捷按钮（事件委托，只绑一次） ---------- */
   $("#dBody").addEventListener("click", function(e){
+    /* 详情里的 WhatsApp 直聊 */
+    var wag = e.target.closest("[data-wago]");
+    if(wag && CUR){
+      var wnum = waNumber(CUR);
+      if(wnum) openWaSend(wnum, buildOutMsg(CUR, "wa").text);
+      return;
+    }
     /* 详情里的写邮件 / 复制邮件内容 / 复制对方邮箱 */
     var ma = e.target.closest("[data-mailgo],[data-mailcopy],[data-mailcp]");
     if(ma && CUR){
@@ -3939,6 +4017,11 @@ function bindUI(){
   $("#qMailMode").onchange = function(){
     S.mailMode = this.value; saveStore(); updateMailHint();
     toast("写邮件将打开：" + this.options[this.selectedIndex].text);
+  };
+  var qWa = document.getElementById("qWaMode");
+  if(qWa) qWa.onchange = function(){
+    S.waMode = this.value; saveStore(); updateWaHint();
+    toast("点「发」时：" + this.options[this.selectedIndex].text);
   };
   var qMy = document.getElementById("qMyMail");
   if(qMy){
@@ -3999,6 +4082,16 @@ function syncSettingsUI(){
   }
   var qmm = document.getElementById("qMyMail");
   if(qmm) qmm.value = S.myEmail || "";
+  var qw = document.getElementById("qWaMode");
+  if(qw){
+    if(!qw.options.length){
+      qw.innerHTML = WA_MODES.map(function(p){
+        return '<option value="' + p.id + '">' + esc(p.name) + '</option>';
+      }).join("");
+    }
+    qw.value = S.waMode || "web";
+  }
+  updateWaHint();
   updateMailHint();
 }
 function copyText(t, quiet){
@@ -4024,7 +4117,7 @@ function boot(){
     try{ localStorage.setItem = function(){}; }catch(e){}
     var _wo = window.open;
     window.open = function(u){
-      if(typeof u === "string" && (u.indexOf("wa.me") >= 0 || u.indexOf("mail") >= 0)){
+      if(typeof u === "string" && (u.indexOf("whatsapp.com") >= 0 || u.indexOf("wa.me") >= 0 || u.indexOf("mail") >= 0)){
         toast("只读演示版不会真的发送。正式版会逐个打开并自动填好收件人与正文，你点发送即可");
         return null;
       }

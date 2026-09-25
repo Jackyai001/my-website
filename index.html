@@ -732,9 +732,12 @@ tbody tr.sel td{background:var(--brand-l)}
   <div class="card" style="margin-bottom:14px">
     <div class="bd" style="padding:13px 18px">
       <div style="font-size:13px;color:var(--txt2);line-height:1.9">
-        <b style="color:var(--ink)">这里只放「邮箱格式校验通过、可发开发信」的客户。</b>
-        点「写邮件」会用你设定的邮箱打开写邮件窗口并预填收件人、主题、正文。
-        <span style="color:var(--warn)">邮件群发的封禁风险比 WhatsApp 高，请先看使用指南里「邮件触达的安全节奏」那一节。</span>
+        <b style="color:var(--ink)">每封邮箱都已核查过，按「宁缺毋滥」分三种：✓ 已核验 / ✗ 不可用邮件 / ⚠ 待确认。</b>
+        默认只显示<b>已核验</b>的（右上角下拉可切换查看不可用、待确认的）。点「写邮件」会用你设定的邮箱打开写邮件窗口并预填收件人、主题、正文。<br>
+        <span style="color:var(--warn)">· <b>已核验</b>：算过对方域名的邮件服务器（MX 记录）确实存在，能收信 —— 但这只代表<b>域名能收信</b>，不代表这个邮箱地址还有人在用（对方离职、邮箱停用只能靠发一封信看是否退信）。<br>
+        · <b>不可用邮件</b>：对方域名根本不存在、或没有邮件服务器，发出去必然退信，建议直接跳过。<br>
+        · <b>待确认</b>：查询没拿到可靠结果（网络超时等），可以重查；新导入的客户如果没有核查记录也会落在这里。<br>
+        邮件群发的封禁风险比 WhatsApp 高，请先看使用指南里「邮件触达的安全节奏」那一节。</span>
       </div>
     </div>
   </div>
@@ -747,8 +750,12 @@ tbody tr.sel td{background:var(--brand-l)}
           <option value="A">仅 A 级优先</option>
           <option value="AB">A + B 级</option>
           <option value="corp">仅企业邮箱</option>
+          <option value="mxok" selected>仅已核验可收信（推荐）</option>
+          <option value="mxbad">仅不可用邮件</option>
+          <option value="mxunk">仅待确认</option>
           <option value="todo">仅未联系过的</option>
         </select>
+        <button class="btn sm" id="mailPageVerify">核查本页邮箱域名</button>
         <button class="btn sm" id="mailPageExport">导出清单（CSV）</button>
       </div>
     </div>
@@ -757,7 +764,7 @@ tbody tr.sel td{background:var(--brand-l)}
         <table>
           <thead><tr>
             <th>采购商</th><th>国家</th><th>联系人</th><th>邮箱</th>
-            <th>邮箱类型</th><th>等级</th><th>跟进状态</th><th>操作</th>
+            <th>邮箱类型</th><th>域名核查</th><th>等级</th><th>跟进状态</th><th>操作</th>
           </tr></thead>
           <tbody id="mailPageBody"></tbody>
         </table>
@@ -941,6 +948,21 @@ tbody tr.sel td{background:var(--brand-l)}
     <div class="mf">
       <button class="btn" id="riskCancel">取消</button>
       <button class="btn p" id="riskOk" disabled>确认并开始</button>
+    </div>
+  </div>
+</div>
+
+<!-- 首次写邮件：让你选一次用哪个邮箱发，之后记住，避免点了毫无反应 -->
+<div class="modal" id="modalMail">
+  <div class="box" style="max-width:540px">
+    <div class="mh">📮 用哪个邮箱发这封邮件？</div>
+    <div class="mb">
+      <div class="hintline" style="margin-bottom:10px">你还没设置自己的发信邮箱，程序没法自动判断该打开哪个网页邮箱。选一个 —— 程序会记住，以后点「写邮件」就直接打开写好的邮件窗口，不需要再选。</div>
+      <div id="mailPick" style="display:flex;flex-direction:column;gap:7px"></div>
+      <div class="legalnote">选完可以随时在「批量触达 → 点『写邮件』时打开」里改。选「只复制内容」不会打开任何网页。</div>
+    </div>
+    <div class="mf">
+      <button class="btn" id="mailPickCancel">取消</button>
     </div>
   </div>
 </div>
@@ -1746,6 +1768,10 @@ function emailsOf(s){
   return String(s).split(/[;,\s]+/).map(function(x){ return x.trim(); })
     .filter(function(x){ return x.indexOf("@") > 0 && x.length > 5; });
 }
+/* 邮箱域名离线核查结果（构建时由 build.ps1 从 _mx.tsv 注入）：域名 -> ok / nomail / nx / unk
+   ok=已核验可收信；nomail=域名存在但没有邮件服务器；nx=域名不存在；unk=查询不到、需人工确认
+   没被注入过时是空对象，所有邮箱都会显示"待确认（未核查）" */
+var MX_DATA = {"swissbuild.co.za":"ok","bati-coffrage.com":"ok","yahoo.comnaria":"nx","parkrosegroup.cl":"ok","aesbrasil.org":"nomail","quarzite.biz":"ok","stonetoolsandchemical.com":"nx","tritonstone.com":"ok","maderasmiguelanez.com":"ok","ociamericas.com":"ok","ups-scs.com":"ok","conkling.com":"ok","rasassociates.com.bd":"nx","dbig.us":"ok","porcelanosa.com":"ok","atemshop.com.ua":"ok","palaunet.com":"ok","location.com.eg":"nx","ftc.com.sa":"ok","almuntaha-gtc.com":"ok","vrrbuilders.com":"ok","oliso.com":"ok","vincecompany.fr":"nx","ghanatel.com.gh":"ok","margiparts.com.br":"nx","alnukaly.com":"nomail","vsnl.net":"ok","idealtile.com":"ok","landmark.com.mm":"nx","borderconcepts.com":"ok","yaboo.com":"ok","jpnco.com":"nomail","dostteknik.com":"ok","grahaputrapersada.com":"ok","timber2udirect.co.uk":"ok","kanyonghomestore.com":"nx","mprugs.com":"ok","live.fae.edu":"nx","africaonline.com.gh":"ok","persiantile.co.za":"ok","promomasse.com":"ok","kessler.co.za":"ok","uralita.com":"ok","riwowa.co.za":"nx","cunsac.com":"ok","arquigeos.cl":"nx","online.com.kh":"ok","netvigator.com":"ok","euroluxeinteriors.com":"ok","jahzeeltechnologiesltd.com":"nx","omantel.net.om":"ok","ninex.co.in":"ok","matriximportexport.com":"nx","europlex.ca":"ok","filinvestcity.com":"ok","achilleosdevelopers.com":"nx","limahubstudio.com":"ok","ms19.hinet.net":"nomail","promenade.com.my":"ok","lndo.netid":"nx","morabbae.com":"nx","hotmail.ru":"ok","soudal.ru":"ok","amauta.rcp.net.pe":"ok","powerlineimports.com":"ok","deltacare-ltd.com":"ok","proted.tk":"nx","hotmail.com.au":"ok","telia.com":"ok","hongkong.com":"ok","essentium.com":"ok","ahlajawksa.com":"nx","dantechsb.com":"ok","chinyoungkorea.com":"ok","hebronet.com":"ok","casacuisine.ma":"nx","melsa.net.id":"ok","agafencing.com.au":"ok","talebgroup.com":"ok","wahfoxbm.com":"nx","schotterwerk-schmitt.de":"ok","msn.com":"ok","pvsinternational.com":"ok","nobd.no":"ok","meiton.com.hk":"ok","graniteimporters.com":"ok","sedia-system.co.jp":"ok","easy.co.mz":"ok","modern-impex.com":"nx","ms17.hinet.net":"nomail","precisionpoint.ph":"ok","echousedecor.com.br":"nx","demi-eune.md":"nx","pgrhweg.poe":"nx","bschk.com.cn":"ok","aon.at":"ok","gen-americas.com":"nx","empirestaple.com":"ok","hotmail.fr":"ok","pavimat.pt":"ok","hansgrohe.com":"ok","vinmartgroup.com":"ok","marmodom.eu":"ok","pebsteel.com.vn":"ok","acracing.com.pa":"ok","motion-ind.com":"ok","stiler.com.uy":"ok","mirceramiki.kz":"ok","amai.hr":"ok","radhikaimpex.com":"nx","villamo.am":"nx","vastuvita.com":"ok","optonline.com":"ok","orange.je":"nomail","necoflex.le":"nx","pansar.com.my":"ok","fliseborsen.dk":"ok","gorgia.ge":"ok","alif.co.za":"ok","paratech.co.kr":"ok","zaker.ae":"nx","netsys.am":"ok","vsnl.com":"nomail","df.ru":"ok","lprimus.com.au":"nx","kingfisher.com":"ok","alandalusia.net":"ok","dane-wood.com":"ok","carrelagesimport.com":"ok","epls.ca":"ok","falconfreight.com":"ok","adimag.ro":"ok","geagroupargentina.com.ar":"ok","bas.lublin.pi":"nx","bigpond.net.au":"ok","designplusitalia.it":"nx","3homee.co.uk":"ok","leeuwerik.nl":"ok","soc.mr":"nx","global-stone.co.uk":"ok","abmcosmos.com":"ok","binayed.com.sa":"ok","legendprojects.com.au":"ok","ciudad.com.ar":"ok","ctm.co.za":"ok","dhivehinet.net.mv":"ok","grupogaltier.com.br":"ok","medihdsa.com":"nx","mail.bg":"ok","livollagranito.com":"ok","speedy.com.pe":"ok","retile.ru":"ok","universalgroup.asia":"ok","ukstoneimports.com":"ok","californiatilesupply.net":"ok","msa.hinet.net":"nomail","hadjez-dz.com":"nx","terrazzco.com":"ok","dowi.nl":"ok","cbntrade.com":"ok","eurotopas.it":"nx","qtgranite.com":"nx","royalstone.ru":"ok","ferreiras.co.za":"ok","zurn.com":"ok","coastal-tile.com":"ok","acehardware.com":"ok","colormaster-plitka.ru":"nx","shazan.sa":"nx","corfingt.com":"nx","lhermetique.com":"ok","internet.gr":"ok","homehardware.ca":"ok","kwah.com":"ok","pusheshkar.com":"nomail","marolith.be":"ok","lbiz.com.sa":"nx","mclafrica.com":"nx","dobthebuilder.ca":"nx","lmaginci.com":"nx","nbi.co.id":"ok","sofiaglobaltrading.com":"ok","sympatico.ca":"ok","tpg.com.au":"ok","yahoo.co.in":"ok","faloconfreight.com":"nx","beograd.com":"ok","mcor.com.my":"ok","demex.cl":"ok","liliana.com.ar":"ok","mcc-healthcare.com":"ok","icloud.com":"ok","hotmail.my":"ok","mstimber.com":"ok","rjemithantimberframe.com":"nx","yandez.ru":"ok","hcm.fpt.vn":"ok","el-nor.com":"nx","axxent.ca":"ok","sket-ind.com":"ok","romatileny.com":"ok","emirates.net.ae":"ok","principal.com.pk":"ok","telfords.le":"nx","avex.kz":"ok","email.com":"ok","cti-web.com":"nomail","grupopueblo.com.py":"ok","marjantileco.com":"ok","ccargo.com.ua":"ok","qflow.com.au":"ok","fortfio.com":"nomail","sekennedy.le":"nx","intnet.mu":"ok","epm.net.co":"nomail","northlion.com":"ok","ptalamsejatipersada.com":"nx","ntg-china.com":"ok","worldforest.com":"ok","goldmyne.biz":"nx","arkea.net":"nx","comptonsales.com":"ok","durgatimber.com":"ok","wellviewuniversal.net":"ok","gema-intan.com":"nx","krishlingerie.com":"nx","newellroofing.com":"ok","cypresssky.com.hk":"nx","idealrailings.com":"ok","gsbmco.com":"nx","dejonghandelsonderneming.nl":"ok","nasrallahjo.com":"nx","milamequipmentsales.com":"ok","brimat.cl":"ok","gmx.com":"ok","carmelimports.com":"ok","yahoo.frimmotaissir":"nx","uniaoguarezi.com.br":"ok","aregalcorp.com":"nx","alascorpca.com":"ok","ittspain.com":"ok","po.jaring.my":"ok","eircom.net":"ok","quietrock.com":"ok","mptmail.net.mm":"ok","frontsite.se":"ok","elmcindia.org":"ok","arcafer.com.br":"ok","ashokafoam.com":"ok","sca.com":"ok","domaterialis.gr":"ok","lccnet.cm":"nx","interrausa.com":"ok","palnet.com":"ok","vsnl.co":"nx","mac.com":"ok","lnlkenya.com":"ok","italtile.co.za":"ok","doe.com":"ok","whyteavelandscaping.ca":"ok","hyundai-dvp.com":"ok","mcconstruction.com":"ok","alnafie-steel.com":"ok","miroadrubber.com":"ok","centrin.net.id":"ok","epicentrk.cn":"ok","adimplywood.com":"ok","lntnet.dj":"nx","westpennhardwoods.com":"ok","macau.ctm.net":"ok","panneauxdumaghreb.com.tn":"ok","ya.ru":"ok","inductoserve.co.za":"ok","atmotile.co.za":"ok","woodgateindustries.com":"ok","avieiros.com":"ok","linklineproducts.com":"nx","gtcasahouse.com.br":"nx","housespace.com.au":"nx","designs-ceramica.com":"ok","sefcertrading.com":"nomail","gibbsanddandy.com":"ok","impulmedicos.com":"ok","businesslinks.biz":"nx","frontiertimberproducts.com.au":"nx","abv.bg":"ok","racclumber.com":"ok","shawafinti.com":"nx","poczta.onet.pi":"nx","atomicintl.com":"ok","hydroteh-cotp.com":"nx","sethsothy.com":"nx","kcp.co.in":"ok","kiswire.com":"ok","vsni.com":"ok","adaptimpex.com":"nx","mobikom.com":"ok","admediatech.com":"nomail","sebastiendubois.be":"ok","baltparma.it":"nx","kimexsro.cz":"ok","abctanzania.com":"ok","multec.com.au":"ok","ec.co.th":"ok","secproject.eu":"nx","fathallagomla.com.sg":"nx","capcocpd.le":"nx","aryava.com":"ok","online.no":"ok","casavivaconcepts.com":"ok","hysko.net":"ok","around.pt":"ok","paketiko.ru":"ok","lndosatnet.id":"nx","qualityp.com.au":"ok","lsolith.com":"nx","artifacts.ws":"ok","lmports-int.com":"nx","ivgroup.com.my":"ok","algeaidyest.com":"ok","yahoo.com.au":"ok","benhurtrading.com":"ok","snnp.co.th":"ok","cresplus.com":"ok","sinfo.net":"nomail","avs.dn.ua":"ok","mail.ru":"ok","newprogress.mn":"ok","vnn.vn":"ok","riddhisiddhient.com":"ok","lol.le":"nx","gatestreet.ca":"ok","printronixindia.com":"nx","solaoyetayo.com":"ok","benlatina.cl":"ok","supremealuminium.co.za":"ok","cavierindia.com":"ok","bijoy.net":"ok","muku-flooring.com":"ok","akvilon.ua":"ok","rangeautomotive.com":"ok","topquin.com":"ok","mail.com":"ok","sodisco.com":"ok","digebis.com":"ok","riadtile.com":"ok","girisha.com.sg":"ok","thede-witte.de":"ok","bit.ly":"ok","premier-egy.com":"ok","asemaneh.com":"ok","gsvickers.co.za":"ok","parkconstruccion.cl":"nx","pacificrimpromotions.com":"ok","primewestproperties.com":"ok","prostostroim.kiev.ua":"nx","lucretiatiles.com":"ok","ineo-design.com":"nx","squarecirclesanitary.co.za":"ok","rbsp.ru":"ok","ldlservices.es":"nx","poliplast.com.co":"ok","woodandstones.nl":"ok","easybuildgroup.co.za":"ok","balahmargroup.com":"ok","deemasglobalinc.ca":"ok","redepp.com":"ok","futuremedia.sk":"ok","streamyx.com":"ok","jengajenga.co.tz":"nx","tradealternatives.com":"ok","agoratec.gr":"ok","maxus.com.ua":"ok","millennium-bs.ae":"ok","veneziastone.com":"ok","lnmorexport.com":"nx","canusawood.com":"ok","bfmetalcorp.com":"ok","takogmetall.no":"ok","pacific.net.id":"ok","infodiscounttunisia.com":"nx","vistagroundworks.com":"nx","scenter.com.br":"ok","homeleighgroup.co.uk":"ok","sina.com.cn":"ok","gmx.de":"ok","alejaz.net":"ok","adifsas.com":"ok","redwoodtrading.net":"nx","magicnet.mn":"ok","cyber.net.pk":"ok","hooddistribution.com":"ok","pirandello.ca":"nx","emartgroup.com":"ok","karagianni.com":"ok","teakwork.gr":"ok","rw.co.za":"ok","qalis.com.hk":"nx","kiponodos.gr":"ok","tilenstyle.co.tz":"ok","rediffimail.com":"ok","showood.gr":"ok","prominentqatar.com":"nomail","tm.net.my":"nx","hemsglobal.com.au":"ok","albmail.com":"ok","taxtranltd.com":"ok","lecomptoir.ma":"ok","essentiaenvironments.com":"ok","ajaholding.com":"ok","africaonline.co.ke":"ok","tecnolatinaar.com":"nx","vto.donetsk.ua":"nx","rammalsquare.com":"nx","conwoodproducts.com":"ok","vibranic.com":"ok","winners-sy.com":"ok","sanwai.cn":"ok","prs.be":"ok","sunday.com":"ok","marcoboni.com.br":"ok","ria.hr":"ok","att.net":"ok","cbcamerica.com":"ok","pldtdsl.net":"ok","yahoo.cn":"ok","hermanosherrero.es":"ok","idc.sc":"ok","dutadharma-elektrindonusa.co.id":"nx","thekrrishgroup.com":"ok","net.et":"nx","pancera.com.vn":"ok","dnclaudiamoloabi.com":"nx","designbureau.ge":"ok","biteccont.com.vn":"nx","cbn.net.id":"ok","skdconsultants.com":"ok","dingcheong.com.hk":"nx","amazingtiles.com.au":"ok","lhammerich.dk":"nx","spialliance.com":"nx","lomanaworld.com":"nomail","sansoxygen.com":"ok","bridalheart.com":"ok","globalaccess.com.br":"nx","tramargroup.co.uk":"ok","legnoferro.com":"nx","euroaquappr.com":"ok","calaminascondor.com":"ok","domkeramiki.ua":"nx","jcco.com.au":"ok","abstgroup.com":"ok","vadjo.com":"ok","jetcoms.net":"ok","amlak.am":"nx","ecdge.com":"ok","racsa.co.cr":"ok","msa.hinet":"nx","parkerlogan.com.au":"ok","laminox.com":"ok","cotecarrelage.com":"nx","epicentrk.com.ua":"ok","thekweniplastics.co.za":"ok","harborfreight.com":"ok","braniganint.le":"nx","jktile.co.bw":"ok","sarey.cl":"nx","euregio-steen.ni":"nx","interface.com":"ok","peakrock.com":"ok","lathams.co.uk":"ok","grupoconstruyesa.com.co":"nx","wanadoo.fr":"ok","orange.jp":"nx","ltwbrands.com":"nx","dropoffice.com.ua":"ok","ksn-info.com":"nx","yahoo.com.mx":"ok","wp.pl":"ok","newoverseas.com.tw":"ok","faresce.com":"nx","centralpark.in":"ok","hawthorntimber.co.uk":"ok","zajil.net":"nomail","kohbrothers.com":"ok","pintuco.com":"ok","kepter.kz":"nx","sedeyn.be":"ok","comtradsourcing.com":"ok","arquitecturayestilo.com.bo":"nx","yahoo.es":"ok","lnbox.ru":"ok","arj.com":"ok","qq.com":"ok","acec-ca.com":"nomail","axelero.hu":"ok","ecofloor.gr":"ok","unikconstructions.com.au":"ok","dantzler1865.com":"ok","atco.com.sa":"ok","s-v-c.com":"ok","instore.cl":"ok","sinyuanasia.com":"ok","canny.com.au":"ok","skynet.be":"ok","dofny.be":"ok","viabcp.com":"nx","lam.net.ma":"nx","fowles.com.au":"ok","gpftrade.com":"nomail","oldroyd.no":"ok","cofnant.com":"nomail","germantimber.net":"ok","mipower.co.za":"ok","anastona.com":"nx","americas.ci":"nx","hotelwangara.net":"nx","paradigmhotelsgroup.com":"ok","anantresources.in":"ok","bhlangkor.com":"ok","tfl-gr.com":"ok","kdevelopment.biz":"ok","cochezycia.com":"ok","yahoo.com.cn":"ok","yemen.netye":"nx","carrieres-debras.be":"nx","alrashedbm.com":"ok","codelco.cl":"ok","glstonetile.com":"ok","wanadoo.mg":"nx","maestro.com.pe":"ok","terapalvelu.fi":"ok","riconstone.com":"ok","byrdtile.com":"ok","t3services.com":"ok","kulturbeslag.se":"ok","mitonstone.cz":"nx","5oceanos.net":"nx","drieplex.nl":"ok","sandtontilewarehouse.co.za":"ok","gmail.cam":"nx","live.co.uk":"ok","ka.com.sg":"ok","napavas.com":"ok","lah.co.ae":"nx","telenet.et":"nx","repregeneca.com":"ok","kiindustries.com":"ok","sailantrading.com":"ok","lulurayyan.com":"ok","gmaill.com":"nx","texturas.com.mx":"nx","innowood.com.au":"ok","winkuae.com":"nx","jagdevtrading.com":"ok","163.com":"ok","ghana.com":"ok","svitonline.com":"ok","arab-merchants.com":"nomail","setif-forja.com":"nx","metalgroup.am":"ok","scale.com.pt":"ok","engineer.com":"ok","live.com.au":"ok","hotmail.com":"ok","nomin.net":"ok","metac.co.za":"ok","139.com":"ok","hardwaresuppliers.ca":"ok","vibuma.com":"ok","postmaster.co.uk":"ok","trencor.co.sz":"ok","infodema.cl":"ok","radmilgroup.rs":"ok","htcele.vn":"nx","dreamdecor.com.br":"ok","teichmannsteel.co.za":"ok","fiesp.org.br":"ok","ver-ona.com":"ok","bathroomgalleries.com":"ok","loulina.ca":"ok","qualitynet.net":"ok","hardwareandglass.com":"ok","alarabia.so":"ok","hakametalworks.com":"ok","polbox.pl":"ok","cathenes.com":"ok","newincompany.com":"nomail","socabeg.sn":"ok","thebesttileco.co.za":"nx","coastalbuilding.com":"ok","alaeddin.ir":"nx","gentexenterprises.com":"ok","mc2k.no":"ok","syntec.ni":"nx","inter.net.ii":"nx","rinox.in":"ok","aliyun.com":"ok","dir.bg":"ok","boudl.com":"ok","ubangitimber.co.uk":"ok","andesseguridad.com":"ok","menard-inc.com":"ok","dnet.netid":"nx","remake.co.za":"ok","winwin-bm.com":"nx","tflas.no":"ok","superceramica.ro":"nx","vjmarcons.com":"ok","multilinkqatar.com":"ok","owenscorning.com":"ok","home.com":"ok","sbit.com.np":"ok","ecotech.com.br":"nx","allmarblegranite.com":"ok","bbbm.ae":"nx","cwpanama.net":"ok","qatar.net.qa":"ok","gpl.le":"nx","miplgroup.in":"ok","rsfsg.com":"ok","mototrading.gr":"nx","mail.1.materialogmaling.no.co":"nx","scanvic.com":"ok","shelamin.com.pt":"ok","simpply.us":"nx","tanphujsc.vn":"ok","mercadodapedra.com":"ok","metrogaisano.com":"ok","mig1991.bg":"ok","ryc.tie.cl":"ok","aberpaulconstruction.co.ke":"nx","duna.com.tr":"ok","ldoud.com":"nx","alishanblinds.com":"nx","segahk.com":"ok","jettadam.dk":"nx","gotechnomedia.com":"ok","jewe.hu":"ok","ottomruttu.com":"ok","ecojute.ru":"ok","brain.net.pk":"ok","hemannschmidt.de":"nx","eastmanimpex.com":"ok","mdcareproviders.com":"ok","capitalstitch.cn":"nx","ldealbathroom.le":"nx","electro.kherson.ua":"ok","c-ofpower.com":"ok","vistaland.com.ph":"ok","glorytop.com.hk":"ok","eurotile.ca":"nomail","alotatile.com":"ok","granitworld.dk":"ok","planet.ni":"nx","ameduliege.com":"ok","xaignavong.com":"ok","goodguysgroup.com.au":"nx","asltd.ramco-group.com":"nx","bssoman.com":"ok","sanmarcoiasi.ro":"ok","dematch-design.com":"nx","tradelinxltd.com":"nx","jfomarketsupply.com":"nx","otenet.gr":"ok","tiles4all.co.za":"ok","hotmail.comftaaalsadi":"nx","completeceilings.in":"ok","consultant.com":"ok","nfonegocio.net.pe":"nx","interstroi.com":"ok","ymail.com":"ok","excelpd.com":"ok","isb.lk":"ok","comcast.net":"ok","nme.com":"ok","kiadarya.com":"ok","yritys.tpo.fi":"ok","menara.ma":"ok","softwoodlumberboard.org":"ok","meharsurgicalsuppliers.com":"nx","ckkhome.com":"ok","kc.epicentrk.com":"nx","thecompakcompaniesllc.com":"ok","lec.co.in":"nx","strataforest.com":"ok","alliedbuilding.com":"ok","malimawood.com":"nx","loilelectronic.com":"nx","terracorp.ru":"ok","dhiwill.com":"nx","zinatex.com":"ok","nkh.sg":"ok","xuite.net":"ok","pacific-stones.com":"nx","rialto.by":"ok","payungemas.com":"ok","valcoindia.com":"ok","kemplitka.ru":"ok","lintel.asia":"nx","inno-lel.com":"nx","acec-sa.com":"ok","in.thomascook.com":"nx","samahcenter.com":"ok","expoceramicacr.com":"ok","corralonelmercado.com":"ok","cybersoft-intl.com":"ok","eastinvest.com.mv":"ok","metrostonerich.com":"ok","fdhouse.com.tw":"nx","ms10.ur1.com.tw":"nx","sbmtx.com":"ok","shelerl.ru":"nx","tya.com.mx":"ok","seifert.be":"nomail","holgera.dk":"nx","tekcom.vn":"ok","balamar.com":"ok","primesourcebp.com":"ok","hvcons.com":"ok","waadhee.com.mv":"nx","nikkoam.com":"ok","detilesmosics.com":"nx","yahoo.co.ld":"nx","grupodeinsa.com":"nx","legrandpenthouse.net":"nx","depotelas.com":"ok","dhamam.com":"ok","mcgregor-hardware.com":"ok","aircom.net":"ok","webcity.ca":"ok","floordesign.ma":"ok","swiftbd.com":"ok","sami-an.com":"ok","toptech.com.hk":"ok","albaddadholding.com":"ok","vidaltrading.com":"nx","zuunmod.gov.mn":"nx","placarpel.com":"ok","impactimportsusa.com":"ok","brightchance.net":"nx","bramex.com.br":"ok","gis.com.mx":"ok","cytanet.com.cy":"ok","herrljunga.dk":"ok","rimbathroomproducts.com":"nx","hstchk.com":"ok","stonehouseip.com":"nx","seznam.cz":"ok","starplusbd.net":"nx","fixationspremier.com":"nx","alconnconstructions.com":"nx","jstradeagency.com":"ok","breithaupt.com.br":"ok","abms.me":"ok","amcontracting.net":"ok","akisol.ni":"nx","antiquitiesimports.com":"ok","sdicgroup.com":"ok","inco.com.lb":"ok","firstdutchbrands.co.za":"ok","efacilitar.com.br":"nx","afrikanaturstein.de":"ok","handleco.co.za":"ok","casabellalifestyle.com":"nx","epodex.am":"ok","sethisteel.com":"nomail","bandders.com":"ok","codeprim.com":"ok","chinachambemexico.org":"nx","tkt.uz":"nomail","grandproduct.com":"ok","maxcomfort.ge":"ok","saneem.com.qa":"ok","globalmetal.company":"ok","adari.com.pl":"ok","europeancabinets.com":"ok","chesapeakeplywood.com":"ok","cardis.com":"ok","coamcontratistas.com":"ok","alassalmanpower.com":"ok","jmail.com":"nomail","asu-property.com":"ok","ancla-asia.com":"ok","stonesking.com":"nomail","thyssenkrupp.com":"ok","chryso.com":"ok","gmail.com":"ok","akdo.com":"ok","azarshahab.com":"ok","nie.ac.in":"ok","ochromagroup.com":"ok","dimension-3.net":"nx","asiaraya.com":"ok","jedar.ae":"ok","soxonline.com":"ok","majesticmarbleimport.com":"nx","bangla.net":"ok","deere.com":"ok","arklowbuildingsupplies.com":"nx","direct-facotory.com":"nx","vintageng.com":"ok","pabarienterprises.com":"ok","centura.ca":"ok","bsmsb.com":"nomail","versatilelb.com":"ok","bsie.waw.pi":"nx","douglasceilings.com.tw":"ok","avetta.com":"ok","camnet.com.kh":"ok","zoho.com":"ok","sinarexim.com":"nx","llynedesign.com":"nx","agrimasialtd.com":"nx","hcfurnituremall.com":"ok","patlindglobal.com":"nx","quinnbuildingsupplies.com":"ok","yeah.net":"ok","yahoo.com.vn":"ok","cox.net":"ok","sify.com":"ok","hiatt-hardware.com":"ok","canada-europe.com":"ok","hisla.fi":"nx","longbeachvn.com":"ok","ecotileimports.com":"ok","thermorum.com":"ok","dawacom.net":"nx","falcon-timber.com":"ok","selectdistributors.com":"ok","cpscollection.com":"ok","brightstoneholding.com":"nx","decoin.ci":"nx","laminam.pl":"ok","dbschenker.com":"ok","adinet.com.uy":"ok","foxtools.eu":"ok","kitchenartdesign.com":"ok","lcestate.com":"nx","coad88.com":"ok","gtecorp.com":"ok","sportmaster.com":"ok","dino.com.pe":"ok","yahoo.com":"ok","sandypointimport.com":"ok","arc.sn":"ok","golchha.com":"ok","cats-net.com":"ok","tricompower.com":"ok","warehouseghana.com":"ok","rpcomapa.com":"nx","peti.com.bo":"ok","alenaia.ly":"nx","zimasolution.com":"nx","yahoo.ca":"ok","impan.de":"ok","batirama.mu":"nx","polarisinter.com":"nx","yahooo.com":"ok","artfiksa.it":"nx","spidemet.com.cy":"nx","ceramichetamburrini.it":"ok","poonarchitect.com":"nx","ritile.com":"ok","pd.jaring.my":"ok","hoekee.com.sg":"ok","papaspainting.com.au":"ok","jyotiimpex.ca":"ok","nina-import.com":"ok","rediffmail.com":"ok","jlstone.co.kr":"nx","mei.com.pk":"ok","atelierproducts.com":"ok","woodhouse.lv":"ok","lketrading.com":"nx","bhamys.com":"ok","optonline.net":"ok","mmb.com.pk":"nx","chadwickssurfaces.net":"ok","akmarti.com":"ok","jfctrainers.co.uk":"nx","b-alomraniah.com":"nx","prismacircle.com":"nx","badogfliser.dk":"ok","floorsol.com":"ok","21cn.com":"ok","woowco.com":"ok","gn-intemational.com":"nx","steelmart.com.mx":"ok","wananchi.com":"ok","artgroup.ro":"ok","americangypsum.com":"ok","gdf-srl.it":"ok","sina.com":"ok","asiadynasty.com":"ok","castellexport.com":"ok","iafrica.com":"ok","site.by":"ok","atlastrade.biz":"ok","eltemasah.group.com":"nx","ammronbc.com":"nx","al-masafi.com":"ok","nachu007.com":"nx","vvkarunaratne.lk":"ok","bwmtrade.com":"nx","coltec.com.gt":"ok","libero.it":"ok","tecnoshipgroup.com":"ok","nder.no":"ok","bota.be":"ok","primehome.com":"ok","gurbaslar.com.tr":"nx","mmbc.com.au":"nx","paellingsen.no":"ok","tin.it":"ok","hochtief-procurement-asia.com":"nx","boddingtons.co.za":"ok","nuvaux.com":"ok","lgro.com":"ok","sprengermidwest.com":"ok","intercoop.com":"nomail","arpac.dk":"ok","hagun-resourcetech.com":"ok","putnamlumber.com":"ok","onthefloor.co.za":"ok","sbcl.mu":"ok","cakrawalamandirisejati.com":"nx","jmcaleer.com":"ok","renewmyid.nl":"ok","integral.pa":"nx","uslumber.com":"ok","hotmail.co.uk":"ok","lchina.co.nz":"nx","camelimports.com":"ok","decoopal.com":"nx","yahoo.com.sg":"ok","pamamgt.com":"ok","akvasvit.com.ua":"ok","falldistributions.com":"ok","dawlance.com.pk":"ok","fib.ni":"nx","keramikosabc.it":"nx","zantel.com":"nomail","em-kei.com":"ok","asfourcharity.com":"nx","bdd.yahoo.uk.ru":"nx","kishojyu.jp":"ok","sol.net.sa":"ok","expressgroups.in":"nx","adel.net":"ok","grupocgmaderas.com":"ok","finecollections.com":"nomail","scg.co.th":"nomail","excite.com":"nomail","the-gcs.com":"ok","surfaceartinc.com":"ok","oyamalumber.com":"ok","solarwise.net.au":"nx","berryclark.co.uk":"ok","148king.com":"ok","mnet.fr":"ok","aitlbd.net":"ok","centrin.netid":"nx","xclusivedubai.com":"nomail","mahanpt.com":"nx","yep.co.za":"ok","oneb.ca":"ok","trade.collins.com.tw":"ok","netvigator.com.hk":"ok","belgacom.net":"ok","camshin.net.ned":"nx","lndosat.net.id":"nx","alpine-crown.com":"ok","sealsystems.le":"nx","indo.net.id":"ok","bigpond.com.au":"ok","grunpower.hu":"ok","acetechindia.in":"ok","admiraltyhomes.com":"nomail","storeimage.com":"ok","rumenjorgov.com":"ok","corkbp.le":"nx","alabuo.co":"ok","ceylongeneral.lk":"nomail","petraslate.com":"ok","saremica.com.tr":"ok","sheridanuae.com":"ok","crateandbarrel.com":"ok","hasson.co.il":"ok","tonysimportedtile.com":"ok","intefral.com.pa":"nx","megateksa.com":"ok","vantrinh.com.vn":"ok","unimat.ro":"ok","myanmar.com.mm":"nomail","visterergy.ru":"nx","steelforcesa.com":"ok","aikenlumber.com":"ok","algimouss.com":"ok","adma-group.com":"ok","imode.ws":"ok","century-properties.com":"ok","emirates.ae":"ok","eurocarhellas.com.gr":"nx","hknet.com":"ok","komeri.bit.or.jp":"ok","oyster.net.ck":"ok","sitesoman.com":"nx","monteadriano.pt":"ok","europamel.net":"ok","bo-import.cz":"ok","84lumber.com":"ok","bennatontile.com":"ok","woodia.co":"nx","vincenttimber.co.uk":"ok","telus.net":"ok","almahedaluminum.com":"ok","codelco.com.cn":"ok","dsp-technik.com":"ok","belgiumsa.be":"nx","viarix.eu":"ok","acmedubai.com":"ok","yahoo.in":"ok","modulplus.biz":"ok","speedy.com.ar":"ok","alkhalili.com":"ok","albaniaonline.net":"ok","santeria.com.sg":"ok","catinisri.com":"nx","galaxy-vietnam.com":"ok","ziggroup.com":"nomail","brooksgroup.le":"nx","faza.ae":"ok","gatorp.no":"nx","cinza.in":"nx","terra.net.lb":"ok","awaco.be":"nx","tenying.com.tw":"nx","ykawoosh.com":"ok","geetaply.com":"nx","swiftkenya.com":"ok","nig.com.kw":"ok","terra.com.br":"ok","verizon.net.do":"nx","rezaeiconstruction.com":"nx","whirlpool.com":"ok","zad.com.qa":"ok","brudergz.com":"nx","alicante.com.mx":"ok","hbcr.vn":"ok","aluminiosaojose.com.br":"ok","cttnb.com":"nomail","ccb.org.co":"ok","speedmarinegroup.com":"ok","dggoldam.com":"ok","bkloils.com":"nomail","taskgauges.in":"ok","gmait.com":"nx","aegservice.am":"ok","alshareef.com.sa":"ok","eurodiy.co.za":"ok","xappee.com":"ok","hektisch.de":"ok","venoholding.com":"nx","barcelonadistributors.com":"ok","yahoo.com.uk":"nx","servimarine.com":"ok","plusten.co.za":"ok","parkrosegroup.com":"ok","boso.ni":"nx","caverhill.com":"ok","heitonbuckley.le":"nx","anjindustries.com.au":"ok","airlesspinturasprofissionais.com":"nomail","alkomandini.com":"nx","maxpyro.fi":"ok","arrayyanpools.com":"nx","stlchina.com.cn":"nx","lakkapaa.com":"ok","tilespoint.fi":"ok","alankarconstruction.com":"nx","crcepng.com":"nx","tayfon.net":"ok","plazayapi.com":"ok","bkknewtrend.com":"ok","windowslive.com":"ok","attachesreliable.ca":"ok","effortimport.com":"nx","capaimports.com":"ok","maricera.com":"ok","vienna.com.pi":"nx","sanicenter.com.pe":"ok","mansasteel.com":"ok","lci1.com":"ok","manzanoglobal.com":"nomail","transimport.cd":"ok","aliaraghi-co.com":"nx","tse.com.er":"ok","source.co.ug":"ok","thronestar.ru":"nx","nexteonbd.com":"ok","amantrading.co.ir":"nx","leland.bj":"nx","lbcontracting.co":"nx","flizes.iv":"nx","qs-e.com":"ok","naxa.com":"ok","thehappycompany.com":"ok","saken.sa":"ok","fakhrigroup.tz":"nomail","steckerlaceros.com":"ok","rrtitz.com":"nx","ezylite.com.au":"nx","akerana.cl":"nx","live.com":"ok","ripten-eng.com":"nx","spacecooling.com.vn":"ok","arsikon.com":"ok","staffwear.co.za":"ok","7seasgroupusa.com":"ok","kemsoluae.com":"ok","ferretera-el-aguila.com.mx":"nx","amari.es":"ok","castillejahome.com.mx":"nx","youremail.com":"ok","list.ru":"ok","mail.net.sa":"ok","hurst.le":"nx","kaiserthailand.com":"nx","rayoman.com":"ok","tarkastusluukkuja.fi":"ok","harshiimpex.com":"ok","amorepacific.com":"ok","radiatatimbers.com":"ok","medinibuilder.com":"nx","yamamabricks.com":"ok","govindsons.co.za":"ok","bellsouth.net":"ok","ceramaxxdubai.com":"ok","intramuro.com":"ok","mdmtimber.co.uk":"ok","mze.com":"nomail","grupoconstrumarket.com":"ok","datelineexports.com":"ok","nnip.com":"nx","kaunas.omnitel.net":"ok","saifpowertec.com":"ok","sasodeco.net":"nx","avelco.co.jp":"ok","smegroup.pk":"nx","indosat.net.id":"nx","lfiltd.net":"nx","vip.163.com":"ok","naturehomedecor.com":"ok","ironbazar.com":"nx","lmportacionesgep.com.co":"nx","afribuild.co.ke":"nx","bluelinxco.com":"ok","lehamplastics.com":"nx","adcars.be":"ok","andinanet.net":"ok","alliancegroupuae.com":"nomail","gravity.mn":"ok","danagroup.co.zm":"ok","astaginaresort.com":"ok","infinity-log.com":"ok","melinhhypemarket.com.vn":"nx","ms24.hinet.net":"nomail","edencroft.com":"ok","auslead.com":"ok","barwapol.pi":"nx","salzburg.co.at":"ok","ddipl.in":"ok","silvan.dk":"ok","chatani.co.jp":"ok","lobomaq.com":"nx","ctci.com.tw":"ok","floretgroup.com":"nx","bravo.ro":"ok","t-com.me":"ok","worldetrading.com":"nomail","innoxius.cz":"ok","majditrading.com":"nx","baminv.com":"ok","globalexports.com":"ok","megastroy.kz":"ok","lynx.net":"ok","gardenplanet.com.ve":"nx","rich-brand.com":"nomail","pointerbrasil.com.br":"ok","jestt.com.tw":"nx","akbioglobal.com":"ok","rambler.ru":"ok","ecbarton.com":"ok","nol.com.jo":"ok","civenco.com":"nomail","legartis.lv":"ok","gtcglobal.us":"nx","harriscomponents.com":"nx","majestictiles.com":"ok","resourcesfiji.com":"ok","hydraformestates.com":"nx","australstar.com.ar":"nx","t-online.de":"ok","dhalumal.com":"ok","aalicoltd.com":"ok","sls-singapore.sg":"ok","emperil.com":"ok","walburnindustrial.com":"ok","alaajoman.com":"nx","alsalemgroup.com":"ok","panasia.co.jp":"nx","rarewoodsusa.com":"ok","starlifting.in":"ok","linktr.ee":"nomail","grupoproaco.com.ar":"ok","sompongpanich.com":"nx","yahoo.com.my":"ok","usbsinc.com":"ok","stroma.md":"ok","mongol.net":"ok","bestway-southamerica.com":"ok","newhome.vn":"ok","stroydecor.kz":"ok","mail.shinnfu.com.tw":"nx","saudisoft.com":"ok","mongolianproperties.com":"ok","tradekem.net":"ok","wadidegla.com":"ok","pacific.net.sg":"ok","hkc.net":"ok","remy-hamburg.de":"ok","stroydvor.kz":"ok","sumberjayalaser.com":"ok","linet.net.au":"nx","hkstar.com":"ok","msa.hinetnet":"nx","grandeurmiddleeast.com":"ok","inbox.ru":"ok","themadisonpark.com":"nomail","c-living.com":"ok","tarazrah.com":"ok","awsatcom.com":"ok","asiagate.co.uk":"ok","matibu.com":"ok","megatile.es":"ok","hptmail.com":"nomail","qproducts.co.za":"ok","hanwa.co.jp":"ok","bk.ru":"ok","optimumtimber.co.uk":"ok","pavini.co.za":"ok","btsgsy.com":"ok","xl-byg.dk":"ok","hasilconstruction.com.my":"ok","harringtonconcrete.le":"nx","darceramica.co.tz":"ok","americanwoodimporters.com":"ok","gulfcreeks.com":"ok","abedisa.isabel.be":"nx","siritecsa.com.ar":"nx","seychelles.sc":"ok","oceanbroadband.net":"nx","o-hgroup.com":"nx","parker-merchanting.co.uk":"nomail","pioneer.com.my":"nx","concordiabuilding.com":"ok","carltonsupplies.com":"ok","alhabarigroup.com":"ok","romatile.com":"ok","yahoo.co.id":"ok","saniperfect.be":"nx","sterlingsites.co":"ok","lcloud.com":"nx","norebo.no":"ok","moov.mg":"ok","ebonet.net":"ok","coralwave.com":"ok","naaasdesign.com":"ok","jobi.mn":"ok","jjmundialdedistribuciones.com":"nx","southlinemaldives.com":"ok","supersil.co.in":"nomail","eka.com.cy":"nx","novak.cz":"nx","liquidata.ch":"ok","a1choice.ca":"ok","jpitre.com":"ok","bezeqint.net":"ok","tileafrica.co.za":"ok","handyman.com.ph":"ok","gtmsupplies.com.au":"ok","natflooringgroup.com":"ok","villapark.com.vn":"ok","yahoo.com.tw":"ok","bricoflex.com.br":"ok","kls-group.com":"ok","canaropa.com":"ok","jamcoqatar.com":"ok","bestful.biz":"nx","marshalllumberco.com":"ok","kymeera.com":"ok","sltnet.lk":"ok","gmx.at":"ok","mfsico.com":"ok","goodwilltrade.com":"ok","eastman-intl.com":"ok","lte.net":"ok","l-hi.de":"ok","aljasoor.com":"ok","zubayen.ae":"ok","gestragroup.com":"ok","zmail.lt":"ok","rankieng.com":"ok","eurosa.com":"ok","exotichomeexpo.com":"nomail","ath.forthnet.gr":"ok","cdproviders.com":"ok","marjanmcc.com":"nx","vmetais.com.br":"nx","digroup-us.com":"ok","durapower.com.ec":"ok","commexdobrasil.com.br":"nx","catpsarl.com":"nx","merinoindia.com":"ok","albayan.com.sa":"ok","epicpl.com":"ok","grupoempresarialpaz.com":"ok","kennametal.com":"ok","xtra.co.nz":"ok","amchaltd.com":"ok","kratosbp.com":"ok","akasakiindia.co.in":"ok","shunlee.com.hk":"ok","fontouraengenharia.com.br":"ok","thdist.com.au":"ok","eleganceus.com":"ok","bin-sultan.com":"ok","euronetltd.com.hk":"nx","vardhan.com":"ok","ctrgroup.cz":"ok","lvarex.be":"nx","opencart.com":"ok","connabride.le":"nx","alfanar.com":"ok","kendepot.co.jp":"ok","terraplus.com":"ok","lntnet.mu":"nx","viphotels.com":"ok","comercialrc.com.pe":"ok","jamejam.net":"ok","kalanihawaii.com":"ok","vestaltile.com":"ok","yhaoo.com":"ok","yebo.co.za":"ok","janas.com.qa":"ok","steinwoodproducts.com":"ok","schubert-firmengruppe.de":"ok","ricbd.com":"nomail","agnewsfireplaces.com.au":"nomail","cyberia.net.lb":"ok","tninet.se":"nx","vishwamitra.ae":"ok","affixscaffolding.com":"ok","suomentyokalu.fi":"ok","technology.com":"nomail","universal-kitchen.com":"ok","tlink.com.sg":"ok","importadoraluanjo.com.br":"ok","yf.hk":"ok","ukr.net":"ok","eternit-ap.com":"ok","naver.com":"ok","fliser.nu":"ok","planet.tn":"ok","worldcargogt.com":"nx","martabid.com":"ok","tda-lamitek.com":"nx","royaltradingag.com":"nx","sunwood.com.vn":"nx","imersa.com.mx":"ok","emirates.netae":"nx","newsteeldist.com":"ok","proeervice.am":"nx","deconsk.ru":"ok","chadwicks.le":"nx","jnj-bd.com":"ok","whitecap.com":"ok","eim.ae":"ok","yahoo.com.ph":"ok","sjimports.ca":"ok","ermitazas.it":"nx","jchannel.com.ph":"ok","makro.com.ph":"ok","rakceram.com":"ok","krobag.com":"ok","prime.vn":"ok","harjase.com":"ok","deuxproject.com":"ok","builddirect.com":"ok","alpha.linkserve.com":"nx","pittman.le":"nx","redelbr.com":"nx","dts.mg":"ok","sinaman.com":"nx","tjom.le":"nx","benfixsteel.com":"ok","live.co.za":"ok","rcmanubhai.com.fj":"ok","hardwoods-inc.com":"ok","uslumberbrokers.com":"ok","pi-am.com":"nx","ferguson.com":"ok","cimexcuritiba.com":"ok","outlook.com":"ok","oma.by":"ok","rugsamerica.com":"ok","wahlam.com.hk":"ok","algurg.ae":"ok","qatar.netqa":"nx","paxonpilot.com.au":"ok","centuryrealestate.in":"ok","profalis.it":"nx","rancon.com.bd":"ok","sidebooms.com":"ok","utotools.com":"ok","yahoo.com.hk":"ok","afya-jeddah.com":"nx","i-pds.com":"ok","ny-elite.com":"ok","eyebytes.com":"ok","michaellinnell.co.uk":"ok","rifp.com":"ok","bigpond.com":"ok","hotmal.com":"nomail","hakmegroup.com":"ok","buildfast.pk":"ok","fareast.fsbusiness.co.uk":"nx","miguna.com":"ok","shurak.com":"ok","gbbusinessvat.com":"nx","arquigeos.ci":"nx","albatross.ge":"ok","vigtrading.vn":"nx","larsentoubro.com":"ok","gnet.tu":"nx","mweb.co.za":"ok","kristalabsheron.az":"nx","hac.hassan-abul.com":"ok","market-nuances.com":"nx","biznetvigator.com":"ok","singret.com.sg":"nx","peakmore.com":"ok","renoways.com":"ok","ganrid.com.au":"ok","vacaciones.com.ve":"ok","conceptsurfaces.com":"ok","noblestyles.com":"nomail","infodema.ci":"nx","agava-kazan.ru":"ok","pasdec.com.my":"ok","spcfloors.co":"ok","taliah.com.sa":"nx","fasonet.bf":"ok","rhinoroofing.co.tz":"nx","almaty.eurasiagold.com":"ok","lmportchina.es":"nx","brokatpolska.pi":"nx","prestashop.com":"ok","telesat.com.co":"ok","stylelivingbd.com":"nomail","sheikhalitraders.com":"nx","aminco.com":"ok","nitinwiregroup.com":"ok","cyclopnet.pt":"ok","basketcase.ca":"ok","neetdeep.com":"ok","bizent.net":"ok","enes.ma":"nx","cvtelecom.cv":"ok","cantv.net":"ok","mystunningwebsite.com":"nomail","tumelero.com.br":"ok","aghsans.sa":"nx","tecnoperfiles.com.ar":"ok","camronint.com":"nx","nioc-lotc.com":"nx","dm.net.lb":"ok","container.co.za":"ok","al-zamel.net":"ok","beamstream.mn":"nx","roopad.net":"ok","baran-ap.com":"ok","finewoodmarketing.com":"ok","optusnet.com.au":"ok","elaguilasanitarios.com":"ok","vcygroup.com":"ok","sutindo.com":"ok","faiolatile.com":"ok","ddclbd.com":"ok","unitednaghi.com.sa":"nx","patraland.com":"ok","industrivern.no":"ok","tetkon.com":"ok","gmx.net":"ok","gresieromania.ro":"ok","florahotels.ae":"ok","fs-group.net":"ok","maoint.com":"ok","broombys.co.uk":"nomail","lafloor.com.my":"nx","arkel.com":"ok","tbsaust.netau":"nx","imperialtileinc.com":"ok","live.hk":"ok","tuboul.co.il":"ok","bygghemma.se":"ok","themac.com.au":"ok","taylor.maxwell.co.uk":"ok","cratian.co.zw":"nx","tradeindia.com":"ok","alfacomex.com.br":"ok","americanimporttile.com":"ok","fenalex.com.pe":"nx","sofiexport.com":"ok","alahmedia.com":"nx","fabricimport.cz":"ok","geffects.com":"ok","jotech.com.sg":"ok","gruporecinos.com":"ok","lucky.co.mz":"ok","florasud.mc":"ok","floorex.az":"ok","connectchina.com.pi":"nx","lmi.cz":"nomail","parkerintl.com":"ok","vesala.fi":"ok","west-imports.com":"ok","alseera.com":"ok","novausawood.com":"ok","uniglobalgroup.com":"ok","rocketmail.com":"ok","cpmz.co.mz":"ok","live.in":"ok","mafrei.com":"ok","dayalsteel.com":"ok","leopak.ru":"ok","sbcglobal.net":"ok","towerhamlets.gov.uk":"ok","fordstreibuilders.com":"ok","vitra.lt":"ok","oplbd.com":"nomail","toga.com.lb":"ok","costco.com":"ok","une.net.co":"ok","eureka.lk":"ok","pixelspread.com":"ok","proyectainvestment.com":"nx","medannet.com":"ok","usmandoors.com":"nx","maimonesrl.it":"ok","orange.sn":"ok","warpargentina.com":"nx","hipco.com":"ok","internationalplywood.nl":"ok","kolayfiooring.com":"nx","motherson.com":"ok","gimbelmexicana.com":"ok","tritunggalprima.com":"ok","iccorporation.net":"nx","selena.com":"ok","brunet.bn":"ok","crc.com.hk":"ok","mundimat.pt":"ok","ltc.com.hk":"ok","lceberg29.ru":"nx","udineproducts.co.zw":"ok","sanform.is":"ok","placari.ro":"ok","rogers.com":"ok","villastoneimports.com":"ok","kischkirur.com":"nx","ffcqatar.com":"ok","shbcmech.com.kw":"ok","belairbaytt.com":"nx","danubiawood.com":"ok","pmman.co.zw":"nx","conplexinternational.com":"ok","scg.com":"ok","excelqatar.com":"ok","aluminum-cladding.com":"ok","coirstore.co.uk":"ok","chevalier.net":"ok","tdc.com.ly":"ok","vancalster-vloeren.be":"ok","facebook.com":"nomail","mik.vn":"ok","shengda-alu.com":"ok","hyfortrading.com":"nx","batelco.com.bh":"ok","windowtothepacific.com":"ok","alesayi.com":"ok","ethionet.et":"ok","ctm.co.tz":"ok","amassico.com":"ok","anilstone.com":"nx","ashwanimetals.com":"ok","reacciona.com.mx":"nx","kems.net":"ok","ekofence.sk":"ok","decorinnovations.com.au":"ok","doublelconcrete.com":"ok","mptmail.net":"ok","intnet.dj":"ok","cs.com":"ok","gresfactory.com":"ok","4u.com.gh":"nx","kennisonforest.com":"ok","godaddy.com":"nomail","chinaallye.com":"ok","carrasconobile.com.uy":"ok","lndumat.ni":"nx","mercomaxsa.com.ar":"ok","u-metal.co.kr":"ok","dwfea.rr.com":"nx","rasanir.ir":"nx","repowerhouse.ca":"nomail","engineering-service.mn":"ok","wink.com.np":"nx","octopusproducts.com":"ok","beyoot.com.eg":"ok","leaurabuldtech.com":"nx","catd.mn":"ok","compaqnet.be":"ok","solexcom.pe":"ok","al-obaidly.com":"nx","eircom.le":"nx","edtankers.com":"ok","axess.mu":"ok","lordkrishnabuildmart.com":"nx","weathershieldt.com":"nx","excomm.com":"ok","fourpointsgc.com":"nx","ugc.com.sa":"ok","advantek.com.br":"ok","coteccons.vn":"ok","go.com.jo":"ok","yahoo.co.uk":"ok","keramir.kz":"ok","cpsudamericana.com":"ok","omegasc-lb.com":"nx","sepantasepehr.com":"nomail","optimacambridge.co.uk":"nx","congofutur.com":"nomail","2nds.biz":"ok","bajamurni.com":"nx","nesma.net.sa":"nx","nithigroup.com":"ok","ethionet.net":"nx","suas.com.co":"ok","cybertech.net.mm":"ok","aprinfra.org":"ok","unitednet.bg":"nx","artisticstyle.com":"nomail","secoin.com":"ok","oegroup.in":"nx","latofonts.com":"ok","vida.se":"ok","pantano.ro":"ok","interparts.pi":"nx","bgcresidential.com":"ok","telecom.net.et":"nx","mail.lviv.ua":"ok","yahoo.fr":"ok","advan.co.jp":"ok","eastcoasttile.com":"ok","everywhere-gt.com":"ok","householdcz.cz":"nx","bdg.centrin.net.id":"ok","upserv.com":"ok","amafhhpackaging.com":"nx","unitech-lkk.com":"nx","twinpeaksleisure.com.au":"ok","rugshook.com":"ok","sigmaco.com":"ok","growimportaciones.com.uy":"nx","montir-coop.hu":"ok","etos-group.com":"ok","ahorasolutions.com":"nomail","nomadenet.cl":"nx","dzega.lv":"ok","duntc.com":"ok","ephathagroup.com":"ok","kruti.in":"ok","khansaheb.ae":"ok","spanishuptile.es":"ok","yahoo.com.br":"ok","riedemann.cl":"ok","marsforcesenegal.com":"nx","smartrade.ro":"ok","telecom.netet":"nx","mggroup.com.pe":"ok","windowgalaxy.co.in":"nx","againternational.fr":"ok","bciasia.com":"ok","capricom-cn.com":"nx","assiagroup.com":"ok","mhgroupintl.com":"nx","statementstile.com":"ok","aeconsults.com":"ok","plastercentre.co.zw":"ok","baucenter.ru":"ok","lin.com":"ok","randallbrothers.com":"ok","hsbstone.com":"ok","accentwire.com":"ok","menniecadada.com":"nx","laticrete.com":"ok","badajoz4.ci":"nx","prokrete.com":"ok","alumni.com":"ok","dhaka.net":"ok","kasthall.com":"ok","emi.irk.ru":"ok","ceragran.co.za":"ok","uddl.com.bd":"ok","fospak.com.pk":"ok","eyeqconstructions.com.au":"nx","tiahco.com":"ok","dtcl.com":"ok","yangon.net.mm":"ok","svagni.lv":"ok","as1ousa.com":"nx","accir.com":"nomail","p-oi.com":"ok","prodigy.net.mx":"ok","potop.com":"nomail","defauw.be":"ok","gammaconstruction.mu":"ok","123tanzania.com":"ok","live.ru":"ok","ushardwaresupply.com":"ok","robustnorge.no":"ok","midco.net":"ok","cotas.com.bo":"ok","nolastone.com":"ok","dekeignaert.be":"ok","roban.com.pl":"ok","everythingconstructionuk.com":"ok","man-cheong.com.hk":"ok","taiba-ksa.com":"nx","indosat.netid":"nx","sherwoodlumber.com":"ok","tublin.le":"nx","proqaseh.com":"ok","nordictimber.nl":"ok","artigas.mx":"ok","gondry.be":"ok","beyler.ro":"nomail","comolimited.com":"ok","melonfashion.ru":"ok","rocadesign.ca":"ok","neoformation.net":"ok","bmtegelimport.be":"ok","hwintertile.com":"ok","goefficient.com":"nx","sinotile.co.za":"ok","garard.com.au":"nx","tiscali.it":"ok","maltanet.net":"ok","pogan.com":"nomail","polyfoam.com.au":"ok","aims-design.com":"ok","y.netye":"nx","msn.cn":"ok","rahawater.com":"ok","pistrittomarble.com":"ok","publiksign.com":"ok","amalfi-marble.com":"ok","mal.ru":"nx","leefullmetal.com":"nx","wwsteelgroup.com":"ok","gjbtrading.com":"ok","rda.gov.lk":"ok","yandex.ru":"ok","harscan.co.za":"ok","sojitz.com":"ok","aluking.vn":"ok","mipa-usa.com":"ok","stonesource.com":"ok","ncialliance.com":"ok","albawardi.com":"ok","kimtingroup.com":"ok","caesarstoneus.com":"ok","mayoreodelistmocr.com":"ok","ocean.com.au":"ok","mixsa.com":"nx","cal-royal.com":"ok","sioutisk.gr":"ok","seychelles.net":"ok","unimade.com.au":"ok","srdoman.com":"ok","spctnet.com":"nx","surora.sr":"ok","buildtech-iraq.com":"ok","hightrade.com.au":"nx","megnatile.com":"ok","live.ca":"ok","kgs-industrie.com":"nx","mascotsmyanmar.com":"ok","grupoirazu.com":"ok","toppave.com.sg":"ok","dura2omheiningen.nl":"ok","alfozan.com":"ok","asplersul.com.br":"nx","velcro.com":"ok","yahho.fr":"ok","dozerbuild.com":"nomail","artesanos.com":"ok","yusri.de":"nx","singnet.com.sg":"ok","iroco.le":"nx","usa.net":"ok","china.com":"ok","hein-marketing.de":"ok","mafrica.com.my":"ok","southernlakesitm.co.nz":"ok","elima.pt":"ok","ge-robinson.co.uk":"ok","siyane.lk":"ok","askmonroe.com":"ok","imanjam.com":"nx","dnet.net.id":"ok","viscom.bg":"ok","lneo-design.com":"nx","livingfashion.net":"ok","topocean.com":"ok","sit.lk":"ok","artstroy.eu":"ok","reicherbau.at":"nx","saioffice.co.tz":"ok","gtc-trade.com":"ok","fastfitt.com":"ok","discodin.com":"ok","unimetgt.com":"ok","machlog.com":"ok","splinter.ni":"nx","onetelnk.net":"nx","condor.co.nz":"ok","paravalos.gr":"nx","lifestylerenos.com.au":"nx","rahmafer.ma":"nx","theshanghaibldtrd.com":"nx","howarth-timber.co.uk":"ok","roblumco.com":"ok","orientalrugmat.com":"nx","vison.se":"ok","hotma.il":"nx","scppipe.com":"nx","assadsaid.com":"ok","mongolnet.mn":"ok","arabia.com":"ok","gbg.bg":"ok","slland.com.my":"nx","infotel.bg":"ok","phdint.com":"ok","summervillehealthcare.com":"ok","rsgroup.le":"nx","opmdevelopments.com.au":"nx","hkepmr.com.hk":"nx","vodinh.com.vn":"nx","mrjgroup.in":"ok","get2net.dk":"ok","bom5.vsnl.netin":"nx","alpharacking.com.au":"nx","me.com":"ok","felipe.ph":"ok","jaysam.co.uk":"ok","suvijayindustries.com":"ok","dkpropertypartners.com":"ok","hvac-mas.com":"nx","africanonline.com":"ok","decoceramica.gr":"ok","excelsio.lv":"nx","telefonica.net":"ok","grestiles.com":"ok","spa.com.mm":"nomail","flinderspartners.com.au":"ok","vorosrez.hu":"ok","126.com":"ok","wlink.com.np":"ok","spanishtiles.co.tz":"ok","visionhardware.com":"ok","excelconstruction.org":"ok","ua.fm":"ok","shaw.ca":"ok","dharmaresidence.com":"nx","nalaimports.com":"ok","aol.com":"ok","ubccommercial.com.au":"nx","e-noguchi.co.jp":"ok","wellpoint-group.com":"nx","keramika.by":"ok","rezayat.net":"ok","tmci-vn.com":"ok","djaimports.com":"ok","sourceconsultingllc.com":"ok","imports-int.com":"ok","gatematic.com":"ok","americangallery.com.sa":"ok","cliper.pt":"nx","alayuni.com":"ok","j-ct.com":"ok","uruklink.net":"ok","zigler.es":"ok","khubrat-ksa.com":"ok","chemidatlantic.com":"ok","gpspd.ru":"ok","sonomatilemakers.com":"ok","arc.com.sg":"ok","trading-consulting.net":"nx","saikattrading.com":"nx","limpro.com.mx":"ok","floor2roof.net":"ok","pinkertons.co.ke":"ok","dinesen.com":"ok","madolimports.net":"ok","hallofelegance.com":"nx","nextspaces.net":"ok","syntec-solutions.com":"nomail","alvarsac.com":"ok","nmm.com.mx":"ok","fisskoss.com.br":"ok","surtile.co.za":"ok","northeastmg.com":"ok","goldstartimber.com":"nx","inveco.fi":"ok","buca-import.com":"nx","gangesoverseas.com":"nx","leggett.com":"ok","cimenterie-de-la-tour.com":"ok","guevent.com":"ok","kmvf.fi":"ok","fordomcorp.com":"nomail","pestructures.com":"nx","wanadoopro.ma":"ok","brightdusk.com":"ok","trimaco.com":"ok","liptinfor.fr":"nx","unihem.si":"ok","bocas.it":"nx","prioritypools.com.au":"ok","maxis.net.my":"nomail","dsgroupworld.in":"ok","dimplex-holz.de":"ok","apatch.com":"nomail","y.net.ye":"ok","gmal.com":"nx","zuendt.at":"ok","helios.co.ii":"nx","elecaf.co.ma":"ok","dhiwll.com":"ok","blackspur.com":"ok","brimat.ci":"nx","protrade.hk":"ok","alhodaco.com":"ok","laureatebuildwell.com":"ok","osmap.it":"ok","ajaybchina.com":"nx","sitnet.lk":"nx","link.lk":"ok","linktrading.com":"ok","hassouneh.com":"ok","anrepco.com":"nomail","sprintgsltd.com":"ok","aquasorce-trading.co.uk":"nx","greenguttersolutions.com":"nx"};
 const RE_MAIL = /^[A-Za-z0-9._%+\-]+@[A-Za-z0-9.\-]+\.[A-Za-z]{2,}$/;
 function mailInfo(emails){
   var valid = [], invalid = [], free = [], corp = [], domains = [];
@@ -2314,7 +2340,7 @@ function render(){
           '<button class="iconbtn" data-act="detail" data-id="'+r.id+'" title="背调详情">☰</button>'+
           '<button class="iconbtn" data-act="letter" data-id="'+r.id+'" title="生成开发信">✉</button>'+
           '<button class="iconbtn" data-act="wa" data-id="'+r.id+'" title="WhatsApp">◉</button>'+
-          '<button class="iconbtn" data-act="mail" data-id="'+r.id+'" title="发邮件">@</button>'+
+          '<button class="iconbtn" data-act="mail" data-id="'+r.id+'" title="发邮件 · '+(r.mail.valid.length ? esc(mailStatusText(r)) : "无邮箱")+'">@</button>'+
           '<button class="iconbtn" data-act="verify" data-id="'+r.id+'" title="核查该邮箱域名">✓</button>'+
         '</div></td>'+
       '</tr>';
@@ -2796,8 +2822,8 @@ function fillUrl(tpl, to, subject, body){
     .replace(/\{su\}/g, encodeURIComponent(subject || ""))
     .replace(/\{bd\}/g, encodeURIComponent(body || ""));
 }
-function copyMailBlock(to, subject, body){
-  copyText("收件人：" + (to || "") + "\n主题：" + (subject || "") + "\n\n" + (body || ""));
+function copyMailBlock(to, subject, body, quiet){
+  copyText("收件人：" + (to || "") + "\n主题：" + (subject || "") + "\n\n" + (body || ""), quiet);
 }
 function updateMailHint(){
   var el = document.getElementById("qMailHint");
@@ -2819,17 +2845,59 @@ function updateMailHint(){
     el.innerHTML = "当前打开方式：<b>" + esc(pv.name) + "</b> —— 该邮箱不支持网址预填，程序会把「收件人+主题+正文」复制到剪贴板并打开邮箱，点「写信」粘贴即可。" + warn;
   }
 }
+/* 还没配置发信邮箱、又识别不出服务商时，让用户选一次用哪个邮箱。
+   不能闷声走 mailto —— 很多电脑没装邮件客户端，点了会毫无反应。 */
+var MAIL_PENDING = null;
+function showMailPick(to, subject, body){
+  MAIL_PENDING = {to:to, subject:subject, body:body};
+  var box = document.getElementById("mailPick");
+  if(!box) return;
+  var list = PROVIDERS.filter(function(p){ return p.id !== "auto" && p.id !== "mailto"; });
+  box.innerHTML = list.map(function(p){
+    return '<button class="btn '+(p.prefill ? "p" : "")+'" data-pick="'+p.id+'" style="justify-content:flex-start">'+esc(p.name)+(p.prefill ? "　直接打开写好的邮件" : "　复制内容后打开")+'</button>';
+  }).join("") +
+  '<button class="btn" data-pick="mailto" style="justify-content:flex-start">系统默认邮件客户端（Outlook / Foxmail）</button>' +
+  '<button class="btn" data-pick="copy" style="justify-content:flex-start">只复制内容（不打开网页，自己粘贴）</button>';
+  document.getElementById("modalMail").classList.add("on");
+}
+function pickMailProvider(id){
+  document.getElementById("modalMail").classList.remove("on");
+  var pg = MAIL_PENDING; MAIL_PENDING = null;
+  if(!pg) return;
+  if(id === "copy"){
+    copyMailBlock(pg.to, pg.subject, pg.body, true);
+    toast("已复制「收件人+主题+正文」，打开任意邮箱点「写信」粘贴即可");
+    return;
+  }
+  if(id !== "mailto"){
+    S.mailMode = id; saveStore(); syncSettingsUI();
+    toast("以后「写邮件」都用：" + providerById(id).name + "（可在「批量触达」里改）");
+  }
+  openMail(pg.to, pg.subject, pg.body, id);
+}
 /* 统一入口：写邮件 */
 function openMail(to, subject, body, forceMode){
   var pv = forceMode ? providerById(forceMode) : resolveProvider();
+  /* 没设置过发信邮箱 + 识别不出服务商 → 先让用户选一次，不要点了一点反应都没有 */
+  if(!forceMode && (!S.mailMode || S.mailMode === "auto") && pv.id === "mailto"){
+    showMailPick(to, subject, body);
+    return;
+  }
   if(pv.prefill && pv.compose){
     var url = fillUrl(pv.compose, to, subject, body);
-    if(url.indexOf("mailto:") === 0){ window.location.href = url; return; }
+    if(url.indexOf("mailto:") === 0){
+      /* 有些电脑没装/没设默认邮件客户端，mailto 点了会毫无反应：先把内容复制好并明确提示
+         （静默复制，避免"已复制到剪贴板"把下面这条说明盖掉） */
+      copyMailBlock(to, subject, body, true);
+      window.location.href = url;
+      toast("已调起系统邮件客户端，并把「收件人+主题+正文」复制到了剪贴板。若没有弹出邮件窗口（电脑未装邮件客户端），请到「设置」把发信方式改成你的网页邮箱，或打开网页邮箱点「写信」粘贴");
+      return;
+    }
     var w = window.open(url, "_blank");
     if(!w){ copyMailBlock(to, subject, body); toast("浏览器拦截了弹窗，内容已复制，手动粘贴即可"); }
     return;
   }
-  copyMailBlock(to, subject, body);
+  copyMailBlock(to, subject, body, true);
   var w2 = window.open(pv.home || "https://mail.google.com/", "_blank");
   if(!w2) toast("弹窗被拦截，内容已复制，请手动打开你的邮箱粘贴");
   else toast("已复制「收件人+主题+正文」，在打开的邮箱里点「写信」粘贴即可");
@@ -2882,6 +2950,49 @@ function waPagePool(){
   out.sort(function(a,b){ return b.score - a.score; });
   return out;
 }
+/* 邮箱域名核查：格式合法不等于域名真的能收信，查 MX 记录才算数 */
+function mailDomainOf(r){
+  var e = (r.mail.valid[0] || ""), i = e.lastIndexOf("@");
+  return i < 0 ? "" : e.slice(i + 1).toLowerCase();
+}
+function mailDnsOf(r){ var d = mailDomainOf(r); return d ? (DNS[d] || null) : null; }
+/* 邮箱核查状态：ok=已核验可收信 / bad=不可用邮件 / unk=待确认
+   优先用运行时联网核查结果，没有就用构建时注入的离线核查表 */
+function mailStatusOf(r){
+  var d = mailDomainOf(r);
+  if(!d) return "none";
+  var x = DNS[d];
+  if(x){
+    if(x.status === "ok") return "ok";
+    if(x.status === "nomail" || x.status === "nxdomain") return "bad";
+    return "unk";
+  }
+  var m = MX_DATA[d];
+  if(m === "ok") return "ok";
+  if(m === "nomail" || m === "nx") return "bad";
+  if(m === "unk") return "unk";
+  return "unk";
+}
+function mailStatusText(r){
+  var s = mailStatusOf(r), d = mailDomainOf(r);
+  var x = DNS[d];
+  var m = MX_DATA[d];
+  if(s === "ok") return "已核验（域名可收信）";
+  if(s === "bad"){
+    if(x ? x.status === "nxdomain" : m === "nx") return "不可用邮件（域名不存在）";
+    return "不可用邮件（域名没有邮件服务器）";
+  }
+  if(s === "none") return "无邮箱";
+  return x ? "待确认（查询失败，可重试）" : "待确认（未核查）";
+}
+function mailDnsText(r){ return mailStatusText(r); }
+function mailDnsCell(r){
+  var s = mailStatusOf(r);
+  if(s === "none") return '<span class="muted">—</span>';
+  if(s === "ok") return '<span style="color:#0f9d58" title="' + esc(mailStatusText(r)) + '">✓ 已核验</span>';
+  if(s === "bad") return '<span style="color:#d93838" title="' + esc(mailStatusText(r)) + '">✗ 不可用邮件</span>';
+  return '<span style="color:#c98a00" title="' + esc(mailStatusText(r)) + '">⚠ 待确认</span>';
+}
 function mailPagePool(){
   var el = $("#mailPageGrade"), mode = el ? el.value : "", out = [];
   for(var i=0;i<ROWS.length;i++){
@@ -2890,6 +3001,9 @@ function mailPagePool(){
     if(mode === "A" && r.grade !== "A") continue;
     if(mode === "AB" && r.grade === "C") continue;
     if(mode === "corp" && !r.mail.corp.length) continue;
+    if(mode === "mxok" && mailStatusOf(r) !== "ok") continue;
+    if(mode === "mxbad" && mailStatusOf(r) !== "bad") continue;
+    if(mode === "mxunk" && mailStatusOf(r) !== "unk") continue;
     if(mode === "todo"){ var n0 = NOTES[r.id]; if(n0 && n0.status && n0.status !== "未联系") continue; }
     out.push(r);
   }
@@ -2927,7 +3041,13 @@ function renderWaPage(){
 function renderMailPage(){
   var body = $("#mailPageBody"); if(!body) return;
   var rows = mailPagePool(), lim = WP_LIMIT.mail, list = rows.slice(0, lim);
-  $("#mailPageInfo").textContent = "共 " + rows.length + " 条";
+  var mok = 0, mbad = 0, munk = 0;
+  ROWS.forEach(function(r){
+    if(!r.mail.valid.length) return;
+    var s = mailStatusOf(r);
+    if(s === "ok") mok++; else if(s === "bad") mbad++; else munk++;
+  });
+  $("#mailPageInfo").textContent = "共 " + rows.length + " 条｜已核验 " + mok + "｜不可用 " + mbad + "｜待确认 " + munk;
   body.innerHTML = list.length ? list.map(function(r){
     var isCorp = r.mail.corp.length > 0;
     return '<tr data-id="'+r.id+'">'+
@@ -2937,6 +3057,7 @@ function renderMailPage(){
       '<td data-label="邮箱"><span class="email" title="'+esc(r.mail.valid.join("；"))+'">'+esc(r.mail.valid[0])+'</span>'+
         (r.mail.valid.length>1 ? '<span class="muted"> +'+(r.mail.valid.length-1)+'</span>' : '')+'</td>'+
       '<td data-label="邮箱类型">'+(isCorp ? '<span class="pill a">企业邮箱</span>' : '<span class="pill b">个人邮箱</span>')+'</td>'+
+      '<td data-label="域名核查">'+mailDnsCell(r)+'</td>'+
       '<td data-label="等级">'+gradeBadge(r.grade, r.score)+'</td>'+
       '<td data-label="跟进状态">'+statusChip(r)+'</td>'+
       '<td data-label="操作" style="white-space:nowrap">'+
@@ -2944,7 +3065,7 @@ function renderMailPage(){
         '<button class="btn sm" data-act="copy">复制邮箱</button> '+
         '<button class="btn sm" data-act="mark">标记已联系</button>'+
       '</td></tr>';
-  }).join("") : '<tr><td colspan="8"><div class="empty">没有符合条件的客户</div></td></tr>';
+  }).join("") : '<tr><td colspan="9"><div class="empty">没有符合条件的客户</div></td></tr>';
   $("#mailPageMore").innerHTML = rows.length > lim
     ? '<button class="btn" id="mailMore">显示更多（还剩 '+(rows.length-lim)+' 条）</button>' : '';
   var mb = $("#mailMore");
@@ -2986,6 +3107,21 @@ function bindWorkbench(){
   });
   var a = $("#waPageGrade"); if(a) a.onchange = function(){ WP_LIMIT.wa = 50; renderWaPage(); };
   var b2 = $("#mailPageGrade"); if(b2) b2.onchange = function(){ WP_LIMIT.mail = 50; renderMailPage(); };
+  var v3 = $("#mailPageVerify");
+  if(v3) v3.onclick = async function(){
+    var pool = mailPagePool().filter(function(r){ var d = mailDomainOf(r); return d && !DNS[d]; }).slice(0, 40);
+    if(!pool.length){ toast("本页需要核查的邮箱域名都已经核查过了"); return; }
+    this.disabled = true;
+    var okN = 0, badN = 0;
+    for(var i = 0; i < pool.length; i++){
+      this.textContent = "核查中 " + (i + 1) + "/" + pool.length;
+      var res = await checkDomain(mailDomainOf(pool[i]));
+      if(res && res.status === "ok") okN++; else badN++;
+    }
+    saveStore(); renderMailPage();
+    this.textContent = "核查本页邮箱域名"; this.disabled = false;
+    toast("核查完成：域名可收信 " + okN + " 个，域名有问题 " + badN + " 个（可在下拉里只看「已核验」）");
+  };
   var e1 = $("#waPageExport");
   if(e1) e1.onclick = function(){
     var rows = waPagePool();
@@ -3000,10 +3136,10 @@ function bindWorkbench(){
   if(e2) e2.onclick = function(){
     var rows = mailPagePool();
     if(!rows.length){ toast("当前没有可导出的记录"); return; }
-    if(exportRows(["序号","采购商","国家/地区","联系人","邮箱","邮箱类型","背调评分","客户等级","采购类目","跟进状态"],
+    if(exportRows(["序号","采购商","国家/地区","联系人","邮箱","邮箱类型","域名核查","背调评分","客户等级","采购类目","跟进状态"],
       rows.map(function(r){
         var n = NOTES[r.id] || {status:"未联系"};
-        return [r.seq, r.buyer, r.country, r.contact, r.mail.valid[0]||"", (r.mail.corp.length?"企业邮箱":"个人邮箱"), r.score, r.grade, r.cats.join("、"), n.status];
+        return [r.seq, r.buyer, r.country, r.contact, r.mail.valid[0]||"", (r.mail.corp.length?"企业邮箱":"个人邮箱"), mailDnsText(r), r.score, r.grade, r.cats.join("、"), n.status];
       }), "邮件可触达清单")) toast("已导出 " + rows.length + " 条");
   };
 }
@@ -3828,6 +3964,13 @@ function bindUI(){
     if(fn) fn();
   };
   $("#riskCancel").onclick = function(){ $("#modalRisk").classList.remove("on"); Q._after = null; };
+  var mp = document.getElementById("mailPick");
+  if(mp) mp.onclick = function(e){
+    var b = e.target.closest("[data-pick]"); if(!b) return;
+    pickMailProvider(b.getAttribute("data-pick"));
+  };
+  var mpc = document.getElementById("mailPickCancel");
+  if(mpc) mpc.onclick = function(){ MAIL_PENDING = null; $("#modalMail").classList.remove("on"); };
   $("#btnBatchOutreach").onclick = function(){
     var ids = Object.keys(SEL);
     if(!ids.length){ toast("请先在客户名录里勾选客户"); return; }
@@ -3858,17 +4001,17 @@ function syncSettingsUI(){
   if(qmm) qmm.value = S.myEmail || "";
   updateMailHint();
 }
-function copyText(t){
+function copyText(t, quiet){
   if(navigator.clipboard && navigator.clipboard.writeText){
-    navigator.clipboard.writeText(t).then(function(){ toast("已复制到剪贴板"); },
-      function(){ fallbackCopy(t); });
-  } else fallbackCopy(t);
+    navigator.clipboard.writeText(t).then(function(){ if(!quiet) toast("已复制到剪贴板"); },
+      function(){ fallbackCopy(t, quiet); });
+  } else fallbackCopy(t, quiet);
 }
-function fallbackCopy(t){
+function fallbackCopy(t, quiet){
   var ta = document.createElement("textarea");
   ta.value = t; ta.style.position = "fixed"; ta.style.left = "-9999px";
   document.body.appendChild(ta); ta.select();
-  try{ document.execCommand("copy"); toast("已复制到剪贴板"); }
+  try{ document.execCommand("copy"); if(!quiet) toast("已复制到剪贴板"); }
   catch(e){ toast("复制失败，请手动选择文本"); }
   ta.remove();
 }

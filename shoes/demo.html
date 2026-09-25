@@ -949,6 +949,21 @@ tbody tr.sel td{background:var(--brand-l)}
   </div>
 </div>
 
+<!-- 首次写邮件：让你选一次用哪个邮箱发，之后记住，避免点了毫无反应 -->
+<div class="modal" id="modalMail">
+  <div class="box" style="max-width:540px">
+    <div class="mh">📮 用哪个邮箱发这封邮件？</div>
+    <div class="mb">
+      <div class="hintline" style="margin-bottom:10px">你还没设置自己的发信邮箱，程序没法自动判断该打开哪个网页邮箱。选一个 —— 程序会记住，以后点「写邮件」就直接打开写好的邮件窗口，不需要再选。</div>
+      <div id="mailPick" style="display:flex;flex-direction:column;gap:7px"></div>
+      <div class="legalnote">选完可以随时在「批量触达 → 点『写邮件』时打开」里改。选「只复制内容」不会打开任何网页。</div>
+    </div>
+    <div class="mf">
+      <button class="btn" id="mailPickCancel">取消</button>
+    </div>
+  </div>
+</div>
+
 <!-- 抽屉 -->
 <div class="mask" id="mask"></div>
 <div class="drawer" id="drawer">
@@ -2887,9 +2902,44 @@ function updateMailHint(){
     el.innerHTML = "当前打开方式：<b>" + esc(pv.name) + "</b> —— 该邮箱不支持网址预填，程序会把「收件人+主题+正文」复制到剪贴板并打开邮箱，点「写信」粘贴即可。" + warn;
   }
 }
+/* 还没配置发信邮箱、又识别不出服务商时，让用户选一次用哪个邮箱。
+   不能闷声走 mailto —— 很多电脑没装邮件客户端，点了会毫无反应。 */
+var MAIL_PENDING = null;
+function showMailPick(to, subject, body){
+  MAIL_PENDING = {to:to, subject:subject, body:body};
+  var box = document.getElementById("mailPick");
+  if(!box) return;
+  var list = PROVIDERS.filter(function(p){ return p.id !== "auto" && p.id !== "mailto"; });
+  box.innerHTML = list.map(function(p){
+    return '<button class="btn '+(p.prefill ? "p" : "")+'" data-pick="'+p.id+'" style="justify-content:flex-start">'+esc(p.name)+(p.prefill ? "　直接打开写好的邮件" : "　复制内容后打开")+'</button>';
+  }).join("") +
+  '<button class="btn" data-pick="mailto" style="justify-content:flex-start">系统默认邮件客户端（Outlook / Foxmail）</button>' +
+  '<button class="btn" data-pick="copy" style="justify-content:flex-start">只复制内容（不打开网页，自己粘贴）</button>';
+  document.getElementById("modalMail").classList.add("on");
+}
+function pickMailProvider(id){
+  document.getElementById("modalMail").classList.remove("on");
+  var pg = MAIL_PENDING; MAIL_PENDING = null;
+  if(!pg) return;
+  if(id === "copy"){
+    copyMailBlock(pg.to, pg.subject, pg.body, true);
+    toast("已复制「收件人+主题+正文」，打开任意邮箱点「写信」粘贴即可");
+    return;
+  }
+  if(id !== "mailto"){
+    S.mailMode = id; saveStore(); syncSettingsUI();
+    toast("以后「写邮件」都用：" + providerById(id).name + "（可在「批量触达」里改）");
+  }
+  openMail(pg.to, pg.subject, pg.body, id);
+}
 /* 统一入口：写邮件 */
 function openMail(to, subject, body, forceMode){
   var pv = forceMode ? providerById(forceMode) : resolveProvider();
+  /* 没设置过发信邮箱 + 识别不出服务商 → 先让用户选一次，不要点了一点反应都没有 */
+  if(!forceMode && (!S.mailMode || S.mailMode === "auto") && pv.id === "mailto"){
+    showMailPick(to, subject, body);
+    return;
+  }
   if(pv.prefill && pv.compose){
     var url = fillUrl(pv.compose, to, subject, body);
     if(url.indexOf("mailto:") === 0){
@@ -3915,6 +3965,13 @@ function bindUI(){
     if(fn) fn();
   };
   $("#riskCancel").onclick = function(){ $("#modalRisk").classList.remove("on"); Q._after = null; };
+  var mp = document.getElementById("mailPick");
+  if(mp) mp.onclick = function(e){
+    var b = e.target.closest("[data-pick]"); if(!b) return;
+    pickMailProvider(b.getAttribute("data-pick"));
+  };
+  var mpc = document.getElementById("mailPickCancel");
+  if(mpc) mpc.onclick = function(){ MAIL_PENDING = null; $("#modalMail").classList.remove("on"); };
   $("#btnBatchOutreach").onclick = function(){
     var ids = Object.keys(SEL);
     if(!ids.length){ toast("请先在客户名录里勾选客户"); return; }

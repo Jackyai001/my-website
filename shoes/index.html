@@ -2805,8 +2805,8 @@ function fillUrl(tpl, to, subject, body){
     .replace(/\{su\}/g, encodeURIComponent(subject || ""))
     .replace(/\{bd\}/g, encodeURIComponent(body || ""));
 }
-function copyMailBlock(to, subject, body){
-  copyText("收件人：" + (to || "") + "\n主题：" + (subject || "") + "\n\n" + (body || ""));
+function copyMailBlock(to, subject, body, quiet){
+  copyText("收件人：" + (to || "") + "\n主题：" + (subject || "") + "\n\n" + (body || ""), quiet);
 }
 function updateMailHint(){
   var el = document.getElementById("qMailHint");
@@ -2834,8 +2834,9 @@ function openMail(to, subject, body, forceMode){
   if(pv.prefill && pv.compose){
     var url = fillUrl(pv.compose, to, subject, body);
     if(url.indexOf("mailto:") === 0){
-      /* 有些电脑没装/没设默认邮件客户端，mailto 点了会毫无反应：先把内容复制好并明确提示 */
-      copyMailBlock(to, subject, body);
+      /* 有些电脑没装/没设默认邮件客户端，mailto 点了会毫无反应：先把内容复制好并明确提示
+         （静默复制，避免"已复制到剪贴板"把下面这条说明盖掉） */
+      copyMailBlock(to, subject, body, true);
       window.location.href = url;
       toast("已调起系统邮件客户端，并把「收件人+主题+正文」复制到了剪贴板。若没有弹出邮件窗口（电脑未装邮件客户端），请到「设置」把发信方式改成你的网页邮箱，或打开网页邮箱点「写信」粘贴");
       return;
@@ -2844,7 +2845,7 @@ function openMail(to, subject, body, forceMode){
     if(!w){ copyMailBlock(to, subject, body); toast("浏览器拦截了弹窗，内容已复制，手动粘贴即可"); }
     return;
   }
-  copyMailBlock(to, subject, body);
+  copyMailBlock(to, subject, body, true);
   var w2 = window.open(pv.home || "https://mail.google.com/", "_blank");
   if(!w2) toast("弹窗被拦截，内容已复制，请手动打开你的邮箱粘贴");
   else toast("已复制「收件人+主题+正文」，在打开的邮箱里点「写信」粘贴即可");
@@ -3873,17 +3874,17 @@ function syncSettingsUI(){
   if(qmm) qmm.value = S.myEmail || "";
   updateMailHint();
 }
-function copyText(t){
+function copyText(t, quiet){
   if(navigator.clipboard && navigator.clipboard.writeText){
-    navigator.clipboard.writeText(t).then(function(){ toast("已复制到剪贴板"); },
-      function(){ fallbackCopy(t); });
-  } else fallbackCopy(t);
+    navigator.clipboard.writeText(t).then(function(){ if(!quiet) toast("已复制到剪贴板"); },
+      function(){ fallbackCopy(t, quiet); });
+  } else fallbackCopy(t, quiet);
 }
-function fallbackCopy(t){
+function fallbackCopy(t, quiet){
   var ta = document.createElement("textarea");
   ta.value = t; ta.style.position = "fixed"; ta.style.left = "-9999px";
   document.body.appendChild(ta); ta.select();
-  try{ document.execCommand("copy"); toast("已复制到剪贴板"); }
+  try{ document.execCommand("copy"); if(!quiet) toast("已复制到剪贴板"); }
   catch(e){ toast("复制失败，请手动选择文本"); }
   ta.remove();
 }

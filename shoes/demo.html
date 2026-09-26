@@ -513,7 +513,7 @@ tbody tr.sel td{background:var(--brand-l)}
 
 <nav class="tabs">
   <button class="tab on" data-page="list"><span class="ic">▤</span>客户名录</button>
-  <button class="tab" data-page="wa"><span class="ic">✓</span>WhatsApp 号码合规</button>
+  <button class="tab" data-page="wa"><span class="ic">✓</span>WhatsApp 号码已核验</button>
   <button class="tab" data-page="mail"><span class="ic">@</span>邮件可触达</button>
   <button class="tab" data-page="board"><span class="ic">◔</span>背调看板</button>
   <button class="tab" data-page="outreach"><span class="ic">✈</span>批量触达</button>
@@ -623,12 +623,12 @@ tbody tr.sel td{background:var(--brand-l)}
       <div class="fgroup">
         <h4>WhatsApp 号码校验</h4>
         <div class="pills" id="fWa">
-          <button class="pill" data-v="ok">✓ 格式合规</button>
-          <button class="pill" data-v="warn">⚠ 待核对</button>
+          <button class="pill" data-v="ok">✓ 已核验</button>
+          <button class="pill" data-v="warn">⚠ 待确认</button>
           <button class="pill" data-v="none">— 无手机号</button>
           <button class="pill" data-v="bad">✕ 不可用</button>
         </div>
-        <div class="hintline" style="margin-top:7px">按各国手机号规则自动校验：✓ 格式正确可直接发；⚠ 疑似固话、位数异常或号码归属国不符；— 名录里没给手机号（只能发邮件/打电话）；✕ 号码无法解析</div>
+        <div class="hintline" style="margin-top:7px">按各国手机号规则逐个核对：✓ 已核验＝格式规范 + 归属国与名录一致 + 命中该国手机号段（可直接发）；⚠ 待确认＝疑似固话、位数异常、号码归属国与名录不符、或名录没写国家（需你自己看原始号码判断）；— 名录里没给手机号（只能发邮件/打电话）；✕ 不可用＝号码无法解析</div>
       </div>
     </div>
 
@@ -694,17 +694,20 @@ tbody tr.sel td{background:var(--brand-l)}
   <div class="card" style="margin-bottom:14px">
     <div class="bd" style="padding:13px 18px">
       <div style="font-size:13px;color:var(--txt2);line-height:1.9">
-        <b style="color:var(--ink)">这里只放「手机号段明确、号码格式合规」的客户 —— 宁缺毋滥，无法保证的一律不放进来。</b>
-        号码已按各国手机号规则补齐国际区号（例如泰国 <code>0844157383</code> → <code>+66844157383</code>），
-        并已剔除按号段判断的固话/公司总机。<br>
-        <span style="color:var(--warn)">已剔除的市场：<b>美国、加拿大、墨西哥、柬埔寨</b> —— 这些国家的手机与固话无法用号段区分，号码格式再对也可能只是公司总机，所以不放进合规名单（它们仍在「客户名录」里，标为"待核"）。<br>
-        <b>另外要说清楚：格式合规 ≠ 已注册 WhatsApp。</b>名录来自展会登记信息，可能包含已停用号码、员工离职后的号码、登记时填错的号码。任何本地软件都无法离线确认对方是否注册 —— 只有 WhatsApp 自己知道。遇到提示未注册的，点「跳过」换下一位即可。</span>
+        <b style="color:var(--ink)">这里只放「已核验」的号码 —— 宁缺毋滥，核对不过的一律不放进来。</b>
+        每个号码都过了三道核对：① 号码格式规范；② <b>号码归属国与名录国家一致</b>；③ 命中该国手机号段（不是固话/公司总机）。<br>
+        <span style="color:var(--warn)"><b>三种标注怎么看：</b><br>
+        · <b>✓ 已核验</b>：上面三道全过，可以放心发。<br>
+        · <b>⚠ 待确认</b>：存疑 —— 例如名录国家是香港、号码却是瑞典的；名录没写国家；疑似固话；号码拼接不全。这些<b>不进名单</b>，需要你自己看「原始号码」判断。<br>
+        · <b>✕ 不可用</b>：号码位数异常、无法解析，发不了。<br>
+        <b>已整体剔除的市场：美国、加拿大、墨西哥、柬埔寨</b>（这些国家的手机与固话无法用号段区分）。<br>
+        <b>还要说清一点：已核验 ≠ 对方已注册 WhatsApp。</b>名录来自展会登记信息，可能包含已停用号码、离职员工的号码、登记时填错的号码。是否注册只有 WhatsApp 自己知道，任何本地软件都无法离线确认。遇到提示未注册的，点「跳过」换下一位即可。</span>
       </div>
     </div>
   </div>
   <div class="card">
     <div class="hd">
-      <span>✓ WhatsApp 号码合规 <span class="muted" id="waPageInfo"></span></span>
+      <span>✓ WhatsApp 号码已核验 <span class="muted" id="waPageInfo"></span></span>
       <div style="display:flex;gap:8px;flex-wrap:wrap">
         <select class="sel" id="waPageGrade" style="width:132px">
           <option value="">全部等级</option>
@@ -1453,9 +1456,11 @@ function waCheck(r){
     } else {
       var m = waMatchDial(d);
       if(m && m.cn !== country && (!own || m.dial !== own.dial)){
-        var g2 = waGrade(m.cn, {dial:m.dial}, m.nat, d);
-        pick = {level:g2.level, e164:"+" + d, raw:cands[i], country:m.cn,
-          note:"号码归属" + m.cn + "，与名录国家" + (country || "未填") + "不一致" + (m.dial === "86" ? "（可能是国内代理/办事处电话，不是买家本人）" : "")};
+        /* 宁缺毋滥：号码归属国与名录国家不一致（含名录国家为空）→ 一律降为「待确认」，不进已核验名单。
+           原因：一个单元格常塞多个号码，程序取"最优"时可能挑到别的国家的号码
+           （例如某香港客户名下配了一个瑞典手机号），那种号码不能当作该客户的 WhatsApp 直发号码。 */
+        pick = {level:"warn", e164:"+" + d, raw:cands[i], country:m.cn,
+          note:"号码归属" + m.cn + "，与名录国家" + (country || "未填") + "不一致，需人工确认（未纳入已核验名单）" + (m.dial === "86" ? "；可能是国内代理/办事处电话，不是买家本人" : "")};
       } else if(own){
         var t = d.replace(/^0+/, "");
         if(t.indexOf(own.dial) === 0 && t.length - own.dial.length >= 6){
@@ -1556,8 +1561,8 @@ function updateWaHint(){
 function waBadge(r){
   var wa = waOf(r);
   if(!wa) return "";
-  var m = wa.level === "ok" ? ["wok","✓ 格式合规"]
-        : (wa.level === "warn" ? ["wwarn","⚠ 待核"]
+  var m = wa.level === "ok" ? ["wok","✓ 已核验"]
+        : (wa.level === "warn" ? ["wwarn","⚠ 待确认"]
         : (wa.level === "none" ? ["wnone","— 无手机"] : ["wbad","✕ 不可用"]));
   var tip = wa.note + (wa.e164 ? "｜规范号码 " + wa.e164 : "");
   return ' <span class="wab ' + m[0] + '" title="' + esc(tip) + '">' + m[1] + '</span>';
@@ -1567,7 +1572,7 @@ function waDetail(r){
   var wa = waOf(r);
   if(!wa) return "";
   var cls = wa.level === "ok" ? "wok" : (wa.level === "warn" ? "wwarn" : (wa.level === "none" ? "wnone" : "wbad"));
-  var txt = wa.level === "ok" ? "格式合规（是否注册需在 WhatsApp 内确认）" : (wa.level === "warn" ? "待核对" : (wa.level === "none" ? "无手机号" : "不可用"));
+  var txt = wa.level === "ok" ? "已核验（号码格式与归属国均核对通过；是否已注册 WhatsApp 需在 WhatsApp 内确认）" : (wa.level === "warn" ? "待确认" : (wa.level === "none" ? "无手机号" : "不可用"));
   return '<div class="wadetail ' + cls + '"><b>WhatsApp 校验：' + txt + '</b>' +
     (wa.e164 ? '<br>规范号码：<span class="mono">' + esc(wa.e164) + '</span>' : '') +
     '<br>' + esc(wa.note) + '</div>';
@@ -1575,7 +1580,7 @@ function waDetail(r){
 /* 导出用的一列文字 */
 function waExport(r){
   var wa = waOf(r);
-  var t = wa.level === "ok" ? "格式合规（未验证是否注册）" : (wa.level === "warn" ? "待核对" : (wa.level === "none" ? "无手机号" : "不可用"));
+  var t = wa.level === "ok" ? "已核验（格式与归属国通过，未验证是否注册）" : (wa.level === "warn" ? "待确认" : (wa.level === "none" ? "无手机号" : "不可用"));
   return t + (wa.e164 ? "（" + wa.e164 + "）" : "") + "：" + wa.note;
 }
 
@@ -3247,7 +3252,7 @@ function bindWorkbench(){
       rows.map(function(r){
         var n = NOTES[r.id] || {status:"未联系"};
         return [r.seq, r.buyer, r.country, r.contact, r.mobile, waOf(r).e164, r.score, r.grade, r.cats.join("、"), n.status];
-      }), "WhatsApp号码合规清单")) toast("已导出 " + rows.length + " 条");
+      }), "WhatsApp号码已核验清单")) toast("已导出 " + rows.length + " 条");
   };
   var e2 = $("#mailPageExport");
   if(e2) e2.onclick = function(){

@@ -3068,7 +3068,16 @@ function waPagePool(){
     out.push(r);
   }
   out.sort(function(a,b){ return b.score - a.score; });
-  return out;
+  /* 名单整理：同一个 WhatsApp 号码被多家登记（展会名录常见）时，只保留评分最高的一条，其余合并计数 */
+  var _seen = {}, _out = [], _merged = 0;
+  for(var _i = 0; _i < out.length; _i++){
+    var _r = out[_i], _k = String(waOf(_r).e164 || "").replace(/[^0-9]/g, "");
+    if(_k && _seen[_k] !== undefined){ _merged++; continue; }
+    if(_k) _seen[_k] = 1;
+    _out.push(_r);
+  }
+  window.WA_DEDUP = _merged;
+  return _out;
 }
 /* 邮箱域名核查：格式合法不等于域名真的能收信，查 MX 记录才算数 */
 function mailDomainOf(r){
@@ -3128,7 +3137,16 @@ function mailPagePool(){
     out.push(r);
   }
   out.sort(function(a,b){ return b.score - a.score; });
-  return out;
+  /* 名单整理：同一个邮箱被多家登记时只保留一条，其余合并计数 */
+  var _seen = {}, _out = [], _merged = 0;
+  for(var _i = 0; _i < out.length; _i++){
+    var _r = out[_i], _k = String((_r.mail && _r.mail.valid && _r.mail.valid[0]) || "").toLowerCase();
+    if(_k && _seen[_k] !== undefined){ _merged++; continue; }
+    if(_k) _seen[_k] = 1;
+    _out.push(_r);
+  }
+  window.MAIL_DEDUP = _merged;
+  return _out;
 }
 function statusChip(r){
   var n = NOTES[r.id], st = (n && n.status) ? n.status : "未联系";
@@ -3138,7 +3156,7 @@ function statusChip(r){
 function renderWaPage(){
   var body = $("#waPageBody"); if(!body) return;
   var rows = waPagePool(), lim = WP_LIMIT.wa, list = rows.slice(0, lim);
-  $("#waPageInfo").textContent = "共 " + rows.length + " 条";
+  $("#waPageInfo").textContent = "共 " + rows.length + " 条" + (window.WA_DEDUP ? "（已按号码去重：另有 " + window.WA_DEDUP + " 条同号记录已合并显示）" : "");
   body.innerHTML = list.length ? list.map(function(r, i){
     return '<tr data-id="'+r.id+'">'+
       '<td data-label="序号" class="mono" style="color:#8894a8">'+(i+1)+'</td>'+
@@ -3168,7 +3186,7 @@ function renderMailPage(){
     var s = mailStatusOf(r);
     if(s === "ok") mok++; else if(s === "bad") mbad++; else munk++;
   });
-  $("#mailPageInfo").textContent = "共 " + rows.length + " 条｜已核验 " + mok + "｜不可用 " + mbad + "｜待确认 " + munk;
+  $("#mailPageInfo").textContent = "共 " + rows.length + " 条｜已核验 " + mok + "｜不可用 " + mbad + "｜待确认 " + munk + (window.MAIL_DEDUP ? "｜已按邮箱去重合并 " + window.MAIL_DEDUP + " 条" : "");
   body.innerHTML = list.length ? list.map(function(r, i){
     var isCorp = r.mail.corp.length > 0;
     return '<tr data-id="'+r.id+'">'+

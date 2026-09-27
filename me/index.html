@@ -1235,7 +1235,7 @@ const WA_RULES = {
   "菲律宾":{m:/^9\d{9}$/,len:[10,10]},
   "伊朗":{m:/^9\d{9}$/,len:[10,10]},
   "马来西亚":{m:/^1\d{8,9}$/,len:[9,10]},
-  "印度尼西亚":{m:/^8\d{8,11}$/,len:[9,12]},
+  "印度尼西亚":{m:/^8\d{9,11}$/,len:[10,12]},
   "香港":{m:/^[456789]\d{7}$/,len:[8,8]},
   "泰国":{m:/^[689]\d{8}$/,len:[9,9]},
   "澳大利亚":{m:/^4\d{8}$/,len:[9,9]},
@@ -1258,11 +1258,11 @@ const WA_RULES = {
   "巴西":{m:/^\d{2}9\d{8}$/,len:[11,11]},
   "肯尼亚":{m:/^[17]\d{8}$/,len:[9,9]},
   "阿曼":{m:/^[79]\d{7}$/,len:[8,8]},
-  "南非":{m:/^[678]\d{8}$/,len:[9,9]},
+  "南非":{m:/^(6|7|8[1-4])\d{8}$/,len:[9,9]},
   "韩国":{m:/^1\d{8,9}$/,len:[9,10]},
-  "乌克兰":{m:/^[67]\d{8}$/,len:[9,9]},
+  "乌克兰":{m:/^(5\d|6[3678]|7[35]|9[1-9])\d{7}$/,len:[9,9]},
   "科威特":{m:/^[569]\d{7}$/,len:[8,8]},
-  "黎巴嫩":{m:/^[371]\d{6,7}$/,len:[7,8]},
+  "黎巴嫩":{m:/^(3\d{6}|(70|71|76|78|79)\d{6})$/,len:[7,8]},
   "哥伦比亚":{m:/^3\d{9}$/,len:[10,10]},
   "阿根廷":{m:/^9\d{10}$/,len:[11,11]},
   "阿尔及利亚":{m:/^[567]\d{8}$/,len:[9,9]},
@@ -1275,7 +1275,9 @@ const WA_RULES = {
   "叙利亚":{m:/^9\d{8}$/,len:[9,9]},
   "智利":{m:/^9\d{8}$/,len:[9,9]},
   "柬埔寨":{m:/^[1-9]\d{7,8}$/,len:[8,9],low:true,note:"柬埔寨手机与固话号段接近、无法可靠区分，未纳入合规名单"},
-  "波兰":{m:/^[45678]\d{8}$/,len:[9,9]},
+  "波兰":{m:/^(45|5[0137]|6[069]|7[2389]|88)\d{7}$/,len:[9,9]},
+  /* 名录里把中国采购代理/办事处写成"国家"的记录：号码本身是合规的中国手机号，但那是代理不是海外买家本人，一律不进已核验名单 */
+  "中国办事处":{m:/^1[3-9]\d{9}$/,len:[11,11],low:true,note:"名录国家写的是「中国办事处」—— 通常是该公司的中国采购代理/办事处，不是海外买家本人，未纳入已核验名单"},
   "日本":{m:/^[789]0\d{8}$/,len:[10,10]},
   "约旦":{m:/^7\d{8}$/,len:[9,9]},
   "土耳其":{m:/^5\d{9}$/,len:[10,10]},
@@ -1291,7 +1293,7 @@ const WA_RULES = {
   "哈萨克斯坦":{m:/^[67]\d{9}$/,len:[10,10]},
   "西班牙":{m:/^[67]\d{8}$/,len:[9,9]},
   "澳门":{m:/^6\d{7}$/,len:[8,8]},
-  "新西兰":{m:/^2\d{7,9}$/,len:[8,10]},
+  "新西兰":{m:/^2\d{6,7}$/,len:[8,9]},
   "捷克":{m:/^[67]\d{8}$/,len:[9,9]},
   "匈牙利":{m:/^(20|30|31|50|70)\d{7}$/,len:[9,9]},
   "加纳":{m:/^[235]\d{8}$/,len:[9,9]},
@@ -1482,8 +1484,31 @@ function waCheck(r){
   if(!best) return {level:"bad", e164:"", raw:cands[0], note:"无法确定国家区号，需人工核对原始号码", count:cands.length};
   best.count = cands.length;
   if(cands.length > 1) best.note += "（该字段含 " + cands.length + " 个号码，已取最优的一个）";
+  var _bd = String(best.e164 || "").replace(/[^0-9]/g, "");
+  if(_bd){
+    var _bm = waBadMap();
+    if(_bm[_bd]){ best.level = "bad"; best.note = "你已实测该号码「" + _bm[_bd] + "」，已自动从直发名单剔除（在名录里可还原）"; }
+  }
   return best;
 }
+/* ===== 实测无效号码：你亲自在 WhatsApp 里验证过「没注册 / 不是本人」的号码 =====
+   说明：WhatsApp 官方不提供"发送前批量查询是否注册"的接口（Twilio 官方文档明确说明），
+   合规做法只能是"边发边核验"——所以这里让你在发送时一键标记，软件永久记住并自动剔除。 */
+var WA_BAD_KEY = "cfme_wabad_v1";
+var WA_BAD_MEMO = null;
+function waBadMap(){
+  if(WA_BAD_MEMO) return WA_BAD_MEMO;
+  try { WA_BAD_MEMO = JSON.parse(localStorage.getItem(WA_BAD_KEY) || "{}"); } catch(e){ WA_BAD_MEMO = {}; }
+  return WA_BAD_MEMO;
+}
+function waBadSave(m){ WA_BAD_MEMO = m; try { localStorage.setItem(WA_BAD_KEY, JSON.stringify(m)); } catch(e){} }
+function waBadCount(){ var m = waBadMap(), n = 0; for(var k in m){ if(m.hasOwnProperty(k)) n++; } return n; }
+function waBadMark(num, reason){
+  var d = String(num || "").replace(/[^0-9]/g, ""); if(!d) return;
+  var m = waBadMap(); m[d] = reason || "未注册/无效"; waBadSave(m); waCacheReset();
+}
+function waBadClearAll(){ waBadSave({}); waCacheReset(); }
+function waCacheReset(){ for(var k in WA_CACHE){ if(WA_CACHE.hasOwnProperty(k)) delete WA_CACHE[k]; } }
 const WA_CACHE = {};
 function waOf(r){
   var k = (r.country || "") + "|" + (r.mobile || "");
@@ -3156,7 +3181,7 @@ function statusChip(r){
 function renderWaPage(){
   var body = $("#waPageBody"); if(!body) return;
   var rows = waPagePool(), lim = WP_LIMIT.wa, list = rows.slice(0, lim);
-  $("#waPageInfo").textContent = "共 " + rows.length + " 条" + (window.WA_DEDUP ? "（已按号码去重：另有 " + window.WA_DEDUP + " 条同号记录已合并显示）" : "");
+  $("#waPageInfo").textContent = "共 " + rows.length + " 条" + (window.WA_DEDUP ? "（已按号码去重：另有 " + window.WA_DEDUP + " 条同号记录已合并显示）" : "") + (waBadCount() ? "｜已实测剔除 " + waBadCount() + " 个无效号码" : "");
   body.innerHTML = list.length ? list.map(function(r, i){
     return '<tr data-id="'+r.id+'">'+
       '<td data-label="序号" class="mono" style="color:#8894a8">'+(i+1)+'</td>'+
@@ -3169,13 +3194,20 @@ function renderWaPage(){
       '<td data-label="操作" style="white-space:nowrap">'+
         '<button class="btn sm p" data-act="wa">发</button> '+
         '<button class="btn sm" data-act="copy">复制号</button> '+
+        '<button class="btn sm" data-act="bad" title="在 WhatsApp 里试过显示没注册/不是本人？点这里永久剔除">号码无效</button> '+
         '<button class="btn sm" data-act="mark">标记已联系</button>'+
       '</td></tr>';
   }).join("") : '<tr><td colspan="8"><div class="empty">没有符合条件的客户</div></td></tr>';
-  $("#waPageMore").innerHTML = rows.length > lim
-    ? '<button class="btn" id="waMore">显示更多（还剩 '+(rows.length-lim)+' 条）</button>' : '';
+  $("#waPageMore").innerHTML = (rows.length > lim
+    ? '<button class="btn" id="waMore">显示更多（还剩 '+(rows.length-lim)+' 条）</button>' : '')
+    + (waBadCount() ? '<button class="btn" id="waBadReset" style="margin-left:8px">还原已剔除的 '+waBadCount()+' 个号码</button>' : '');
   var mb = $("#waMore");
   if(mb) mb.onclick = function(){ WP_LIMIT.wa += 200; renderWaPage(); };
+  var rb = $("#waBadReset");
+  if(rb) rb.onclick = function(){
+    if(!confirm("确定要还原全部被剔除的号码吗？它们会重新回到直发名单。")) return;
+    waBadClearAll(); toast("已全部还原"); renderWaPage(); render();
+  };
 }
 function renderMailPage(){
   var body = $("#mailPageBody"); if(!body) return;
@@ -3231,6 +3263,15 @@ function quickMark(r){
   toast("已标记「已发信」");
   renderWaPage(); renderMailPage();
 }
+/* 一键把"实测无效"的号码从直发名单永久剔除（可在名录里还原） */
+function quickMarkBad(r){
+  var num = waOf(r).e164 || "";
+  if(!num){ toast("这条没有可用号码"); return; }
+  if(!confirm("确认这个号码在 WhatsApp 里「没有注册 / 不是本人」吗？\n" + num + "\n\n确认后会从直发名单里永久剔除，名录里仍能看到，可随时还原。")) return;
+  waBadMark(num, "未注册/不是本人");
+  toast("已剔除 " + num + "，以后不会再出现在直发名单里");
+  renderWaPage(); renderMailPage(); render();
+}
 function bindWorkbench(){
   ["#waPageBody", "#mailPageBody"].forEach(function(sel){
     var tb = $(sel); if(!tb) return;
@@ -3242,6 +3283,7 @@ function bindWorkbench(){
       if(act === "wa") openWaFor(r);
       else if(act === "mail") openMailFor(r);
       else if(act === "mark") quickMark(r);
+      else if(act === "bad") quickMarkBad(r);
       else if(act === "copy") copyText(sel === "#waPageBody" ? waOf(r).e164 : (r.mail.valid[0] || ""));
     };
   });

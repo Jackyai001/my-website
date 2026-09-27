@@ -3185,7 +3185,7 @@ function renderMailPage(){
     var s = mailStatusOf(r);
     if(s === "ok") mok++; else if(s === "bad") mbad++; else munk++;
   });
-  $("#mailPageInfo").textContent = "共 " + rows.length + " 条｜已核验 " + mok + "｜不可用 " + mbad + "｜待确认 " + munk + (window.MAIL_DEDUP ? "｜已按邮箱去重合并 " + window.MAIL_DEDUP + " 条" : "");
+  $("#mailPageInfo").textContent = "已核验 " + mok + " 条（全库可收信）" + (window.MAIL_DEDUP ? "，按邮箱去重后名单 " + rows.length + " 条（已合并 " + window.MAIL_DEDUP + " 条同邮箱记录）" : "") + "｜不可用 " + mbad + "｜待确认 " + munk;
   body.innerHTML = list.length ? list.map(function(r, i){
     var isCorp = r.mail.corp.length > 0;
     return '<tr data-id="'+r.id+'">'+

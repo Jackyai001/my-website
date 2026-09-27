@@ -1482,8 +1482,31 @@ function waCheck(r){
   if(!best) return {level:"bad", e164:"", raw:cands[0], note:"无法确定国家区号，需人工核对原始号码", count:cands.length};
   best.count = cands.length;
   if(cands.length > 1) best.note += "（该字段含 " + cands.length + " 个号码，已取最优的一个）";
+  var _bd = String(best.e164 || "").replace(/[^0-9]/g, "");
+  if(_bd){
+    var _bm = waBadMap();
+    if(_bm[_bd]){ best.level = "bad"; best.note = "你已实测该号码「" + _bm[_bd] + "」，已自动从直发名单剔除（在名录里可还原）"; }
+  }
   return best;
 }
+/* ===== 实测无效号码：你亲自在 WhatsApp 里验证过「没注册 / 不是本人」的号码 =====
+   说明：WhatsApp 官方不提供"发送前批量查询是否注册"的接口（Twilio 官方文档明确说明），
+   合规做法只能是"边发边核验"——所以这里让你在发送时一键标记，软件永久记住并自动剔除。 */
+var WA_BAD_KEY = "cfgf_wabad_v1";
+var WA_BAD_MEMO = null;
+function waBadMap(){
+  if(WA_BAD_MEMO) return WA_BAD_MEMO;
+  try { WA_BAD_MEMO = JSON.parse(localStorage.getItem(WA_BAD_KEY) || "{}"); } catch(e){ WA_BAD_MEMO = {}; }
+  return WA_BAD_MEMO;
+}
+function waBadSave(m){ WA_BAD_MEMO = m; try { localStorage.setItem(WA_BAD_KEY, JSON.stringify(m)); } catch(e){} }
+function waBadCount(){ var m = waBadMap(), n = 0; for(var k in m){ if(m.hasOwnProperty(k)) n++; } return n; }
+function waBadMark(num, reason){
+  var d = String(num || "").replace(/[^0-9]/g, ""); if(!d) return;
+  var m = waBadMap(); m[d] = reason || "未注册/无效"; waBadSave(m); waCacheReset();
+}
+function waBadClearAll(){ waBadSave({}); waCacheReset(); }
+function waCacheReset(){ for(var k in WA_CACHE){ if(WA_CACHE.hasOwnProperty(k)) delete WA_CACHE[k]; } }
 const WA_CACHE = {};
 function waOf(r){
   var k = (r.country || "") + "|" + (r.mobile || "");
@@ -3156,7 +3179,7 @@ function statusChip(r){
 function renderWaPage(){
   var body = $("#waPageBody"); if(!body) return;
   var rows = waPagePool(), lim = WP_LIMIT.wa, list = rows.slice(0, lim);
-  $("#waPageInfo").textContent = "共 " + rows.length + " 条" + (window.WA_DEDUP ? "（已按号码去重：另有 " + window.WA_DEDUP + " 条同号记录已合并显示）" : "");
+  $("#waPageInfo").textContent = "共 " + rows.length + " 条" + (window.WA_DEDUP ? "（已按号码去重：另有 " + window.WA_DEDUP + " 条同号记录已合并显示）" : "") + (waBadCount() ? "｜已实测剔除 " + waBadCount() + " 个无效号码" : "");
   body.innerHTML = list.length ? list.map(function(r, i){
     return '<tr data-id="'+r.id+'">'+
       '<td data-label="序号" class="mono" style="color:#8894a8">'+(i+1)+'</td>'+
@@ -3169,13 +3192,20 @@ function renderWaPage(){
       '<td data-label="操作" style="white-space:nowrap">'+
         '<button class="btn sm p" data-act="wa">发</button> '+
         '<button class="btn sm" data-act="copy">复制号</button> '+
+        '<button class="btn sm" data-act="bad" title="在 WhatsApp 里试过显示没注册/不是本人？点这里永久剔除">号码无效</button> '+
         '<button class="btn sm" data-act="mark">标记已联系</button>'+
       '</td></tr>';
   }).join("") : '<tr><td colspan="8"><div class="empty">没有符合条件的客户</div></td></tr>';
-  $("#waPageMore").innerHTML = rows.length > lim
-    ? '<button class="btn" id="waMore">显示更多（还剩 '+(rows.length-lim)+' 条）</button>' : '';
+  $("#waPageMore").innerHTML = (rows.length > lim
+    ? '<button class="btn" id="waMore">显示更多（还剩 '+(rows.length-lim)+' 条）</button>' : '')
+    + (waBadCount() ? '<button class="btn" id="waBadReset" style="margin-left:8px">还原已剔除的 '+waBadCount()+' 个号码</button>' : '');
   var mb = $("#waMore");
   if(mb) mb.onclick = function(){ WP_LIMIT.wa += 200; renderWaPage(); };
+  var rb = $("#waBadReset");
+  if(rb) rb.onclick = function(){
+    if(!confirm("确定要还原全部被剔除的号码吗？它们会重新回到直发名单。")) return;
+    waBadClearAll(); toast("已全部还原"); renderWaPage(); render();
+  };
 }
 function renderMailPage(){
   var body = $("#mailPageBody"); if(!body) return;
@@ -3231,6 +3261,15 @@ function quickMark(r){
   toast("已标记「已发信」");
   renderWaPage(); renderMailPage();
 }
+/* 一键把"实测无效"的号码从直发名单永久剔除（可在名录里还原） */
+function quickMarkBad(r){
+  var num = waOf(r).e164 || "";
+  if(!num){ toast("这条没有可用号码"); return; }
+  if(!confirm("确认这个号码在 WhatsApp 里「没有注册 / 不是本人」吗？\n" + num + "\n\n确认后会从直发名单里永久剔除，名录里仍能看到，可随时还原。")) return;
+  waBadMark(num, "未注册/不是本人");
+  toast("已剔除 " + num + "，以后不会再出现在直发名单里");
+  renderWaPage(); renderMailPage(); render();
+}
 function bindWorkbench(){
   ["#waPageBody", "#mailPageBody"].forEach(function(sel){
     var tb = $(sel); if(!tb) return;
@@ -3242,6 +3281,7 @@ function bindWorkbench(){
       if(act === "wa") openWaFor(r);
       else if(act === "mail") openMailFor(r);
       else if(act === "mark") quickMark(r);
+      else if(act === "bad") quickMarkBad(r);
       else if(act === "copy") copyText(sel === "#waPageBody" ? waOf(r).e164 : (r.mail.valid[0] || ""));
     };
   });

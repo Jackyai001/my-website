@@ -700,7 +700,7 @@ tbody tr.sel td{background:var(--brand-l)}
         · <b>✓ 已核验</b>：上面三道全过，可以放心发。<br>
         · <b>⚠ 待确认</b>：存疑 —— 例如名录国家是香港、号码却是瑞典的；名录没写国家；疑似固话；号码拼接不全。这些<b>不进名单</b>，需要你自己看「原始号码」判断。<br>
         · <b>✕ 不可用</b>：号码位数异常、无法解析，发不了。<br>
-        <b>已整体剔除的市场：美国、加拿大、墨西哥、柬埔寨</b>（这些国家的手机与固话无法用号段区分）。<br>
+        <b>以下市场不进本名单：美国、加拿大、墨西哥、柬埔寨</b>（这些国家的手机与固话无法用号段区分，无法可靠挑出手机号）。<b>注意：这只是「不进 WhatsApp 直发名单」——这些国家的客户在「客户名录」里完整保留，可用邮箱、领英等方式正常开发。</b><br>
         <b>还要说清一点：已核验 ≠ 对方已注册 WhatsApp。</b>名录来自展会登记信息，可能包含已停用号码、离职员工的号码、登记时填错的号码。是否注册只有 WhatsApp 自己知道，任何本地软件都无法离线确认。遇到提示未注册的，点「跳过」换下一位即可。</span>
       </div>
     </div>
@@ -1703,7 +1703,7 @@ function doLogout(){
 function showDemoBar(){
   var b = document.createElement("div");
   b.className = "demobar";
-  b.innerHTML = '<b>只读演示版</b>仅展示 50 条脱敏示例数据（正式版 4432 条，含完整联系方式，可导出、可批量触达）　' +
+  b.innerHTML = '<b>只读演示版</b>仅展示 50 条脱敏示例数据（正式版 5190 条，含完整联系方式，可导出、可批量触达）　' +
     '<a href="' + LIC_CONTACT_URL + '" target="_blank" rel="noopener">' + esc(LIC_CONTACT_BTN) + '</a>';
   document.body.insertBefore(b, document.body.firstChild);
 }
@@ -1787,7 +1787,7 @@ function showGate(){
         '<h1>把一份名录，变成能直接开工的客户清单</h1>' +
         '<p>自动背调打分并说明 A/B/C 理由 · 按国家与类目精准筛选 · 按客户需求生成差异化话术 · WhatsApp 与邮件逐个触达 · 全流程跟进记录</p>' +
         '<div class="lstats">' +
-          '<div><b>4432</b><span>条机械设备采购商</span></div>' +
+          '<div><b>5190</b><span>条机械设备采购商</span></div>' +
           '<div><b>12</b><span>个机械设备类目</span></div>' +
           '<div><b>6</b><span>项背调维度</span></div>' +
           '<div><b>42</b><span>组差异化话术</span></div>' +

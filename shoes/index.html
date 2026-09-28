@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="zh-CN">
 <head>
 <meta charset="UTF-8">
@@ -1616,6 +1616,7 @@ function toast(msg){
   clearTimeout(t._t); t._t = setTimeout(function(){ t.classList.remove("on"); }, 2100);
 }
 function download(name, text, mime){
+  if(trialBlock("导出或下载数据")) return;      /* 试用账号禁止导出 */
   var blob = new Blob(["\ufeff"+text], {type:(mime||"text/csv")+";charset=utf-8"});
   var a = document.createElement("a");
   a.href = URL.createObjectURL(blob); a.download = name;
@@ -1623,6 +1624,7 @@ function download(name, text, mime){
   setTimeout(function(){ URL.revokeObjectURL(a.href); a.remove(); }, 800);
 }
 function downloadRaw(name, text, mime){
+  if(trialBlock("导出或下载数据")) return;      /* 试用账号禁止导出 */
   var blob = new Blob([text], {type:(mime||"application/json")+";charset=utf-8"});
   var a = document.createElement("a");
   a.href = URL.createObjectURL(blob); a.download = name;
@@ -1709,6 +1711,78 @@ function showDemoBar(){
   document.body.insertBefore(b, document.body.firstChild);
 }
 /* 产品代号：一个激活码只对一个产品有效（建材版 BM / 鞋类版 SH） */
+/* ---------------- 试用账号：公开通用试用码 · 限 7 天 · 限次试用 ---------------- */
+/* 试用规则：数据只显示前 200 条；WhatsApp 直发 10 次、邮件触达 10 封、搜索查询 20 次；
+   不能导出/下载、不能更改任何数据；7 天后自动回到激活页。额度记录在本机浏览器。 */
+var LIC_TRIAL_CODE = "TRIAL2026";                 /* 公开通用试用码（改这里即可换码） */
+var LIC_TRIAL_ALIAS = ["TRIAL2026", "试用2026", "试用", "JAT-TRIAL"];
+var LIC_TRIAL_DAYS = 7;
+var TRIAL_ROWS = 200;                             /* 试用账号可见客户条数 */
+var TRIAL_LIMITS = { wa:10, mail:10, q:20 };      /* WhatsApp / 邮件 / 查询 额度 */
+var TRIAL_STORE = "cfme_trial_v1";
+function isTrial(){ var l = getLic(); return !!(l && l.trial); }
+function trialDeadline(){ var l = getLic(); return (l && l.at ? l.at : 0) + LIC_TRIAL_DAYS * 86400000; }
+function trialDaysLeft(){
+  var ms = trialDeadline() - Date.now();
+  return ms <= 0 ? 0 : Math.ceil(ms / 86400000);
+}
+function trialExpired(){ return isTrial() && trialDeadline() <= Date.now(); }
+function trialState(){
+  try{ return JSON.parse(localStorage.getItem(TRIAL_STORE) || "") || { wa:0, mail:0, q:0, lastQ:0 }; }
+  catch(e){ return { wa:0, mail:0, q:0, lastQ:0 }; }
+}
+function trialSave(s){ try{ localStorage.setItem(TRIAL_STORE, JSON.stringify(s)); }catch(e){} }
+function trialLeft(k){ var s = trialState(); return Math.max(0, TRIAL_LIMITS[k] - (s[k] || 0)); }
+function licIsTrialCode(code){
+  var c = String(code || "").trim().toUpperCase().replace(/\s|-/g, "");
+  for (var i = 0; i < LIC_TRIAL_ALIAS.length; i++){
+    if (c === String(LIC_TRIAL_ALIAS[i]).toUpperCase().replace(/\s|-/g, "")) return true;
+  }
+  return false;
+}
+/* 计一次额度；用完 / 到期返回 false */
+function trialUse(k){
+  if (!isTrial()) return true;
+  if (trialExpired()){ toast("试用期已结束（" + LIC_TRIAL_DAYS + " 天）。点右上角「添加客服」开通正式账号即可继续使用"); return false; }
+  var s = trialState();
+  if (k === "q" && Date.now() - (s.lastQ || 0) < 2500) return true;   /* 查询做防抖，避免误扣 */
+  if ((s[k] || 0) >= TRIAL_LIMITS[k]){
+    toast(k === "wa" ? "试用额度已用完（10 次 WhatsApp 直发）。点右上角「添加客服」开通正式账号，即可无限使用"
+      : k === "mail" ? "试用额度已用完（10 封邮件触达）。点右上角「添加客服」开通正式账号，即可无限使用"
+      : "试用额度已用完（20 次搜索查询）。点右上角「添加客服」开通正式账号，即可无限使用");
+    return false;
+  }
+  s[k] = (s[k] || 0) + 1;
+  if (k === "q") s.lastQ = Date.now();
+  trialSave(s);
+  updateTrialBar();
+  return true;
+}
+/* 试用账号禁止的操作 */
+function trialBlock(what){
+  if (!isTrial()) return false;
+  if (trialExpired()){ toast("试用期已结束（" + LIC_TRIAL_DAYS + " 天）。点右上角「添加客服」开通正式账号即可继续使用"); return true; }
+  toast("试用账号不能" + what + "。点右上角「添加客服」开通正式账号即可使用");
+  return true;
+}
+function trialText(){
+  if (!isTrial()) return "";
+  if (trialExpired()) return "试用已到期";
+  return "剩余 WhatsApp " + trialLeft("wa") + " 次 · 邮件 " + trialLeft("mail") + " 封 · 查询 " + trialLeft("q") + " 次 · 还剩 " + trialDaysLeft() + " 天";
+}
+function updateTrialBar(){
+  var el = document.getElementById("trialBarTxt");
+  if (el) el.textContent = trialText();
+}
+function showTrialBar(){
+  var b = document.createElement("div");
+  b.className = "demobar";
+  b.innerHTML = '<b>试用账号</b><span id="trialBarTxt">' + esc(trialText()) + '</span>' +
+    '　本试用版仅显示前 ' + TRIAL_ROWS + ' 条客户，不能导出与修改数据　' +
+    '<a href="' + LIC_CONTACT_URL + '" target="_blank" rel="noopener">' + esc(LIC_CONTACT_BTN) + '</a>';
+  document.body.insertBefore(b, document.body.firstChild);
+}
+
 var LIC_PROD = "SH";
 var LIC_PROD_NAME = { BM:"建材版", SH:"鞋类版" };
 /* 激活码签名：由「产品 + 序号 + 手机号后四位」派生 10 位校验串 */
@@ -1754,6 +1828,7 @@ function saveLic(o){ try{ localStorage.setItem(LIC_STORE, JSON.stringify(o)); }c
 function isActivated(){
   var l = getLic();
   if(!l || !l.code || !l.tail) return false;
+  if(l.trial) return !trialExpired();      /* 试用账号：7 天内视为已激活 */
   return licCheck(l.code, l.tail).ok;
 }
 function licInfoText(){
@@ -1817,6 +1892,7 @@ function showGate(){
           '<input class="ginp gcode" id="gCode" placeholder="JAT-SH-001-XXXXX-XXXXX" autocomplete="off">' +
           '<button class="gbtn" id="gGo">立即激活</button>' +
           '<div class="gmsg" id="gMsg"></div>' +
+          '<div class="gfoot" style="cursor:pointer" id="lTrial"><span style="color:#2f6bff">想先试用？点这里填入试用码（' + LIC_TRIAL_DAYS + ' 天 ｜ 限 10 次 WhatsApp）→</span></div>' +
           '<div class="gfoot">还没有激活码？<br>' +
             '<a class="glink" href="' + LIC_CONTACT_URL + '" target="_blank" rel="noopener">' + esc(LIC_CONTACT_BTN) + '</a>' +
           '</div>' +
@@ -1831,6 +1907,12 @@ function showGate(){
     if(b) b.onclick = openAct;
   });
   document.getElementById("lClose").onclick = function(){ lMask.classList.remove("on"); };
+  var ltr = document.getElementById("lTrial");
+  if(ltr) ltr.onclick = function(){
+    var c = document.getElementById("gCode"); if(c){ c.value = LIC_TRIAL_CODE; c.focus(); }
+    msg.className = "gmsg";
+    msg.textContent = "已填入试用码 " + LIC_TRIAL_CODE + "：" + LIC_TRIAL_DAYS + " 天内可发 10 次 WhatsApp、10 封邮件、查询 20 次，客户数据仅显示前 " + TRIAL_ROWS + " 条，不能导出与修改。填好姓名和手机号后点「立即激活」即可开始。";
+  };
   lMask.onclick = function(e){ if(e.target === lMask) lMask.classList.remove("on"); };
   var msg = document.getElementById("gMsg");
   function fail(t){ msg.className = "gmsg bad"; msg.textContent = t; }
@@ -1840,6 +1922,14 @@ function showGate(){
     var code = document.getElementById("gCode").value || "";
     if(!name){ fail("请填写姓名或公司名称"); return; }
     if(!/^\d{11}$/.test(phone)){ fail("请输入 11 位手机号"); return; }
+    if(licIsTrialCode(code)){          /* 公开通用试用码：开通 7 天限次试用 */
+      saveLic({trial:true, name:name, phone:phone, tail:phone.slice(7), code:"TRIAL", seq:"TRL", at:Date.now()});
+      try{ localStorage.removeItem(TRIAL_STORE); }catch(e){}
+      msg.className = "gmsg ok";
+      msg.textContent = "试用账号已开通：" + LIC_TRIAL_DAYS + " 天 / 前 " + TRIAL_ROWS + " 条数据 / 10 次 WhatsApp + 10 封邮件 + 20 次查询。正在进入…";
+      setTimeout(function(){ location.reload(); }, 1300);
+      return;
+    }
     var r = licCheck(code, phone.slice(7));
     if(!r.ok){ fail(r.msg); return; }
     saveLic({name:name, phone:phone, tail:phone.slice(7), code:licClean(code), seq:r.seq, at:Date.now()});
@@ -2161,6 +2251,7 @@ function loadStore(){
 }
 function saveStore(){
   if(DEMO) return;   /* 只读演示版不写入任何数据 */
+  if(isTrial()) return;   /* 试用账号不能更改任何数据（跟进、标签、备注、设置都不落盘） */
   try{
     localStorage.setItem(STORE_NOTES, JSON.stringify(NOTES));
     localStorage.setItem(STORE_DNS, JSON.stringify(DNS));
@@ -2325,8 +2416,9 @@ function loadEmbedded(){
 function currentRows(){
   var imp = null;
   try{ imp = JSON.parse(localStorage.getItem(STORE_IMPORT)||"null"); }catch(e){}
-  if(imp && imp.length){ return normalizeRows(imp); }
-  return loadEmbedded();
+  var rows = (imp && imp.length) ? normalizeRows(imp) : loadEmbedded();
+  if(isTrial()) rows = rows.slice(0, TRIAL_ROWS);   /* 试用账号只放行前 200 条 */
+  return rows;
 }
 
 /* ---------------- 7. 筛选 ---------------- */
@@ -2393,6 +2485,8 @@ function pass(r){
 }
 function count(o){ return Object.keys(o).length; }
 function applyFilters(){
+  /* 试用账号：搜索查询限 20 次（首次进入系统的渲染不计次） */
+  if(isTrial() && window.TRIAL_BOOTED && !trialUse("q")){ return; }
   VIEW = ROWS.filter(pass);
   sortView();
   FILTERS.page = 1;
@@ -3248,6 +3342,7 @@ function renderMailPage(){
   if(mb) mb.onclick = function(){ WP_LIMIT.mail += 200; renderMailPage(); };
 }
 function openWaFor(r){
+  if(!trialUse("wa")) return;          /* 试用账号：WhatsApp 直发限 10 次 */
   var num = waNumber(r);
   if(!num){ toast("这条没有可用的 WhatsApp 号码"); return; }
   var m = buildOutMsg(r, "wa");
@@ -3255,12 +3350,14 @@ function openWaFor(r){
   if(waModeId() !== "copy") toast("已打开 WhatsApp（内容已预填），发完记得点「标记已联系」");
 }
 function openMailFor(r){
+  if(!trialUse("mail")) return;        /* 试用账号：邮件触达限 10 封 */
   var to = r.mail.valid[0] || "";
   if(!to){ toast("这条没有可用邮箱"); return; }
   var m = buildOutMsg(r, "mail");
   openMail(to, m.subject, m.text);
 }
 function quickMark(r){
+  if(trialBlock("更改数据（标记已联系）")) return;
   var n = noteOf(r.id);
   n.status = "已发信"; n.last = Date.now();
   saveStore();
@@ -3269,6 +3366,7 @@ function quickMark(r){
 }
 /* 一键把"实测无效"的号码从直发名单永久剔除（可在名录里还原） */
 function quickMarkBad(r){
+  if(trialBlock("更改数据（剔除号码）")) return;
   var num = waOf(r).e164 || "";
   if(!num){ toast("这条没有可用号码"); return; }
   if(!confirm("确认这个号码在 WhatsApp 里「没有注册 / 不是本人」吗？\n" + num + "\n\n确认后会从直发名单里永久剔除，名录里仍能看到，可随时还原。")) return;
@@ -3358,6 +3456,7 @@ const HEAD_CN = ["序号","采购商","国家/地区","联系人","手机/WhatsA
   "优势与风险提示","邮箱域名核查","WhatsApp发送时间","邮件发送时间","跟进状态","标签","备注","最后跟进"];
 function exportRows(headers, rows, name){
   if(demoBlock("导出")) return false;
+  if(trialBlock("导出或下载数据")) return false;   /* 试用账号禁止导出（返回 false，避免误报"已导出"） */
   download(name + "_" + new Date().toISOString().slice(0,10) + ".csv", toCsv(headers, rows));
   return true;
 }
@@ -3987,6 +4086,7 @@ function bindUI(){
   if(loTop) loTop.onclick = doLogout;
   $("#bkClose").onclick = function(){ $("#modalBackup").classList.remove("on"); };
   $("#bkExport").onclick = function(){
+    if(trialBlock("导出备份数据")) return;      /* 试用账号禁止导出 */
     downloadRaw("客户背调系统备份_" + new Date().toISOString().slice(0,10) + ".json",
       JSON.stringify({v:1, notes:NOTES, dns:DNS, settings:S,
         imported:JSON.parse(localStorage.getItem(STORE_IMPORT)||"null")}), "application/json");
@@ -3994,6 +4094,7 @@ function bindUI(){
   };
   $("#bkExportCsv").onclick = exportAll;
   $("#bkImport").onclick = function(){
+    if(trialBlock("导入或更改数据")) return;    /* 试用账号禁止导入 */
     var inp = document.createElement("input");
     inp.type = "file"; inp.accept = ".json";
     inp.onchange = function(){
@@ -4256,6 +4357,8 @@ function boot(){
   buildLetter([]);
   $("#letterScope").value = "filtered";
   if(DEMO) showDemoBar();
+  if(isTrial()) showTrialBar();                    /* 试用账号：顶部常驻额度条 */
+  window.TRIAL_BOOTED = true;                      /* 首次渲染完成，之后的操作才计查询次数 */
   if(DEMO){ var loTop2 = $("#btnLogoutTop"); if(loTop2) loTop2.style.display = "none"; }
 }
 boot();

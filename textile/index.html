@@ -694,7 +694,7 @@ tbody tr.sel td{background:var(--brand-l)}
     <div class="bd" style="padding:13px 18px">
       <div style="font-size:13px;color:var(--txt2);line-height:1.9">
         <b style="color:var(--ink)">这里只放「已核验」的号码 —— 宁缺毋滥，核对不过的一律不放进来。</b>
-        每个号码都过了三道核对：① 号码格式规范；② <b>号码归属国与名录国家一致</b>；③ 命中该国手机号段（不是固话/公司总机）。号码取自「直线电话」栏；<b>该栏为空时自动改用「电话」栏的号码</b>（纺织品名录的直线电话多数没登记）。<br>
+        每个号码都过了三道核对：① 号码格式规范；② <b>号码归属国与名录国家一致</b>；③ 命中该国手机号段（不是固话/公司总机）。号码取自「直线电话」栏；<b>该栏为空时改用「电话」栏，但只有该栏只含 1 个号码时才纳入</b> —— 一格塞多个号码的（固话/传真/手机混在一起）无法确认哪个是本人手机，一律不进本名单。<br>
         <span style="color:var(--warn)"><b>三种标注怎么看：</b><br>
         · <b>✓ 已核验</b>：上面三道全过，可以放心发。<br>
         · <b>⚠ 待确认</b>：存疑 —— 例如名录国家是香港、号码却是瑞典的；名录没写国家；疑似固话；号码拼接不全。这些<b>不进名单</b>，需要你自己看「原始号码」判断。<br>
@@ -1484,6 +1484,12 @@ function waCheck(r){
   best.count = cands.length;
   if(cands.length > 1) best.note += "（该字段含 " + cands.length + " 个号码，已取最优的一个）";
   if(_fromTel) best.note += "（名录未给手机号，已改用「电话」栏的号码校验）";
+  /* 宁缺毋滥：手机栏为空、电话栏里又塞了多个号码时，无法确定哪个是本人手机
+     （常把固话/传真和手机混在一格），这类号码一律不纳入直发名单，降为待确认。 */
+  if(_fromTel && cands.length > 1 && best.level === "ok"){
+    best.level = "warn";
+    best.note = "电话栏里有 " + cands.length + " 个号码，无法确认哪个是本人手机，未纳入直发名单";
+  }
   var _bd = String(best.e164 || "").replace(/[^0-9]/g, "");
   if(_bd){
     var _bm = waBadMap();
